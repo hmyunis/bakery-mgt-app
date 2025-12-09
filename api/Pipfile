@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+djangorestframework = "*"
+python-decouple = "*"
+dj-database-url = "*"
+pymysql = "*"
+pillow = "*"
+djangorestframework-simplejwt = "*"
+djangorestframework-camel-case = "*"
+django-filter = "*"
+openpyxl = "*"
+django-cors-headers = "*"
+drf-spectacular = "*"
+pywebpush = "*"
+cryptography = "*"
+py-vapid = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
