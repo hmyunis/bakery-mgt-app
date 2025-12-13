@@ -40,11 +40,10 @@ class Recipe(models.Model):
         related_name='recipe'
     )
     composite_ingredient = models.OneToOneField(
-        'inventory.Ingredient', 
-        on_delete=models.CASCADE, 
-        null=True, blank=True, 
-        related_name='recipe',
-        limit_choices_to={'is_composite': True}
+        'inventory.Ingredient',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='recipe'
     )
     
     instructions = models.TextField(blank=True)

@@ -2,7 +2,15 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
+// Load token from localStorage on initialization
 let authToken = localStorage.getItem("bakery_auth_token");
+
+export const getAuthToken = () => {
+  // Always read fresh from localStorage to ensure we have the latest value
+  const token = localStorage.getItem("bakery_auth_token");
+  authToken = token;
+  return token;
+};
 
 export const setAuthToken = (token: string | null) => {
   authToken = token ?? null;
@@ -14,29 +22,31 @@ export const setAuthToken = (token: string | null) => {
 };
 
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
+    baseURL: API_BASE_URL,
+    withCredentials: true,
 });
 
 apiClient.interceptors.request.use((config) => {
-  if (authToken) {
-    config.headers.Authorization = `Bearer ${authToken}`;
-  }
-  return config;
+    // Always read fresh from localStorage to ensure we have the latest token
+    const token = localStorage.getItem("bakery_auth_token");
+    if (token) {
+        authToken = token;
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error.response?.status;
-    if (status === 401) {
-      // bubble a logout event so auth flows can react
-      setAuthToken(null);
-      window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+    (response) => response,
+    (error) => {
+        const status = error.response?.status;
+        if (status === 401) {
+            // bubble a logout event so auth flows can react
+            setAuthToken(null);
+            window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+        }
+        return Promise.reject(error);
     }
-    return Promise.reject(error);
-  },
 );
 
 export type ApiClient = typeof apiClient;
-

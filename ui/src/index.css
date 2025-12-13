@@ -1,38 +1,265 @@
+@import url("https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;600;700&display=swap");
 @import "tailwindcss";
 @plugin './hero.ts';
 @source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --bg: #05060a;
-  --panel: rgba(255, 255, 255, 0.04);
-  --border: rgba(255, 255, 255, 0.08);
-  --fg: #e7ecf3;
-  --muted: #cbd5e1;
-  --accent: #06b6d4; /* cyan default */
-  color-scheme: dark;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-:root[data-theme="light"] {
-  --bg: #f8fafc;
-  --panel: rgba(255, 255, 255, 0.9);
-  --border: rgba(15, 23, 42, 0.08);
-  --fg: #0f172a;
-  --muted: #475569;
-  color-scheme: light;
+@font-face {
+    font-family: "Poppins";
+    src: url("./assets/fonts/Poppins-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
 }
 
 body {
-  margin: 0;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at 10% 20%, color-mix(in srgb, var(--accent) 25%, transparent), transparent 35%),
-    radial-gradient(circle at 90% 10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 40%),
-    radial-gradient(circle at 50% 90%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 35%),
-    var(--bg);
-  color: var(--fg);
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+    :root {
+        /* App-specific variables used throughout the codebase */
+        --bg: #f8fafc;
+        --panel: rgba(255, 255, 255, 0.9);
+        --border: rgba(15, 23, 42, 0.08);
+        --fg: #0f172a;
+        --muted: #475569;
+        --accent: #06b6d4; /* cyan default */
+        color-scheme: light;
+
+        /* Shadcn/ui compatible variables */
+        --background: 42 15% 97%;
+        --foreground: 25 25% 18%;
+
+        --card: 0 0% 95%;
+        --card-foreground: 25 25% 18%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 25 25% 18%;
+
+        --primary: 25 55% 30%;
+        --primary-foreground: 40 30% 95%;
+
+        --secondary: 35 20% 80%;
+        --secondary-foreground: 25 55% 30%;
+
+        --muted: 35 15% 88%;
+        --muted-foreground: 25 20% 45%;
+
+        --accent: 28 70% 55%;
+        --accent-foreground: 0 0% 100%;
+
+        --destructive: 0 75% 55%;
+        --destructive-foreground: 42 25% 95%;
+
+        --border: 35 15% 82%;
+        --input: 35 15% 82%;
+        --ring: 28 70% 55%;
+
+        --radius: 0.5rem;
+
+        /* Font variables */
+        --font-display: "Playfair Display", serif;
+        --font-script: "Great Vibes", cursive;
+    }
+
+    .dark {
+        /* App-specific variables - improved dark mode (not pure black) */
+        --bg: #0f172a; /* Slate-900 - dark but not pure black */
+        --panel: rgba(15, 23, 42, 0.8); /* Semi-transparent slate */
+        --border: rgba(255, 255, 255, 0.1);
+        --fg: #f1f5f9; /* Slate-100 - light text */
+        --muted: #94a3b8; /* Slate-400 - muted text */
+        --accent: #06b6d4; /* cyan default */
+        color-scheme: dark;
+
+        /* Shadcn/ui compatible variables */
+        --background: 222 47% 11%; /* Slate-950 */
+        --foreground: 210 40% 98%;
+
+        --card: 222 47% 11%;
+        --card-foreground: 210 40% 98%;
+
+        --popover: 222 47% 11%;
+        --popover-foreground: 210 40% 98%;
+
+        --primary: 210 40% 98%;
+        --primary-foreground: 222 47% 11%;
+
+        --secondary: 217 33% 17%;
+        --secondary-foreground: 210 40% 98%;
+
+        --muted: 217 33% 17%;
+        --muted-foreground: 215 20% 65%;
+
+        --accent: 28 75% 65%;
+        --accent-foreground: 222 47% 11%;
+
+        --destructive: 0 75% 60%;
+        --destructive-foreground: 210 40% 98%;
+
+        --border: 217 33% 17%;
+        --input: 217 33% 17%;
+        --ring: 28 75% 65%;
+    }
+}
+
+@layer base {
+    body {
+        @apply bg-background text-foreground font-sans;
+    }
+    /* Ensure modals have opaque background */
+    section[role="dialog"] {
+        @apply bg-background;
+    }
+}
+
+@layer utilities {
+    /* Font utility classes */
+    .font-display {
+        font-family: var(--font-display);
+    }
+    .font-script {
+        font-family: var(--font-script);
+    }
+    /* Coffee-themed backgrounds */
+    .bg-gradient-coffee {
+        background: var(--gradient-coffee);
+    }
+    .bg-gradient-cream {
+        background: var(--gradient-cream);
+    }
+    .dark .bg-gradient-cream {
+        background: var(--gradient-coffee);
+    }
+    .bg-gradient-warm {
+        background: var(--gradient-warm);
+    }
+
+    /* Custom shadows */
+    .shadow-warm {
+        box-shadow: var(--shadow-warm);
+    }
+    .shadow-strong {
+        box-shadow: var(--shadow-strong);
+    }
+
+    /* Reusable transition utilities */
+    .transition-smooth {
+        transition: var(--transition-smooth);
+    }
+
+    .transition-spring {
+        transition: var(--transition-spring);
+    }
+
+    /* Coffee-themed text colors */
+    .text-coffee-dark {
+        color: hsl(var(--coffee-dark));
+    }
+    .dark .text-coffee-dark {
+        color: hsl(var(--coffee-light));
+    }
+    .text-coffee-medium {
+        color: hsl(var(--coffee-medium));
+    }
+    .text-coffee-light {
+        color: hsl(var(--coffee-light));
+    }
+    .text-cream {
+        color: hsl(var(--cream));
+    }
+
+    .bg-coffee-dark {
+        background: hsl(var(--coffee-dark));
+    }
+    .bg-coffee-medium {
+        background: hsl(var(--coffee-medium));
+    }
+    .bg-coffee-light {
+        background: hsl(var(--coffee-light));
+    }
+    .bg-card {
+        background: hsl(var(--card));
+    }
+
+    /* Reusable hover effect utilities */
+    .hover-lift {
+        transition: var(--transition-smooth);
+    }
+    .hover-lift:hover {
+        box-shadow: var(--shadow-strong);
+        transform: translateY(-0.25rem);
+    }
+
+    .hover-scale {
+        transition: var(--transition-spring);
+    }
+    .hover-scale:hover {
+        transform: scale(1.05);
+    }
+
+    /* Line clamp utilities */
+    .line-clamp-1 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+    }
+
+    .line-clamp-2 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    /* Animation utilities */
+    .animate-bounce-in {
+        animation: bounceIn 0.6s ease-out;
+    }
+
+    .animate-slide-up {
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes bounceIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.3);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        70% {
+            transform: scale(0.9);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes slideUp {
+        0% {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+button {
+    width: fit-content;
+    min-width: fit-content;
 }

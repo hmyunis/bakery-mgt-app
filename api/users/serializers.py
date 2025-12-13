@@ -8,12 +8,71 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
     Custom JWT Serializer to add specific user data to the token payload.
     This avoids extra API calls on the frontend to fetch 'me'.
+    Supports login with either username or phone_number.
     """
+    username_field = 'username'  # Keep for compatibility
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Allow username or phone_number as identifier
+        self.fields['username'] = serializers.CharField(required=False)
+        self.fields['phone_number'] = serializers.CharField(required=False)
+    
+    def validate(self, attrs):
+        username = attrs.get('username')
+        phone_number = attrs.get('phone_number')
+        password = attrs.get('password')
+        
+        # Determine which field to use for authentication
+        identifier = None
+        if username:
+            identifier = username
+            lookup_field = 'username'
+        elif phone_number:
+            identifier = phone_number
+            lookup_field = 'phone_number'
+        else:
+            raise serializers.ValidationError({
+                'non_field_errors': ['Either username or phone_number is required.']
+            })
+        
+        if not password:
+            raise serializers.ValidationError({
+                'password': ['Password is required.']
+            })
+        
+        # Try to find user by identifier
+        try:
+            user = User.objects.get(**{lookup_field: identifier})
+        except User.DoesNotExist:
+            raise serializers.ValidationError({
+                'non_field_errors': ['Invalid credentials.']
+            })
+        
+        # Verify password
+        if not user.check_password(password):
+            raise serializers.ValidationError({
+                'non_field_errors': ['Invalid credentials.']
+            })
+        
+        if not user.is_active:
+            raise serializers.ValidationError({
+                'non_field_errors': ['User account is disabled.']
+            })
+        
+        # Update last_login timestamp
+        from django.utils import timezone
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        
+        attrs['username'] = user.username
+        return super().validate(attrs)
+    
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
         # Add custom claims
-        token['full_name'] = f"{user.first_name} {user.last_name}".strip()
+        token['full_name'] = user.full_name or ""
         token['username'] = user.username
         token['email'] = user.email
         token['phone_number'] = user.phone_number
@@ -30,15 +89,16 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
     confirm_password = serializers.CharField(write_only=True, required=False)
     avatar = serializers.FileField(required=False)
+    avatar_clear = serializers.BooleanField(write_only=True, required=False)
 
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'first_name', 'last_name', 'email', 
-            'phone_number', 'role', 'address', 'avatar', 
-            'password', 'confirm_password', 'date_joined'
+            'id', 'username', 'full_name', 'email', 
+            'phone_number', 'role', 'address', 'avatar', 'avatar_clear',
+            'password', 'confirm_password', 'date_joined', 'last_login', 'is_active'
         )
-        read_only_fields = ('id', 'date_joined')
+        read_only_fields = ('id', 'date_joined', 'last_login')
 
     def validate(self, data):
         """
@@ -76,8 +136,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('confirm_password', None)
+        validated_data.pop('avatar_clear', None)  # Remove write-only field
         password = validated_data.pop('password', None)
-        
+
         user = User(**validated_data)
         if password:
             user.set_password(password)
@@ -101,6 +162,20 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop('confirm_password', None)
         password = validated_data.pop('password', None)
+        
+        # Handle avatar removal: check for avatar_clear flag first
+        avatar_clear = validated_data.pop('avatar_clear', False)
+        if avatar_clear:
+            validated_data['avatar'] = None
+        elif 'avatar' in validated_data:
+            # If avatar is provided, check if it's an empty file
+            avatar = validated_data['avatar']
+            # Check if it's an empty file (to clear the avatar)
+            if hasattr(avatar, 'size') and avatar.size == 0:
+                validated_data['avatar'] = None
+            elif isinstance(avatar, str) and avatar == '':
+                validated_data['avatar'] = None
+        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if password:

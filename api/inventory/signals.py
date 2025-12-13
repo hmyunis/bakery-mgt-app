@@ -1,12 +1,26 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from .models import Purchase, StockAdjustment, Ingredient
 from notifications.services import send_notification
 from notifications.models import NotificationEvent
 
+# Store old purchase data before update
+@receiver(pre_save, sender=Purchase)
+def store_old_purchase_data(sender, instance, **kwargs):
+    if instance.pk:  # Only for updates
+        try:
+            old_purchase = Purchase.objects.get(pk=instance.pk)
+            instance._old_quantity = old_purchase.quantity
+            instance._old_ingredient_id = old_purchase.ingredient_id
+        except Purchase.DoesNotExist:
+            pass
+
 @receiver(post_save, sender=Purchase)
 def update_inventory_on_purchase(sender, instance, created, **kwargs):
+    from django.db.models import F
+    
     if created:
+        # NEW PURCHASE
         ingredient = instance.ingredient
         
         # 1. Update Weighted Average Cost
@@ -21,7 +35,6 @@ def update_inventory_on_purchase(sender, instance, created, **kwargs):
             ingredient.average_cost_per_unit = new_avg
         
         # 2. Update Stock (use F() to avoid race conditions)
-        from django.db.models import F
         ingredient.current_stock = F('current_stock') + instance.quantity
         ingredient.last_purchased_price = instance.unit_cost
         ingredient.save(update_fields=['current_stock', 'last_purchased_price', 'average_cost_per_unit'])
@@ -52,6 +65,56 @@ def update_inventory_on_purchase(sender, instance, created, **kwargs):
                     'percentage': f"{percentage:.1f}"
                 }
             )
+    else:
+        # UPDATED PURCHASE
+        if hasattr(instance, '_old_quantity'):
+            old_quantity = instance._old_quantity
+            old_ingredient_id = instance._old_ingredient_id
+            new_quantity = instance.quantity
+            
+            # If ingredient changed, revert old and add new
+            if old_ingredient_id != instance.ingredient_id:
+                # Revert from old ingredient
+                old_ingredient = Ingredient.objects.get(pk=old_ingredient_id)
+                old_ingredient.current_stock = F('current_stock') - old_quantity
+                old_ingredient.save(update_fields=['current_stock'])
+                
+                # Add to new ingredient
+                new_ingredient = instance.ingredient
+                new_ingredient.current_stock = F('current_stock') + new_quantity
+                new_ingredient.last_purchased_price = instance.unit_cost
+                new_ingredient.save(update_fields=['current_stock', 'last_purchased_price'])
+            else:
+                # Same ingredient, adjust quantity difference
+                quantity_diff = new_quantity - old_quantity
+                if quantity_diff != 0:
+                    ingredient = instance.ingredient
+                    ingredient.current_stock = F('current_stock') + quantity_diff
+                    ingredient.last_purchased_price = instance.unit_cost
+                    ingredient.save(update_fields=['current_stock', 'last_purchased_price'])
+
+@receiver(post_delete, sender=Purchase)
+def revert_inventory_on_purchase_delete(sender, instance, **kwargs):
+    from django.db.models import F
+    
+    # Revert the stock increase when purchase is deleted
+    ingredient = instance.ingredient
+    ingredient.current_stock = F('current_stock') - instance.quantity
+    ingredient.save(update_fields=['current_stock'])
+    ingredient.refresh_from_db()
+    
+    # Optionally send notification
+    send_notification(
+        NotificationEvent.PURCHASE_CREATED,  # Reuse or create new event type
+        {
+            'purchaser_name': instance.purchaser.username if instance.purchaser else 'System',
+            'quantity': str(instance.quantity),
+            'ingredient_name': ingredient.name,
+            'unit': ingredient.unit,
+            'total_cost': str(instance.total_cost),
+            'action': 'deleted'
+        }
+    )
 
 @receiver(post_save, sender=StockAdjustment)
 def update_inventory_on_adjustment(sender, instance, created, **kwargs):

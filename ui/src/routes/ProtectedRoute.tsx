@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAppSelector } from "../store";
+import { getAuthToken } from "../lib/apiClient";
 
 type Props = {
   allowedRoles?: string[];
@@ -9,15 +10,19 @@ type Props = {
 export function ProtectedRoute({ allowedRoles = [], children }: Props) {
   const location = useLocation();
   const { isAuthenticated, roles } = useAppSelector((s) => s.auth);
+  
+  // Also check token directly as fallback (in case Redux hasn't rehydrated yet)
+  const token = getAuthToken();
+  const isAuth = isAuthenticated || !!token;
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace state={{ from: location }} />;
+  if (!isAuth) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   const hasRole =
     allowedRoles.length === 0 || allowedRoles.some((role) => roles.includes(role));
 
-  if (!hasRole) {
+  if (!hasRole && allowedRoles.length > 0) {
     return <Navigate to="/access-denied" replace />;
   }
 

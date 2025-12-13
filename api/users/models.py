@@ -10,6 +10,13 @@ class User(AbstractUser):
         ('cashier', 'Cashier'),
     )
     
+    # Override first_name and last_name to be unused
+    first_name = None
+    last_name = None
+    
+    # Use full_name instead
+    full_name = models.CharField(max_length=255, blank=True, null=True)
+    
     # We use username for login, but store phone separately
     phone_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
     address = models.TextField(null=True, blank=True)

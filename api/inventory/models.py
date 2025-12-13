@@ -20,9 +20,6 @@ class Ingredient(models.Model):
     average_cost_per_unit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     last_purchased_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     
-    # Is it a "Composite" ingredient? (Made in kitchen, like Topping)
-    is_composite = models.BooleanField(default=False)
-    
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -54,6 +51,8 @@ class Purchase(models.Model):
             raise ValidationError("Purchase total cost cannot be negative.")
     
     def save(self, *args, **kwargs):
+        from decimal import Decimal
+        
         # Validate before saving
         self.clean()
         
@@ -65,7 +64,7 @@ class Purchase(models.Model):
 
         # Anomaly Detection: If price is > 30% higher than average
         if self.ingredient.average_cost_per_unit > 0:
-            threshold = self.ingredient.average_cost_per_unit * 1.30
+            threshold = self.ingredient.average_cost_per_unit * Decimal('1.30')
             # Decimal conversion safety handled by Django
             if self.unit_cost > threshold:
                 self.is_price_anomaly = True

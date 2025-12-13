@@ -20,7 +20,7 @@ class UserViewSet(viewsets.ModelViewSet):
     
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['role', 'is_active']
-    search_fields = ['username', 'first_name', 'last_name', 'phone_number', 'email']
+    search_fields = ['username', 'full_name', 'phone_number', 'email']
     ordering_fields = ['date_joined', 'username']
     
     def get_queryset(self):
