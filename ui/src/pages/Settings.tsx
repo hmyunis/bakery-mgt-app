@@ -1,14 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { Tabs, Tab, Spinner } from "@heroui/react";
+import React, { useEffect, useState, useMemo } from "react";
+import { Tabs, Tab, Spinner, Button } from "@heroui/react";
+import { CreditCard, Plus } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { ProfileSummaryCard } from "../components/profile/ProfileSummaryCard";
 import { ProfileForm } from "../components/profile/ProfileForm";
+import { PageTitle } from "../components/ui/PageTitle";
+import { DataTable } from "../components/ui/DataTable";
+import { DataTablePagination } from "../components/ui/DataTablePagination";
+import { getPaymentMethodColumns } from "../components/payment/PaymentMethodColumns";
+import { PaymentMethodFormModal } from "../components/payment/PaymentMethodFormModal";
+import { DeletePaymentMethodModal } from "../components/payment/DeletePaymentMethodModal";
+import { usePaymentMethods, useUpdatePaymentMethod } from "../hooks/usePayment";
 import type { UserProfile } from "../services/authService";
+import type { PaymentMethod } from "../types/payment";
 import { toast } from "sonner";
+import { useAppSelector } from "../store";
 
 const SettingsPage: React.FC = () => {
     const { user, updateProfile, isUpdatingProfile, changePassword, isChangingPassword } =
         useAuth();
+    const { user: authUser } = useAppSelector((state) => state.auth);
+    const isAdmin = authUser?.role === "admin";
 
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
@@ -16,6 +28,25 @@ const SettingsPage: React.FC = () => {
         oldPassword: "",
         newPassword: "",
     });
+
+    // Payment Methods state
+    const [paymentPage, setPaymentPage] = useState(1);
+    const [paymentPageSize, setPaymentPageSize] = useState(10);
+    const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
+    const [editingPaymentMethod, setEditingPaymentMethod] = useState<PaymentMethod | null>(null);
+    const [deletingPaymentMethod, setDeletingPaymentMethod] = useState<PaymentMethod | null>(null);
+
+    const { data: paymentMethodsData, isLoading: isLoadingPaymentMethods } = usePaymentMethods({
+        page: paymentPage,
+        page_size: paymentPageSize,
+    });
+
+    const { mutateAsync: updatePaymentMethod } = useUpdatePaymentMethod();
+
+    const paymentMethodRows = useMemo(
+        () => paymentMethodsData?.results ?? [],
+        [paymentMethodsData]
+    );
 
     useEffect(() => {
         if (user) {
@@ -56,6 +87,32 @@ const SettingsPage: React.FC = () => {
             });
             setPasswordForm({ oldPassword: "", newPassword: "" });
             setIsEditing(false);
+        }
+    };
+
+    // Payment Methods handlers
+    const handleAddPaymentMethod = () => {
+        setEditingPaymentMethod(null);
+        setIsPaymentFormOpen(true);
+    };
+
+    const handleEditPaymentMethod = (paymentMethod: PaymentMethod) => {
+        setEditingPaymentMethod(paymentMethod);
+        setIsPaymentFormOpen(true);
+    };
+
+    const handleDeletePaymentMethod = (paymentMethod: PaymentMethod) => {
+        setDeletingPaymentMethod(paymentMethod);
+    };
+
+    const handleToggleActive = async (paymentMethod: PaymentMethod) => {
+        try {
+            await updatePaymentMethod({
+                id: paymentMethod.id,
+                data: { is_active: !paymentMethod.is_active },
+            });
+        } catch (error) {
+            // Error handling is done in the hook
         }
     };
 
@@ -141,18 +198,15 @@ const SettingsPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Page Header */}
-            <div>
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Settings</h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Manage your profile information and account settings
-                </p>
-            </div>
+            <PageTitle
+                title="Settings"
+                subtitle="Manage your profile information and account settings"
+            />
 
             {/* Settings Content */}
             <Tabs aria-label="Settings" color="primary" variant="underlined">
                 <Tab key="profile" title="Profile">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <ProfileSummaryCard profile={user} />
                         <ProfileForm
                             isEditing={isEditing}
@@ -168,34 +222,80 @@ const SettingsPage: React.FC = () => {
                     </div>
                 </Tab>
 
-                <Tab key="preferences" title="Preferences">
-                    <div className="mt-6">
-                        <div className="text-center py-12">
-                            <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-slate-500/10 mb-4">
-                                <svg
-                                    className="size-8 text-slate-400"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
-                                    />
-                                </svg>
+                {isAdmin && (
+                    <Tab
+                        key="payment-methods"
+                        title={
+                            <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4" />
+                                <span>Payment Methods</span>
                             </div>
-                            <p className="text-slate-600 dark:text-slate-400 text-lg">
-                                Preferences will be implemented here.
-                            </p>
-                            <p className="text-slate-500 dark:text-slate-500 text-sm mt-2">
-                                Theme settings, notifications, and other preferences.
-                            </p>
+                        }
+                    >
+                        <div className="space-y-4">
+                            <div className="flex justify-end">
+                                <Button
+                                    color="primary"
+                                    startContent={<Plus className="h-4 w-4" />}
+                                    onPress={handleAddPaymentMethod}
+                                >
+                                    Add Payment Method
+                                </Button>
+                            </div>
+
+                            {isLoadingPaymentMethods ? (
+                                <div className="flex justify-center py-12">
+                                    <Spinner size="lg" />
+                                </div>
+                            ) : (
+                                <>
+                                    <DataTable
+                                        columns={getPaymentMethodColumns({
+                                            onEdit: handleEditPaymentMethod,
+                                            onDelete: handleDeletePaymentMethod,
+                                            onToggleActive: handleToggleActive,
+                                        })}
+                                        data={paymentMethodRows}
+                                    />
+                                    {paymentMethodsData && paymentMethodsData.count > 0 && (
+                                        <DataTablePagination
+                                            pagination={{
+                                                count: paymentMethodsData.count,
+                                                page: paymentPage,
+                                                pageSize: paymentPageSize,
+                                                totalPages: Math.ceil(
+                                                    paymentMethodsData.count / paymentPageSize
+                                                ),
+                                            }}
+                                            onPageChange={(newPage) => setPaymentPage(newPage)}
+                                            onPageSizeChange={(newSize) => {
+                                                setPaymentPageSize(newSize);
+                                                setPaymentPage(1);
+                                            }}
+                                        />
+                                    )}
+                                </>
+                            )}
                         </div>
-                    </div>
-                </Tab>
+                    </Tab>
+                )}
             </Tabs>
+
+            {/* Payment Method Modals */}
+            <PaymentMethodFormModal
+                isOpen={isPaymentFormOpen}
+                onClose={() => {
+                    setIsPaymentFormOpen(false);
+                    setEditingPaymentMethod(null);
+                }}
+                paymentMethod={editingPaymentMethod}
+            />
+
+            <DeletePaymentMethodModal
+                isOpen={!!deletingPaymentMethod}
+                onClose={() => setDeletingPaymentMethod(null)}
+                paymentMethod={deletingPaymentMethod}
+            />
         </div>
     );
 };

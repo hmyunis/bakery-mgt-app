@@ -146,10 +146,13 @@ export function IngredientFormModal({
 
                             <Select
                                 label="Unit"
-                                selectedKeys={[formData.unit]}
+                                selectionMode="single"
+                                selectedKeys={new Set([formData.unit])}
                                 onSelectionChange={(keys) => {
                                     const selected = Array.from(keys)[0] as Unit;
-                                    if (selected) handleInputChange("unit", selected);
+                                    if (selected) {
+                                        handleInputChange("unit", selected);
+                                    }
                                 }}
                                 isRequired
                                 classNames={{
@@ -160,7 +163,7 @@ export function IngredientFormModal({
                                 }}
                             >
                                 {UNITS.map((unit) => (
-                                    <SelectItem key={unit}>
+                                    <SelectItem key={unit} value={unit}>
                                         {unit === "kg"
                                             ? "Kilogram (kg)"
                                             : unit === "g"

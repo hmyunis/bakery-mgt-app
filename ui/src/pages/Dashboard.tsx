@@ -1,7 +1,7 @@
 import { Card, CardBody, CardHeader, Chip, Button } from "@heroui/react";
 import { LayoutDashboard, TrendingUp, Package, Users, ArrowUpRight, Sparkles } from "lucide-react";
 import { useAppSelector } from "../store";
-import { PageHeader } from "../components/ui/PageHeader";
+import { PageTitle } from "../components/ui/PageTitle";
 
 export function DashboardPage() {
     const { user, roles } = useAppSelector((state) => state.auth);
@@ -66,18 +66,10 @@ export function DashboardPage() {
 
     return (
         <div className="space-y-6">
-            {/* Page Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
-                        Dashboard
-                    </h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Welcome back, {user?.name || "User"}! Here's an overview of your bakery
-                        operations.
-                    </p>
-                </div>
-            </div>
+            <PageTitle
+                title="Dashboard"
+                subtitle={`Welcome back, ${user?.name || "User"}! Here's an overview of your bakery operations.`}
+            />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">

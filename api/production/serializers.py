@@ -4,10 +4,20 @@ from .models import Product, Recipe, RecipeItem, ProductionRun, IngredientUsage
 from inventory.models import Ingredient
 
 class ProductSerializer(serializers.ModelSerializer):
+    image_clear = serializers.BooleanField(write_only=True, required=False)
+    
     class Meta:
         model = Product
         fields = '__all__'
         read_only_fields = ('stock_quantity',)
+    
+    def update(self, instance, validated_data):
+        # Handle image removal: check for image_clear flag first
+        image_clear = validated_data.pop('image_clear', False)
+        if image_clear:
+            validated_data['image'] = None
+        
+        return super().update(instance, validated_data)
 
 class RecipeItemSerializer(serializers.ModelSerializer):
     ingredient_name = serializers.CharField(source='ingredient.name', read_only=True)
@@ -70,7 +80,7 @@ class ProductionRunSerializer(serializers.ModelSerializer):
 
     def get_usages(self, obj):
         # Simple representation of usage for GET requests
-        return list(obj.usages.values('ingredient__name', 'theoretical_amount', 'actual_amount', 'wastage'))
+        return list(obj.usages.values('ingredient__name', 'ingredient__unit', 'theoretical_amount', 'actual_amount', 'wastage'))
 
     def validate(self, data):
         # Ensure either product or composite is selected, not both, not neither

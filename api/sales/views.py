@@ -14,13 +14,30 @@ class IsCashierOrAdmin(permissions.BasePermission):
             return True # Cashier creates sales
         return request.user.role == 'admin'
 
-class PaymentMethodViewSet(viewsets.ReadOnlyModelViewSet):
+class IsAdmin(permissions.BasePermission):
+    """Admin-only permission for payment method management."""
+    def has_permission(self, request, view):
+        if request.user.is_anonymous:
+            return False
+        # Admin can do everything, others can only read active methods
+        if view.action in ['list', 'retrieve']:
+            return request.user.is_authenticated
+        return request.user.role == 'admin'
+
+class PaymentMethodViewSet(viewsets.ModelViewSet):
     """
-    Cashiers need to see active methods.
+    Admin can manage payment methods (CRUD).
+    Cashiers can see active methods (read-only).
     """
-    queryset = PaymentMethod.objects.filter(is_active=True)
+    queryset = PaymentMethod.objects.all()
     serializer_class = PaymentMethodSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdmin]
+    
+    def get_queryset(self):
+        # Admins see all, others see only active
+        if self.request.user.role == 'admin':
+            return PaymentMethod.objects.all()
+        return PaymentMethod.objects.filter(is_active=True)
 
 class SaleViewSet(viewsets.ModelViewSet):
     queryset = Sale.objects.select_related('cashier').prefetch_related('items__product', 'payments__method').order_by('-created_at')

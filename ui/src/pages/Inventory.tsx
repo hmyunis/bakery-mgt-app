@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Button, Tabs, Tab } from "@heroui/react";
-import { Plus, Package, ShoppingCart } from "lucide-react";
+import { Plus, Package, ShoppingCart, ListChecks, RotateCcw } from "lucide-react";
 import { PageTitle } from "../components/ui/PageTitle";
 import { IngredientFilterCard } from "../components/inventory/IngredientFilterCard";
 import { DataTable } from "../components/ui/DataTable";
@@ -9,16 +9,22 @@ import { IngredientFormModal } from "../components/inventory/IngredientFormModal
 import { DeleteIngredientModal } from "../components/inventory/DeleteIngredientModal";
 import { PurchaseFormModal } from "../components/inventory/PurchaseFormModal";
 import { DeletePurchaseModal } from "../components/inventory/DeletePurchaseModal";
+import { ShoppingList } from "../components/inventory/ShoppingList";
+import { StockAdjustmentFormModal } from "../components/inventory/StockAdjustmentFormModal";
+import { DeleteStockAdjustmentModal } from "../components/inventory/DeleteStockAdjustmentModal";
 import { getIngredientColumns } from "../components/inventory/IngredientColumns";
 import { getPurchaseColumns } from "../components/inventory/PurchaseColumns";
+import { getStockAdjustmentColumns } from "../components/inventory/StockAdjustmentColumns";
 import {
     useIngredients,
     useDeleteIngredient,
     usePurchases,
     useDeletePurchase,
+    useStockAdjustments,
+    useDeleteStockAdjustment,
 } from "../hooks/useInventory";
 import { useDebounce } from "../hooks/useDebounce";
-import type { Ingredient, Purchase } from "../types/inventory";
+import type { Ingredient, Purchase, StockAdjustment } from "../types/inventory";
 
 export function InventoryPage() {
     const [activeTab, setActiveTab] = useState("ingredients");
@@ -39,6 +45,13 @@ export function InventoryPage() {
     const [deletingPurchase, setDeletingPurchase] = useState<Purchase | null>(null);
     const [purchaseIngredient, setPurchaseIngredient] = useState<Ingredient | null>(null);
 
+    // Stock Adjustments state
+    const [adjustmentPage, setAdjustmentPage] = useState(1);
+    const [adjustmentPageSize, setAdjustmentPageSize] = useState(10);
+    const [isAdjustmentFormOpen, setIsAdjustmentFormOpen] = useState(false);
+    const [deletingAdjustment, setDeletingAdjustment] = useState<StockAdjustment | null>(null);
+    const [adjustmentIngredient, setAdjustmentIngredient] = useState<Ingredient | null>(null);
+
     const debouncedIngredientSearch = useDebounce(ingredientSearch, 500);
 
     // Ingredients data
@@ -54,12 +67,21 @@ export function InventoryPage() {
         page_size: purchasePageSize,
     });
 
+    // Stock Adjustments data
+    const { data: adjustmentsData, isLoading: isLoadingAdjustments } = useStockAdjustments({
+        page: adjustmentPage,
+        page_size: adjustmentPageSize,
+    });
+
     const { mutateAsync: deleteIngredient, isPending: isDeletingIngredient } =
         useDeleteIngredient();
     const { mutateAsync: deletePurchase, isPending: isDeletingPurchase } = useDeletePurchase();
+    const { mutateAsync: deleteAdjustment, isPending: isDeletingAdjustment } =
+        useDeleteStockAdjustment();
 
     const ingredientRows = useMemo(() => ingredientsData?.results ?? [], [ingredientsData]);
     const purchaseRows = useMemo(() => purchasesData?.results ?? [], [purchasesData]);
+    const adjustmentRows = useMemo(() => adjustmentsData?.results ?? [], [adjustmentsData]);
 
     // Ingredient handlers
     const handleAddIngredient = () => {
@@ -103,6 +125,22 @@ export function InventoryPage() {
         if (!deletingPurchase) return;
         await deletePurchase(deletingPurchase.id);
         setDeletingPurchase(null);
+    };
+
+    // Stock Adjustment handlers
+    const handleAddAdjustment = (ingredient?: Ingredient) => {
+        setAdjustmentIngredient(ingredient || null);
+        setIsAdjustmentFormOpen(true);
+    };
+
+    const handleDeleteAdjustment = (adjustment: StockAdjustment) => {
+        setDeletingAdjustment(adjustment);
+    };
+
+    const handleDeleteAdjustmentConfirm = async () => {
+        if (!deletingAdjustment) return;
+        await deleteAdjustment(deletingAdjustment.id);
+        setDeletingAdjustment(null);
     };
 
     return (
@@ -157,6 +195,7 @@ export function InventoryPage() {
                                 onEdit: handleEditIngredient,
                                 onDelete: handleDeleteIngredient,
                                 onAddPurchase: handleAddPurchase,
+                                onAdjustStock: handleAddAdjustment,
                             })}
                             data={ingredientRows}
                             isLoading={isLoadingIngredients}
@@ -226,6 +265,66 @@ export function InventoryPage() {
                         )}
                     </div>
                 </Tab>
+
+                <Tab
+                    key="shopping-list"
+                    title={
+                        <div className="flex items-center gap-2">
+                            <ListChecks className="h-4 w-4" />
+                            <span>Shopping List</span>
+                        </div>
+                    }
+                >
+                    <div className="pt-4">
+                        <ShoppingList />
+                    </div>
+                </Tab>
+
+                <Tab
+                    key="adjustments"
+                    title={
+                        <div className="flex items-center gap-2">
+                            <RotateCcw className="h-4 w-4" />
+                            <span>Stock Adjustments</span>
+                        </div>
+                    }
+                >
+                    <div className="pt-4 space-y-4">
+                        <div className="flex justify-end">
+                            <Button
+                                color="primary"
+                                onPress={() => handleAddAdjustment()}
+                                startContent={<Plus className="h-4 w-4" />}
+                            >
+                                Record Adjustment
+                            </Button>
+                        </div>
+
+                        <DataTable
+                            columns={getStockAdjustmentColumns({
+                                onDelete: handleDeleteAdjustment,
+                            })}
+                            data={adjustmentRows}
+                            isLoading={isLoadingAdjustments}
+                        />
+
+                        {adjustmentsData && adjustmentsData.count > 0 && (
+                            <DataTablePagination
+                                pagination={{
+                                    count: adjustmentsData.count,
+                                    page: adjustmentPage,
+                                    pageSize: adjustmentPageSize,
+                                    totalPages: Math.ceil(adjustmentsData.count / adjustmentPageSize),
+                                }}
+                                onPageChange={(newPage) => setAdjustmentPage(newPage)}
+                                onPageSizeChange={(newSize) => {
+                                    setAdjustmentPageSize(newSize);
+                                    setAdjustmentPage(1);
+                                }}
+                            />
+                        )}
+                    </div>
+                </Tab>
             </Tabs>
 
             {/* Ingredient Modals */}
@@ -264,6 +363,24 @@ export function InventoryPage() {
                 onConfirm={handleDeletePurchaseConfirm}
                 purchase={deletingPurchase}
                 isLoading={isDeletingPurchase}
+            />
+
+            {/* Stock Adjustment Modals */}
+            <StockAdjustmentFormModal
+                isOpen={isAdjustmentFormOpen}
+                onClose={() => {
+                    setIsAdjustmentFormOpen(false);
+                    setAdjustmentIngredient(null);
+                }}
+                preselectedIngredient={adjustmentIngredient}
+            />
+
+            <DeleteStockAdjustmentModal
+                isOpen={!!deletingAdjustment}
+                onClose={() => setDeletingAdjustment(null)}
+                onConfirm={handleDeleteAdjustmentConfirm}
+                adjustment={deletingAdjustment}
+                isLoading={isDeletingAdjustment}
             />
         </div>
     );

@@ -239,7 +239,7 @@ export function LandingPage() {
                                     </p>
                                     <div className="flex flex-wrap gap-3">
                                         {Object.entries(accents).map(([key, value]) => (
-                                            <button
+                                            <Button
                                                 key={key}
                                                 aria-label={key}
                                                 onClick={() =>

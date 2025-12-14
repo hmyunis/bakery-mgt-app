@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     Modal,
     ModalContent,
@@ -13,8 +13,9 @@ import {
     RadioGroup,
     Radio,
     Chip,
+    Alert,
 } from "@heroui/react";
-import { X } from "lucide-react";
+import { X, AlertTriangle } from "lucide-react";
 import type {
     Ingredient,
     Purchase,
@@ -88,6 +89,19 @@ export function PurchaseFormModal({
 
     const isLoading = isCreating || isUpdating;
     const ingredients = ingredientsData?.results || [];
+
+    // Memoize selectedKeys Set for ingredient select
+    const ingredientSelectedKeys = useMemo(() => {
+        return formData.ingredient ? new Set<string>([formData.ingredient]) : new Set<string>();
+    }, [formData.ingredient]);
+
+    // Transform ingredients to items format for Select
+    const ingredientItems = useMemo(() => {
+        return ingredients.map((ing) => ({
+            key: ing.id.toString(),
+            label: `${ing.name} (${ing.unit})`,
+        }));
+    }, [ingredients]);
 
     // Load recent vendors on mount
     useEffect(() => {
@@ -243,6 +257,17 @@ export function PurchaseFormModal({
     const previewTotalCost = calculateTotalCost().toFixed(2);
     const previewUnitCost = calculateUnitCost().toFixed(2);
 
+    // Check for price anomaly (>30% above average cost)
+    const selectedIngredient =
+        ingredients.find((ing) => ing.id.toString() === formData.ingredient) ||
+        preselectedIngredient;
+    const unitCostValue = calculateUnitCost();
+    const isPriceAnomaly =
+        selectedIngredient &&
+        selectedIngredient.average_cost_per_unit > 0 &&
+        unitCostValue > 0 &&
+        unitCostValue > selectedIngredient.average_cost_per_unit * 1.3;
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="2xl" backdrop="blur">
             <ModalContent className="max-h-screen overflow-y-auto">
@@ -260,14 +285,21 @@ export function PurchaseFormModal({
                             {!preselectedIngredient ? (
                                 <Select
                                     label="Ingredient"
-                                    selectedKeys={formData.ingredient ? [formData.ingredient] : []}
+                                    placeholder="Select an ingredient"
+                                    selectionMode="single"
+                                    selectedKeys={ingredientSelectedKeys}
                                     onSelectionChange={(keys) => {
                                         const selected = Array.from(keys)[0] as string;
-                                        if (selected) handleInputChange("ingredient", selected);
+                                        if (selected) {
+                                            handleInputChange("ingredient", selected);
+                                        } else {
+                                            handleInputChange("ingredient", "");
+                                        }
                                     }}
                                     isRequired
                                     isInvalid={!!errors.ingredient}
                                     errorMessage={errors.ingredient}
+                                    items={ingredientItems}
                                     classNames={{
                                         trigger: "!w-full !text-left",
                                         label: "!w-full !text-left",
@@ -275,11 +307,7 @@ export function PurchaseFormModal({
                                         value: "!text-slate-900 dark:!text-slate-100",
                                     }}
                                 >
-                                    {ingredients.map((ing) => (
-                                        <SelectItem key={ing.id.toString()}>
-                                            {ing.name} ({ing.unit})
-                                        </SelectItem>
-                                    ))}
+                                    {(ingredient) => <SelectItem>{ingredient.label}</SelectItem>}
                                 </Select>
                             ) : (
                                 <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3">
@@ -377,6 +405,36 @@ export function PurchaseFormModal({
                                         </p>
                                     </div>
                                 </div>
+
+                                {/* Price Anomaly Warning */}
+                                {isPriceAnomaly && selectedIngredient && (
+                                    <Alert
+                                        color="warning"
+                                        variant="flat"
+                                        title="Price Anomaly Detected"
+                                        startContent={<AlertTriangle className="h-5 w-5" />}
+                                        className="lg:col-span-2"
+                                    >
+                                        <div className="text-sm">
+                                            <p className="mb-1">
+                                                The entered unit cost (
+                                                <strong>{unitCostValue.toFixed(2)} ETB</strong>) is
+                                                more than 30% higher than the average cost (
+                                                <strong>
+                                                    {selectedIngredient.average_cost_per_unit.toFixed(
+                                                        2
+                                                    )}{" "}
+                                                    ETB
+                                                </strong>
+                                                ).
+                                            </p>
+                                            <p className="text-xs opacity-80">
+                                                Please verify the cost before proceeding. This
+                                                purchase will be flagged as a price anomaly.
+                                            </p>
+                                        </div>
+                                    </Alert>
+                                )}
                             </div>
 
                             {/* Vendor input with recent vendors */}

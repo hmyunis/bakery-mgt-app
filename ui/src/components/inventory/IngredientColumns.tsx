@@ -1,16 +1,18 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Ingredient } from "../../types/inventory";
 import { Button, Chip, Tooltip } from "@heroui/react";
-import { Edit, Trash2, AlertTriangle, ShoppingCart } from "lucide-react";
+import { Edit, Trash2, AlertTriangle, ShoppingCart, RotateCcw } from "lucide-react";
 
 export const getIngredientColumns = ({
     onEdit,
     onDelete,
     onAddPurchase,
+    onAdjustStock,
 }: {
     onEdit?: (ingredient: Ingredient) => void;
     onDelete?: (ingredient: Ingredient) => void;
     onAddPurchase?: (ingredient: Ingredient) => void;
+    onAdjustStock?: (ingredient: Ingredient) => void;
 }): ColumnDef<Ingredient>[] => [
     {
         id: "rowNumber",
@@ -115,8 +117,22 @@ export const getIngredientColumns = ({
                                 color="success"
                                 className="min-w-8 w-8 h-8 p-2"
                                 onPress={() => onAddPurchase(ingredient)}
-                                >
+                            >
                                 <ShoppingCart className="h-4 w-4" />
+                            </Button>
+                        </Tooltip>
+                    )}
+                    {onAdjustStock && (
+                        <Tooltip content="Adjust Stock" placement="top">
+                            <Button
+                                isIconOnly
+                                size="sm"
+                                variant="flat"
+                                color="warning"
+                                className="min-w-8 w-8 h-8 p-2"
+                                onPress={() => onAdjustStock(ingredient)}
+                            >
+                                <RotateCcw className="h-4 w-4" />
                             </Button>
                         </Tooltip>
                     )}

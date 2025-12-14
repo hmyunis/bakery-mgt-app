@@ -143,7 +143,7 @@ class InventoryService {
         const data = response.data?.data || response.data;
         return {
             items: (data.items || []).map((item: any) => this.normalizeIngredient(item)),
-            share_text: data.share_text || "",
+            share_text: data.shareText || data.share_text || "",
         };
     }
 
@@ -271,18 +271,20 @@ class InventoryService {
     // ==================== STOCK ADJUSTMENTS ====================
 
     /**
-     * Normalize stock adjustment data from backend
+     * Normalize stock adjustment data from backend (camelCase or snake_case)
      */
     private normalizeStockAdjustment(adjustment: any): StockAdjustment {
         return {
             id: adjustment.id,
             ingredient: adjustment.ingredient,
-            ingredient_name: adjustment.ingredient_name,
+            ingredient_name: adjustment.ingredientName || adjustment.ingredient_name,
             actor: adjustment.actor,
-            actor_name: adjustment.actor_name,
-            quantity_change: parseFloat(adjustment.quantity_change || 0),
+            actor_name: adjustment.actorName || adjustment.actor_name,
+            quantity_change: parseFloat(
+                adjustment.quantityChange || adjustment.quantity_change || 0
+            ),
             reason: adjustment.reason,
-            notes: adjustment.notes,
+            notes: adjustment.notes || "",
             timestamp: adjustment.timestamp,
         };
     }

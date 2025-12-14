@@ -140,6 +140,20 @@ def update_inventory_on_adjustment(sender, instance, created, **kwargs):
             }
         )
 
+@receiver(post_delete, sender=StockAdjustment)
+def revert_inventory_on_adjustment_delete(sender, instance, **kwargs):
+    """
+    Revert the stock change when a stock adjustment is deleted.
+    Since quantity_change was added to stock, we subtract it to reverse.
+    """
+    from django.db.models import F
+    
+    # Revert the stock change (subtract the quantity_change that was previously added)
+    ingredient = instance.ingredient
+    ingredient.current_stock = F('current_stock') - instance.quantity_change
+    ingredient.save(update_fields=['current_stock'])
+    ingredient.refresh_from_db()
+
 @receiver(post_save, sender=Ingredient)
 def check_low_stock(sender, instance, **kwargs):
     """Check if ingredient stock is low and send notification"""

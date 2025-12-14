@@ -343,6 +343,16 @@ export function useDeleteStockAdjustment() {
             queryClient.invalidateQueries({ queryKey: ["stock-adjustments"] });
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update stock levels
             queryClient.removeQueries({ queryKey: ["stock-adjustments", id] });
+            toast.success("Stock adjustment deleted successfully");
+        },
+        onError: (error: any) => {
+            const errorData = error.response?.data;
+            const errorMessage =
+                errorData?.message ||
+                errorData?.detail ||
+                error.message ||
+                "Failed to delete stock adjustment";
+            toast.error(errorMessage);
         },
     });
 }
