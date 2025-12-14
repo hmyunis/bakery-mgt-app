@@ -11,10 +11,20 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('stock_quantity',)
     
+    def create(self, validated_data):
+        # Remove image_clear from validated_data before creating
+        # (it's only used in updates to clear the image)
+        validated_data.pop('image_clear', None)
+        return super().create(validated_data)
+    
     def update(self, instance, validated_data):
         # Handle image removal: check for image_clear flag first
         image_clear = validated_data.pop('image_clear', False)
         if image_clear:
+            # Clear the image field
+            if instance.image:
+                # Delete the actual file from storage
+                instance.image.delete(save=False)
             validated_data['image'] = None
         
         return super().update(instance, validated_data)

@@ -2,6 +2,15 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
+// Get base URL without /api/v1 for image URLs
+export const getImageBaseUrl = () => {
+    const envUrl = import.meta.env.VITE_API_BASE_URL;
+    if (envUrl) {
+        return envUrl.replace(/\/api\/v1$/, "");
+    }
+    return "http://localhost:8001";
+};
+
 // Load token from localStorage on initialization
 let authToken = localStorage.getItem("bakery_auth_token");
 

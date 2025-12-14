@@ -233,6 +233,10 @@ export function ProductionPage() {
                 onSelectionChange={(key) => setActiveTab(String(key))}
                 color="primary"
                 variant="underlined"
+                classNames={{
+                    tabList: "flex flex-wrap gap-2 sm:gap-3",
+                    tab: "whitespace-nowrap",
+                }}
             >
                 <Tab
                     key="products"

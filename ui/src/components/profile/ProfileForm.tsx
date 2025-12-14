@@ -30,7 +30,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
     isLoading,
 }) => {
     return (
-        <Card className="lg:col-span-2 shadow-warm">
+        <Card className="lg:col-span-2 shadow-warm border border-zinc-200 dark:border-zinc-800">
             <CardBody className="p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">

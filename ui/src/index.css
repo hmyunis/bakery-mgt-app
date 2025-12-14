@@ -196,6 +196,7 @@ body {
     .hover-lift:hover {
         box-shadow: var(--shadow-strong);
         transform: translateY(-0.25rem);
+        transition-duration: 1s;
     }
 
     .hover-scale {

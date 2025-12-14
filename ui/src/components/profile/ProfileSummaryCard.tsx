@@ -61,7 +61,7 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({ profile 
         "U";
 
     return (
-        <Card className="shadow-warm">
+        <Card className="shadow-warm border border-zinc-200 dark:border-zinc-800">
             <CardBody className="p-6 text-center">
                 <input
                     type="file"

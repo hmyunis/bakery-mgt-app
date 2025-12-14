@@ -204,7 +204,15 @@ const SettingsPage: React.FC = () => {
             />
 
             {/* Settings Content */}
-            <Tabs aria-label="Settings" color="primary" variant="underlined">
+            <Tabs
+                aria-label="Settings"
+                color="primary"
+                variant="underlined"
+                classNames={{
+                    tabList: "flex flex-wrap gap-2 sm:gap-3",
+                    tab: "whitespace-nowrap",
+                }}
+            >
                 <Tab key="profile" title="Profile">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <ProfileSummaryCard profile={user} />

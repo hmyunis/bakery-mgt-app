@@ -2,8 +2,9 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils import timezone
-from django.db.models import Sum
-from .models import PaymentMethod, Sale, DailyClosing, SalePayment
+from django.db import transaction
+from django.db.models import Sum, F
+from .models import PaymentMethod, Sale, DailyClosing
 from .serializers import PaymentMethodSerializer, SaleSerializer, DailyClosingSerializer
 
 class IsCashierOrAdmin(permissions.BasePermission):
@@ -45,8 +46,22 @@ class SaleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsCashierOrAdmin]
     
     def perform_create(self, serializer):
-        # Already handled in serializer, but extra check
-        pass
+        # Serializer handles the full transaction (items, payments, stock deduction) in SaleSerializer.create()
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        """
+        Delete a sale and reverse stock changes:
+        - Add back product stock for each SaleItem
+        - Delete the sale (cascades to SaleItem + SalePayment)
+        """
+        with transaction.atomic():
+            # Lock all involved products and restock
+            for item in instance.items.select_related("product").all():
+                item.product.stock_quantity = F("stock_quantity") + item.quantity
+                item.product.save(update_fields=["stock_quantity"])
+
+            instance.delete()
 
 class DailyClosingViewSet(viewsets.ModelViewSet):
     queryset = DailyClosing.objects.order_by('-date')

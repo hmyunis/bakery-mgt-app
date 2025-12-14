@@ -159,9 +159,10 @@ export function InventoryPage() {
                 color="primary"
                 variant="underlined"
                 classNames={{
-                    tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                    tabList:
+                        "flex flex-wrap gap-4 sm:gap-6 w-full relative rounded-none p-0 border-b border-divider",
                     cursor: "w-full bg-primary",
-                    tab: "max-w-fit px-0 h-12",
+                    tab: "max-w-fit px-0 h-12 whitespace-nowrap",
                     tabContent: "group-data-[selected=true]:text-primary",
                 }}
             >
@@ -207,7 +208,9 @@ export function InventoryPage() {
                                     count: ingredientsData.count,
                                     page: ingredientPage,
                                     pageSize: ingredientPageSize,
-                                    totalPages: Math.ceil(ingredientsData.count / ingredientPageSize),
+                                    totalPages: Math.ceil(
+                                        ingredientsData.count / ingredientPageSize
+                                    ),
                                 }}
                                 onPageChange={(newPage) => setIngredientPage(newPage)}
                                 onPageSizeChange={(newSize) => {
@@ -314,7 +317,9 @@ export function InventoryPage() {
                                     count: adjustmentsData.count,
                                     page: adjustmentPage,
                                     pageSize: adjustmentPageSize,
-                                    totalPages: Math.ceil(adjustmentsData.count / adjustmentPageSize),
+                                    totalPages: Math.ceil(
+                                        adjustmentsData.count / adjustmentPageSize
+                                    ),
                                 }}
                                 onPageChange={(newPage) => setAdjustmentPage(newPage)}
                                 onPageSizeChange={(newSize) => {

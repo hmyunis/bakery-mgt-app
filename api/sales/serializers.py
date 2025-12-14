@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.db import transaction
+from django.db.models import F
 from .models import PaymentMethod, Sale, SaleItem, SalePayment, DailyClosing
 from production.models import Product
 
@@ -21,19 +22,23 @@ class SalePaymentInputSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
 
 class SaleSerializer(serializers.ModelSerializer):
-    items = SaleItemSerializer(many=True) # For Output
+    items = SaleItemSerializer(many=True, read_only=True) # For Output
     payments = serializers.SerializerMethodField()
+    cashier_name = serializers.CharField(source='cashier.username', read_only=True)
     
     # Inputs
-    items_input = serializers.ListField(child=serializers.DictField(), write_only=True)
-    payments_input = SalePaymentInputSerializer(many=True, write_only=True)
+    items_input = serializers.ListField(child=serializers.DictField(), write_only=True, required=True)
+    payments_input = SalePaymentInputSerializer(many=True, write_only=True, required=True)
 
     class Meta:
         model = Sale
-        fields = ['id', 'total_amount', 'created_at', 'items', 'payments', 'items_input', 'payments_input']
-        read_only_fields = ('total_amount', 'created_at', 'cashier')
+        fields = ['id', 'total_amount', 'created_at', 'cashier', 'cashier_name', 'items', 'payments', 'items_input', 'payments_input']
+        read_only_fields = ('total_amount', 'created_at', 'cashier', 'cashier_name')
 
     def get_payments(self, obj):
+        # Handle both Sale instance and dict (during creation)
+        if isinstance(obj, dict):
+            return []
         return list(obj.payments.values('method__name', 'amount'))
 
     def create(self, validated_data):
@@ -56,7 +61,7 @@ class SaleSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(f"Quantity must be greater than 0 for product {product_id}")
                 
                 try:
-                    product = Product.objects.get(id=product_id, is_active=True)
+                    product = Product.objects.select_for_update().get(id=product_id, is_active=True)
                 except Product.DoesNotExist:
                     raise serializers.ValidationError(f"Product with id {product_id} not found or inactive")
                 
@@ -76,6 +81,10 @@ class SaleSerializer(serializers.ModelSerializer):
                     subtotal=price * qty
                 )
                 total_amount += (price * qty)
+                
+                # Deduct stock
+                product.stock_quantity = F('stock_quantity') - qty
+                product.save(update_fields=['stock_quantity'])
             
             # 3. Process Payments
             payment_total = 0
