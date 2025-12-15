@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view, permission_classes
+from datetime import datetime
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -74,16 +75,21 @@ def owner_dashboard(request):
     """
     today = timezone.localdate()
     now = timezone.now()
+    
+    # Calculate start and end of day in local time, then convert to aware datetimes
+    # This avoids DB-level timezone conversion issues
+    start_of_day = timezone.make_aware(datetime.combine(today, datetime.min.time()))
+    end_of_day = timezone.make_aware(datetime.combine(today, datetime.max.time()))
 
     # Sales Today
-    sales_qs = Sale.objects.filter(created_at__date=today)
+    sales_qs = Sale.objects.filter(created_at__range=(start_of_day, end_of_day))
     sales_today_total = sales_qs.aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
     sales_today_count = sales_qs.count()
     sales_today_avg = sales_qs.aggregate(avg=Avg("total_amount"))["avg"] or Decimal("0")
 
     # Cash vs Digital split (based on payment method name)
     payments_qs = (
-        SalePayment.objects.filter(sale__created_at__date=today)
+        SalePayment.objects.filter(sale__created_at__range=(start_of_day, end_of_day))
         .select_related("method", "sale")
         .only("amount", "method__name", "sale__created_at")
     )
@@ -98,7 +104,7 @@ def owner_dashboard(request):
 
     # Top Products Today
     top_products_qs = (
-        SaleItem.objects.filter(sale__created_at__date=today)
+        SaleItem.objects.filter(sale__created_at__range=(start_of_day, end_of_day))
         .values("product__name")
         .annotate(quantity=Sum("quantity"), revenue=Sum("subtotal"))
         .order_by("-revenue")[:5]
@@ -192,7 +198,7 @@ def owner_dashboard(request):
 
     # Recent Production Runs (today)
     recent_runs_qs = (
-        ProductionRun.objects.filter(date_produced__date=today)
+        ProductionRun.objects.filter(date_produced__range=(start_of_day, end_of_day))
         .select_related("product", "composite_ingredient", "chef")
         .order_by("-date_produced")[:5]
     )

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
     Modal,
     ModalContent,
@@ -13,9 +13,8 @@ import {
     Chip,
     Divider,
 } from "@heroui/react";
-import { Plus, Trash2, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import type { CreateProductionRunData, Product } from "../../types/production";
-import type { Ingredient } from "../../types/inventory";
 import { useIngredients } from "../../hooks/useInventory";
 import { useCreateProductionRun, useProducts, useRecipeByProduct } from "../../hooks/useProduction";
 
@@ -180,8 +179,6 @@ export function ProductionRunFormModal({
         const actual = parseFloat(actualAmount);
         return actual - theoretical;
     };
-
-    const selectedProduct = products.find((p) => p.id.toString() === formData.product);
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="3xl" backdrop="blur" scrollBehavior="inside">

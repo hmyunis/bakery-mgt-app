@@ -13,28 +13,14 @@ IGNORED_MODELS = ['AuditLog', 'Session', 'LogEntry', 'MigrationRecorder']
 # Sensitive fields to redact
 SENSITIVE_FIELDS = ['password', 'token']
 
+import sys
+
 def is_migrating():
     """Check if migrations are currently running"""
-    # Check if we're in a migration context by checking if the table exists
-    # and if we can actually query it
-    try:
-        # Try to check if table exists and is accessible
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='audit_auditlog'")
-            table_exists = cursor.fetchone() is not None
-            if not table_exists:
-                return True
-            # Also check if we can query the table structure
-            cursor.execute("PRAGMA table_info(audit_auditlog)")
-            columns = cursor.fetchall()
-            # Check if actor_id column exists (added in migration 0002)
-            column_names = [col[1] for col in columns]
-            if 'actor_id' not in column_names:
-                return True
-            return False
-    except Exception:
-        # If we can't check, assume we're migrating to be safe
+    # Check if 'migrate' or 'makemigrations' is in the command arguments
+    if len(sys.argv) > 1 and ('migrate' in sys.argv or 'makemigrations' in sys.argv):
         return True
+    return False
 
 def _get_clean_dict(instance):
     """Convert model instance to dict, excluding sensitive fields/binary data."""

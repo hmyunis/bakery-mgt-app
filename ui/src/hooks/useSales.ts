@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { salesService } from "../services/salesService";
-import type { Sale, CreateSaleData, SaleListParams } from "../types/sales";
+import type { CreateSaleData, SaleListParams } from "../types/sales";
 import { toast } from "sonner";
 
 /**

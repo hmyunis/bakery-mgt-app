@@ -1,5 +1,5 @@
 import { apiClient } from "../lib/apiClient";
-import { VALID_ROLES, type UserRole } from "../constants/roles";
+import { type UserRole } from "../constants/roles";
 
 export interface User {
     id: number;

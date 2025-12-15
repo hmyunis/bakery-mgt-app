@@ -11,18 +11,12 @@ export const getImageBaseUrl = () => {
     return "http://localhost:8001";
 };
 
-// Load token from localStorage on initialization
-let authToken = localStorage.getItem("bakery_auth_token");
-
 export const getAuthToken = () => {
   // Always read fresh from localStorage to ensure we have the latest value
-  const token = localStorage.getItem("bakery_auth_token");
-  authToken = token;
-  return token;
+  return localStorage.getItem("bakery_auth_token");
 };
 
 export const setAuthToken = (token: string | null) => {
-  authToken = token ?? null;
   if (token) {
     localStorage.setItem("bakery_auth_token", token);
   } else {
@@ -39,7 +33,6 @@ apiClient.interceptors.request.use((config) => {
     // Always read fresh from localStorage to ensure we have the latest token
     const token = localStorage.getItem("bakery_auth_token");
     if (token) {
-        authToken = token;
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

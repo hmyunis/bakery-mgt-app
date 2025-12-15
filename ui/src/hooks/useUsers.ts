@@ -3,7 +3,6 @@ import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import {
   userService,
-  type User,
   type CreateUserData,
   type UpdateUserData,
   type UsersListParams,
@@ -42,7 +41,7 @@ export function useCreateUser() {
         errorData?.message ||
         errorData?.errors?.nonFieldErrors?.[0] ||
         errorData?.non_field_errors?.[0] ||
-        Object.values(errorData?.errors || errorData || {})[0]?.[0] ||
+                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
         error.message ||
         "Failed to create user";
       toast.error(errorMessage);
@@ -88,7 +87,7 @@ export function useUpdateUser() {
         errorData?.message ||
         errorData?.errors?.nonFieldErrors?.[0] ||
         errorData?.non_field_errors?.[0] ||
-        Object.values(errorData?.errors || errorData || {})[0]?.[0] ||
+                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
         error.message ||
         "Failed to update user";
       toast.error(errorMessage);

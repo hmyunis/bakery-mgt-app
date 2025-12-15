@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { paymentService } from "../services/paymentService";
 import type {
-    PaymentMethod,
     CreatePaymentMethodData,
     UpdatePaymentMethodData,
     PaymentMethodListParams,

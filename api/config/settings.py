@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-from decouple import config, Csv
+from decouple import config
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -44,6 +44,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'audit.middleware.AuditMiddleware', # Audit logging middleware
+    'core.middleware.NoCacheMiddleware', # Prevent caching of API responses
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'djangorestframework_camel_case.middleware.CamelCaseMiddleWare', # CamelCase
@@ -75,7 +76,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASE_URL = config('DATABASE_URL')
 DATABASES = {
-    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL')
+    )
 }
 
 # Cache Configuration (Required for Rate Limiting)
@@ -176,7 +179,7 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
-    'CAMELIZE_NAMES': True, # Important for drf-camel-case support
+    'CAMELIZE_NAMES': True,
 }
 
 # VAPID Configuration for Web Push Notifications

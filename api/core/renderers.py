@@ -1,6 +1,5 @@
-from drf_camel_case.render import CamelCaseJSONRenderer
+from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from rest_framework.renderers import BaseRenderer
-import openpyxl
 from io import BytesIO
 
 class CustomCamelCaseJSONRenderer(CamelCaseJSONRenderer):

@@ -1,6 +1,6 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Recipe } from "../../types/production";
-import { Button, Chip, Tooltip } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 import { Edit, Trash2 } from "lucide-react";
 
 export const getRecipeColumns = ({

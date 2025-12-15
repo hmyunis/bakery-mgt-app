@@ -12,7 +12,6 @@ import {
 import { ChefHat, Package, Calendar, User, AlertTriangle, FileText } from "lucide-react";
 import type { ProductionRun } from "../../types/production";
 import { useIngredients } from "../../hooks/useInventory";
-import { useRecipeByProduct } from "../../hooks/useProduction";
 
 interface ProductionRunDetailModalProps {
     isOpen: boolean;
@@ -32,11 +31,6 @@ export function ProductionRunDetailModal({
     const { data: ingredientsData } = useIngredients({ page_size: 100 });
     const ingredients = ingredientsData?.results || [];
 
-    // Fetch recipe to get standard_yield for wastage calculation
-    const { data: recipeData } = useRecipeByProduct(
-        productionRun?.product || null
-    );
-
     // Create ingredient map for unit lookup
     const ingredientMap = new Map(
         ingredients.map((ing) => [ing.name.toLowerCase(), ing])
@@ -45,9 +39,7 @@ export function ProductionRunDetailModal({
     if (!productionRun) return null;
 
     const productName = productionRun.product_name || productionRun.composite_name || "Unknown";
-    const recipe = recipeData;
     const quantityProduced = productionRun.quantity_produced;
-    const standardYield = recipe?.standard_yield || 1;
 
     // Calculate wastage in terms of product pieces
     // For each ingredient: (wastage / theoretical_amount) * quantity_produced = pieces affected

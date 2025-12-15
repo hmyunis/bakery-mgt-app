@@ -15,15 +15,12 @@ import {
 } from "@heroui/react";
 import type {
     Ingredient,
-    StockAdjustment,
     CreateStockAdjustmentData,
-    UpdateStockAdjustmentData,
     StockAdjustmentReason,
 } from "../../types/inventory";
 import {
     useIngredients,
     useCreateStockAdjustment,
-    useUpdateStockAdjustment,
 } from "../../hooks/useInventory";
 import { toast } from "sonner";
 

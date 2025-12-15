@@ -1,11 +1,18 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
 import os
 import sys
+
 import pymysql
 
-# Install PyMySQL as MySQLdb for CPanel/Production compatibility
+# This creates the "MySQLdb" alias in Python's memory
 pymysql.install_as_MySQLdb()
+
+# Now we import that alias so we can change its version setting
+import MySQLdb
+
+# We overwrite the version to trick Django (2.2.2 is safe)
+if MySQLdb.version_info < (2, 2, 2):
+    MySQLdb.version_info = (2, 2, 2, 'final', 0)
 
 def main():
     """Run administrative tasks."""

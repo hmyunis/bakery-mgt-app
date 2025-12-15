@@ -9,7 +9,6 @@ import {
     Input,
     Select,
     SelectItem,
-    Switch,
 } from "@heroui/react";
 import type { Ingredient, CreateIngredientData, UpdateIngredientData, Unit } from "../../types/inventory";
 import {
@@ -163,7 +162,7 @@ export function IngredientFormModal({
                                 }}
                             >
                                 {UNITS.map((unit) => (
-                                    <SelectItem key={unit} value={unit}>
+                                    <SelectItem key={unit}>
                                         {unit === "kg"
                                             ? "Kilogram (kg)"
                                             : unit === "g"

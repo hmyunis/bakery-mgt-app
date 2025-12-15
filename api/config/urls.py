@@ -6,6 +6,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from django.views.generic import TemplateView
 from core.views import health_check, owner_dashboard, bakery_settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,16 +33,13 @@ urlpatterns = [
 
 urlpatterns += staticfiles_urlpatterns()
 
-# Static/Media Serving
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
-    # In production, CPanel usually handles static via web server config, 
-    # but strictly for uploaded media we might need to expose it if not separate
-    from django.views.static import serve
-    from django.urls import re_path
     urlpatterns += [
-        re_path(r'^uploads/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+        re_path(r'^(?P<path>uploads/.*)$', serve, {
+            'document_root': settings.MEDIA_ROOT,
+        })
     ]
 
 urlpatterns += [

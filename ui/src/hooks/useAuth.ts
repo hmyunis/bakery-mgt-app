@@ -116,7 +116,7 @@ export const useAuth = () => {
                         name: fullName || currentUser.username,
                         email: currentUser.email,
                         avatar: currentUser.avatar || undefined,
-                        role: currentUser.role,
+                        role: isValidRole(currentUser.role) ? currentUser.role : undefined,
                     },
                 })
             );

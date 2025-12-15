@@ -2,13 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { inventoryService } from "../services/inventoryService";
 import type {
-    Ingredient,
     CreateIngredientData,
     UpdateIngredientData,
-    Purchase,
     CreatePurchaseData,
     UpdatePurchaseData,
-    StockAdjustment,
     CreateStockAdjustmentData,
     UpdateStockAdjustmentData,
     IngredientListParams,
@@ -65,7 +62,7 @@ export function useCreateIngredient() {
                 errorData?.message ||
                 errorData?.errors?.nonFieldErrors?.[0] ||
                 errorData?.non_field_errors?.[0] ||
-                Object.values(errorData?.errors || errorData || {})[0]?.[0] ||
+                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
                 error.message ||
                 "Failed to create ingredient";
             toast.error(errorMessage);
@@ -94,7 +91,7 @@ export function useUpdateIngredient() {
                 errorData?.message ||
                 errorData?.errors?.nonFieldErrors?.[0] ||
                 errorData?.non_field_errors?.[0] ||
-                Object.values(errorData?.errors || errorData || {})[0]?.[0] ||
+                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
                 error.message ||
                 "Failed to update ingredient";
             toast.error(errorMessage);
@@ -193,7 +190,7 @@ export function useCreatePurchase() {
                 errorData?.message ||
                 errorData?.errors?.nonFieldErrors?.[0] ||
                 errorData?.non_field_errors?.[0] ||
-                Object.values(errorData?.errors || errorData || {})[0]?.[0] ||
+                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
                 error.message ||
                 "Failed to record purchase";
             toast.error(errorMessage);
@@ -223,7 +220,7 @@ export function useUpdatePurchase() {
                 errorData?.message ||
                 errorData?.errors?.nonFieldErrors?.[0] ||
                 errorData?.non_field_errors?.[0] ||
-                Object.values(errorData?.errors || errorData || {})[0]?.[0] ||
+                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
                 error.message ||
                 "Failed to update purchase";
             toast.error(errorMessage);
