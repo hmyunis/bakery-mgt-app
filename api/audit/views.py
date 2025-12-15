@@ -16,6 +16,15 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAdminUser]
     
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['action', 'table_name', 'actor']
-    search_fields = ['record_id', 'old_value', 'new_value', 'table_name']
-    ordering_fields = ['timestamp']
+    filterset_fields = ['action', 'table_name', 'actor', 'ip_address']
+    # NOTE: Searching JSON fields can be backend-dependent; we keep them out of default search
+    # for reliability (esp. SQLite). Users can still search by record/table/action/actor/ip.
+    search_fields = [
+        'record_id',
+        'table_name',
+        'action',
+        'ip_address',
+        'actor__username',
+        'actor__full_name',
+    ]
+    ordering_fields = ['timestamp', 'action', 'table_name']

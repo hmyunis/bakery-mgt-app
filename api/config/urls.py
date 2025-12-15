@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from django.views.generic import TemplateView
-from core.views import health_check
+from core.views import health_check, owner_dashboard, bakery_settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
@@ -12,6 +12,10 @@ urlpatterns = [
     
     # Health Check
     path('api/v1/health/', health_check, name='health_check'),
+    # Dashboard aggregates (Admin/Owner)
+    path('api/v1/dashboard/owner/', owner_dashboard, name='owner_dashboard'),
+    # Bakery Settings
+    path('api/v1/core/bakery-settings/', bakery_settings, name='bakery_settings'),
     
     # API Version 1
     path('api/v1/users/', include('users.urls')),

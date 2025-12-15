@@ -1,6 +1,5 @@
 import threading
 
-# Thread-local storage to hold the current request
 _thread_locals = threading.local()
 
 def get_current_user():
@@ -10,18 +9,18 @@ def get_current_ip():
     return getattr(_thread_locals, 'ip', None)
 
 class AuditMiddleware:
-    """
-    Middleware to capture the current user and IP address 
-    and store them in thread-local storage for use in Signals.
-    """
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # Store user and IP in thread locals
-        _thread_locals.user = request.user if request.user.is_authenticated else None
+        if hasattr(_thread_locals, 'user'):
+            delattr(_thread_locals, 'user')
+        if hasattr(_thread_locals, 'ip'):
+            delattr(_thread_locals, 'ip')
         
-        # Get IP Address
+        if request.user.is_authenticated:
+            _thread_locals.user = request.user
+        
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[0]
@@ -30,12 +29,5 @@ class AuditMiddleware:
         _thread_locals.ip = ip
 
         response = self.get_response(request)
-        
-        # Cleanup
-        if hasattr(_thread_locals, 'user'):
-            del _thread_locals.user
-        if hasattr(_thread_locals, 'ip'):
-            del _thread_locals.ip
-            
         return response
 

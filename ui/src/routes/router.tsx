@@ -4,6 +4,7 @@ import { NotFoundPage } from "../pages/NotFound";
 import { AccessDeniedPage } from "../pages/AccessDenied";
 import { Login } from "../pages/Login";
 import { DashboardPage } from "../pages/Dashboard";
+import { AuditLogsPage } from "../pages/AuditLogs";
 import { InventoryPage } from "../pages/Inventory";
 import { ProductionPage } from "../pages/Production";
 import { SalesPage } from "../pages/Sales";
@@ -74,6 +75,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["admin", "storekeeper", "chef", "cashier"]}>
             <SettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "audit-logs",
+        element: (
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AuditLogsPage />
           </ProtectedRoute>
         ),
       },

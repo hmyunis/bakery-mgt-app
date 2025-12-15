@@ -8,7 +8,6 @@ import { PersistGate } from "redux-persist/integration/react";
 import { Toaster } from "sonner";
 import { persistor, store } from "./store";
 import { queryClient } from "./lib/queryClient";
-import "./i18n";
 import "./index.css";
 import App from "./App.tsx";
 

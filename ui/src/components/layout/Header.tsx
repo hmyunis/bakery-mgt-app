@@ -8,10 +8,11 @@ import {
     Switch,
     Avatar,
 } from "@heroui/react";
-import { Moon, Sun, User, LogOut, Settings, Menu, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Moon, Sun, User, LogOut, Menu, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { toggleMode } from "../../store/settingsSlice";
 import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
     isCollapsed: boolean;
@@ -25,10 +26,16 @@ export function Header({ isCollapsed, onToggleSidebar, onToggleMobile }: HeaderP
     const { user } = useAppSelector((state) => state.auth);
     const { logout, isLoggingOut } = useAuth();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const navigate = useNavigate();
 
     const handleLogout = async () => {
         setIsProfileOpen(false);
         await logout();
+    };
+
+    const handleProfileNavigate = () => {
+        setIsProfileOpen(false);
+        navigate("/app/settings");
     };
 
     return (
@@ -126,22 +133,10 @@ export function Header({ isCollapsed, onToggleSidebar, onToggleMobile }: HeaderP
                             <DropdownItem
                                 key="profile"
                                 startContent={<User className="size-4" />}
-                                onPress={() => {
-                                    setIsProfileOpen(false);
-                                }}
+                                onPress={handleProfileNavigate}
                                 className="py-2.5"
                             >
                                 Profile
-                            </DropdownItem>
-                            <DropdownItem
-                                key="settings"
-                                startContent={<Settings className="size-4" />}
-                                onPress={() => {
-                                    setIsProfileOpen(false);
-                                }}
-                                className="py-2.5"
-                            >
-                                Settings
                             </DropdownItem>
                             <DropdownItem
                                 key="logout"

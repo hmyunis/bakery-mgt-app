@@ -3,9 +3,13 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { useThemeInit } from "../../hooks/useThemeInit";
+import { useThemeColor } from "../../hooks/useThemeColor";
+import { useBakerySettings } from "../../hooks/useBakery";
 
 export function DashboardLayout() {
     useThemeInit(); // Initialize theme from persisted state
+    const { data: bakerySettings } = useBakerySettings();
+    useThemeColor(bakerySettings?.themeColor); // Apply dynamic theme color
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 

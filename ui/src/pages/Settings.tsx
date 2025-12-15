@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Tabs, Tab, Spinner, Button } from "@heroui/react";
-import { CreditCard, Plus } from "lucide-react";
+import { CreditCard, Plus, Store } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { ProfileSummaryCard } from "../components/profile/ProfileSummaryCard";
 import { ProfileForm } from "../components/profile/ProfileForm";
@@ -15,6 +15,7 @@ import type { UserProfile } from "../services/authService";
 import type { PaymentMethod } from "../types/payment";
 import { toast } from "sonner";
 import { useAppSelector } from "../store";
+import { BakerySettingsForm } from "../components/settings/BakerySettingsForm";
 
 const SettingsPage: React.FC = () => {
     const { user, updateProfile, isUpdatingProfile, changePassword, isChangingPassword } =
@@ -284,6 +285,22 @@ const SettingsPage: React.FC = () => {
                                     )}
                                 </>
                             )}
+                        </div>
+                    </Tab>
+                )}
+
+                {isAdmin && (
+                    <Tab
+                        key="bakery-info"
+                        title={
+                            <div className="flex items-center gap-2">
+                                <Store className="h-4 w-4" />
+                                <span>Bakery Information</span>
+                            </div>
+                        }
+                    >
+                        <div className="space-y-4">
+                            <BakerySettingsForm />
                         </div>
                     </Tab>
                 )}

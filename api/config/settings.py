@@ -130,7 +130,7 @@ THROTTLE_USER_RATE = config('THROTTLE_USER_RATE', default='1000/hour')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'audit.authentication.AuditJWTAuthentication',  # Custom JWT auth that sets user in thread locals for audit logging
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'core.renderers.CustomCamelCaseJSONRenderer',

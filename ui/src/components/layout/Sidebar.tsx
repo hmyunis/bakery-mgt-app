@@ -1,9 +1,19 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Package, ChefHat, ShoppingCart, Users, Settings, X } from "lucide-react";
+import {
+    LayoutDashboard,
+    Package,
+    ChefHat,
+    ShoppingCart,
+    Users,
+    Settings,
+    ScrollText,
+    X,
+} from "lucide-react";
 import { Button, Tooltip } from "@heroui/react";
 import { cn } from "../../lib/utils";
 import { useAppSelector } from "../../store";
 import type { UserRole } from "../../constants/roles";
+import { useBakerySettings } from "../../hooks/useBakery";
 
 interface NavItem {
     label: string;
@@ -20,10 +30,10 @@ const navItems: NavItem[] = [
         roles: ["admin", "storekeeper", "chef", "cashier"],
     },
     {
-        label: "Inventory",
-        icon: Package,
-        path: "/app/inventory",
-        roles: ["admin", "storekeeper"],
+        label: "Sales",
+        icon: ShoppingCart,
+        path: "/app/sales",
+        roles: ["admin", "cashier"],
     },
     {
         label: "Production",
@@ -32,15 +42,21 @@ const navItems: NavItem[] = [
         roles: ["admin", "chef"],
     },
     {
-        label: "Sales",
-        icon: ShoppingCart,
-        path: "/app/sales",
-        roles: ["admin", "cashier"],
+        label: "Inventory",
+        icon: Package,
+        path: "/app/inventory",
+        roles: ["admin", "storekeeper"],
     },
     {
         label: "Users",
         icon: Users,
         path: "/app/users",
+        roles: ["admin"],
+    },
+    {
+        label: "Audit Logs",
+        icon: ScrollText,
+        path: "/app/audit-logs",
         roles: ["admin"],
     },
     {
@@ -60,6 +76,7 @@ interface SidebarProps {
 export function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }: SidebarProps) {
     const location = useLocation();
     const { roles } = useAppSelector((state) => state.auth);
+    const { data: bakerySettings } = useBakerySettings();
 
     const visibleItems = navItems.filter((item) =>
         roles.some((role: UserRole) => item.roles.includes(role))
@@ -142,13 +159,21 @@ export function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }: SidebarPro
                             className="flex items-center space-x-2 hover:opacity-80"
                         >
                             <div className="min-w-16 px-1.5">
-                                <div className="size-8 rounded-lg bg-gradient-to-br from-[var(--accent)] to-purple-500 flex items-center justify-center">
-                                    <span className="text-lg">🍞</span>
-                                </div>
+                                {bakerySettings?.logoUrl ? (
+                                    <img
+                                        src={bakerySettings.logoUrl}
+                                        alt={bakerySettings.name || "Bakery"}
+                                        className="size-14 rounded-lg object-contain"
+                                    />
+                                ) : (
+                                    <div className="size-8 rounded-lg bg-gradient-to-br from-[var(--accent)] to-purple-500 flex items-center justify-center">
+                                        <span className="text-lg">🍞</span>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <p className="text-lg font-bold text-gray-800 dark:text-gray-200 text-nowrap">
-                                    Bakery
+                                    {bakerySettings?.name || "Bakery"}
                                 </p>
                                 <p className="text-[10px] text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                     Management

@@ -66,7 +66,7 @@ export function DataTablePagination({
                             onPress={() => onPageChange(1)}
                             isDisabled={!hasPreviousPage}
                             aria-label="First page"
-                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400"
+                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white"
                         >
                             <ChevronsLeft className="h-4 w-4" />
                         </Button>
@@ -76,7 +76,7 @@ export function DataTablePagination({
                             onPress={() => onPageChange(pagination.page - 1)}
                             isDisabled={!hasPreviousPage}
                             aria-label="Previous page"
-                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400"
+                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -86,7 +86,7 @@ export function DataTablePagination({
                             onPress={() => onPageChange(pagination.page + 1)}
                             isDisabled={!hasNextPage}
                             aria-label="Next page"
-                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400"
+                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
@@ -96,7 +96,7 @@ export function DataTablePagination({
                             onPress={() => onPageChange(pagination.totalPages)}
                             isDisabled={!hasNextPage}
                             aria-label="Last page"
-                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400"
+                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white"
                         >
                             <ChevronsRight className="h-4 w-4" />
                         </Button>

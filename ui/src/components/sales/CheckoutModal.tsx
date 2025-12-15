@@ -41,7 +41,9 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
     const { data: paymentMethodsData } = usePaymentMethods({ is_active: true });
     const { mutateAsync: createSale, isPending: isCreating } = useCreateSale();
 
-    const paymentMethods = paymentMethodsData?.results || [];
+    const paymentMethods = useMemo(() => {
+        return (paymentMethodsData?.results || []).filter((method) => method.is_active === true);
+    }, [paymentMethodsData]);
     const totalAmount = useMemo(() => {
         return cartItems.reduce((sum, item) => sum + item.product.selling_price * item.quantity, 0);
     }, [cartItems]);
@@ -53,17 +55,34 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
     const remainingAmount = totalAmount - paidAmount;
     const isFullyPaid = remainingAmount <= 0;
 
+    // Filter out any inactive payment methods from current payments
+    useEffect(() => {
+        if (paymentMethods.length === 0 || payments.length === 0) return;
+        
+        const activePaymentMethodIds = new Set(paymentMethods.map((m) => m.id));
+        const hasInactivePayments = payments.some((p) => !activePaymentMethodIds.has(p.method.id));
+        
+        if (hasInactivePayments) {
+            setPayments((prev) =>
+                prev.filter((p) => activePaymentMethodIds.has(p.method.id))
+            );
+        }
+    }, [paymentMethods]);
+
     // Initialize with first payment method if available
     useEffect(() => {
         if (isOpen && paymentMethods.length > 0 && payments.length === 0) {
-            setPayments([
-                {
-                    method: paymentMethods[0],
-                    amount: totalAmount,
-                },
-            ]);
+            const firstActiveMethod = paymentMethods.find((m) => m.is_active === true);
+            if (firstActiveMethod) {
+                setPayments([
+                    {
+                        method: firstActiveMethod,
+                        amount: totalAmount,
+                    },
+                ]);
+            }
         }
-    }, [isOpen, paymentMethods, totalAmount]);
+    }, [isOpen, paymentMethods, totalAmount, payments.length]);
 
     const addPaymentMethod = () => {
         if (paymentMethods.length === 0) return;
@@ -117,6 +136,14 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
 
         if (payments.length === 0) {
             toast.error("Please add at least one payment method");
+            return;
+        }
+
+        // Validate all payment methods are still active
+        const activePaymentMethodIds = new Set(paymentMethods.map((m) => m.id));
+        const inactivePayments = payments.filter((p) => !activePaymentMethodIds.has(p.method.id));
+        if (inactivePayments.length > 0) {
+            toast.error("One or more selected payment methods are no longer active. Please select different payment methods.");
             return;
         }
 
@@ -218,6 +245,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                 {payments.map((payment, index) => {
                                     const availableMethods = paymentMethods.filter(
                                         (method) =>
+                                            method.is_active === true &&
                                             !payments.some(
                                                 (p, i) => i !== index && p.method.id === method.id
                                             )
