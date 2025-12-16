@@ -20,7 +20,7 @@ class IsChefOrAdmin(permissions.BasePermission):
             return False
 
         # Chefs can Read/Create ProductionRuns. Only Admin can manage Recipes/Products.
-        if view.action in ['create', 'list', 'retrieve']:
+        if view.action in ['create', 'list', 'retrieve', 'products_with_recipes']:
             return request.user.role in ['admin', 'chef', 'storekeeper']
         return request.user.role == 'admin'
 

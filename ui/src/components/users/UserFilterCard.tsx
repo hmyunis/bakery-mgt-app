@@ -40,6 +40,7 @@ export const UserFilterCard: React.FC<UserFilterCardProps> = ({
             <div className="w-full sm:w-48">
                 <Select
                     placeholder="Filter by status"
+                    aria-label="Filter by status"
                     selectedKeys={isActiveFilter === null ? [] : [isActiveFilter.toString()]}
                     onSelectionChange={(keys) => {
                         const selected = Array.from(keys)[0] as string;

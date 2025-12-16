@@ -290,7 +290,9 @@ export function ProductionPage() {
                                     columns={getProductColumns({
                                         onEdit: isAdmin ? handleEditProduct : undefined,
                                         onDelete: isAdmin ? handleDeleteProduct : undefined,
-                                        onBuildRecipe: handleOpenRecipeBuilder,
+                                        onBuildRecipe: isAdmin
+                                            ? handleOpenRecipeBuilder
+                                            : undefined,
                                         onRecordProduction: (product) => {
                                             setSelectedProductForProduction(product);
                                             setIsProductionRunFormOpen(true);

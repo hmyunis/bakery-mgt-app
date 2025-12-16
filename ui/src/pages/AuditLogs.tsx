@@ -66,6 +66,7 @@ export function AuditLogsPage() {
                 <div className="w-full sm:w-48">
                     <Select
                         placeholder="Filter by action"
+                        aria-label="Filter by action"
                         selectedKeys={action === "ALL" ? [] : [action]}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as string;

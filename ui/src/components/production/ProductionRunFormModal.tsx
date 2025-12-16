@@ -45,15 +45,16 @@ export function ProductionRunFormModal({
     const { data: recipeData } = useRecipeByProduct(
         preselectedProduct?.id || (formData.product ? parseInt(formData.product) : null)
     );
-    const { mutateAsync: createProductionRun, isPending: isCreating } =
-        useCreateProductionRun();
+    const { mutateAsync: createProductionRun, isPending: isCreating } = useCreateProductionRun();
 
     const products = productsData?.results || [];
     const ingredients = ingredientsData?.results || [];
     const recipe = recipeData;
 
-    // Update usage inputs when recipe changes
+    // Update usage inputs when recipe changes or modal opens
     useEffect(() => {
+        if (!isOpen) return;
+
         if (recipe && recipe.items && recipe.items.length > 0) {
             setUsageInputs(
                 recipe.items.map((item) => ({
@@ -64,7 +65,7 @@ export function ProductionRunFormModal({
         } else {
             setUsageInputs([]);
         }
-    }, [recipe]);
+    }, [recipe, isOpen]);
 
     // Reset form when modal opens/closes
     useEffect(() => {
@@ -82,7 +83,7 @@ export function ProductionRunFormModal({
                     notes: "",
                 });
             }
-            setUsageInputs([]);
+            // usageInputs is handled by the recipe effect
             setErrors({});
         }
     }, [isOpen, preselectedProduct]);
@@ -198,7 +199,9 @@ export function ProductionRunFormModal({
                                     placeholder="Select a product"
                                     selectionMode="single"
                                     selectedKeys={
-                                        formData.product ? new Set<string>([formData.product]) : new Set<string>()
+                                        formData.product
+                                            ? new Set<string>([formData.product])
+                                            : new Set<string>()
                                     }
                                     onSelectionChange={(keys) => {
                                         const selected = Array.from(keys)[0] as string;
@@ -224,7 +227,9 @@ export function ProductionRunFormModal({
                                 </Select>
                             ) : (
                                 <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3">
-                                    <p className="text-sm text-zinc-500 dark:text-zinc-400">Product</p>
+                                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                        Product
+                                    </p>
                                     <p className="font-medium text-zinc-900 dark:text-zinc-100">
                                         {preselectedProduct.name}
                                     </p>
@@ -283,7 +288,9 @@ export function ProductionRunFormModal({
 
                                     <div className="space-y-3 max-h-64 overflow-y-auto">
                                         {usageInputs.map((usage, index) => {
-                                            const theoretical = getTheoreticalAmount(usage.ingredient);
+                                            const theoretical = getTheoreticalAmount(
+                                                usage.ingredient
+                                            );
                                             const wastage = getWastagePreview(
                                                 usage.ingredient,
                                                 usage.actual_amount
@@ -332,8 +339,12 @@ export function ProductionRunFormModal({
                                                                 placeholder={theoretical.toFixed(3)}
                                                                 step="0.001"
                                                                 min="0"
-                                                                isInvalid={!!errors[`usage_${index}`]}
-                                                                errorMessage={errors[`usage_${index}`]}
+                                                                isInvalid={
+                                                                    !!errors[`usage_${index}`]
+                                                                }
+                                                                errorMessage={
+                                                                    errors[`usage_${index}`]
+                                                                }
                                                                 classNames={{
                                                                     input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
                                                                 }}
@@ -347,12 +358,16 @@ export function ProductionRunFormModal({
                                                                     <>
                                                                         <AlertTriangle className="h-3 w-3 text-danger-500" />
                                                                         <span className="text-danger-600 dark:text-danger-400 font-medium">
-                                                                            Wastage: +{wastage.toFixed(3)}
+                                                                            Wastage: +
+                                                                            {wastage.toFixed(3)}
                                                                         </span>
                                                                     </>
                                                                 ) : wastage < 0 ? (
                                                                     <span className="text-success-600 dark:text-success-400">
-                                                                        Saved: {Math.abs(wastage).toFixed(3)}
+                                                                        Saved:{" "}
+                                                                        {Math.abs(wastage).toFixed(
+                                                                            3
+                                                                        )}
                                                                     </span>
                                                                 ) : (
                                                                     <span className="text-zinc-500">
@@ -403,4 +418,3 @@ export function ProductionRunFormModal({
         </Modal>
     );
 }
-

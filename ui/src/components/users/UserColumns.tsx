@@ -117,7 +117,7 @@ export const getUserColumns = ({
             return (
                 <div className="relative flex justify-end items-center">
                     <Dropdown>
-                        <DropdownTrigger as={Button} isIconOnly variant="light">
+                        <DropdownTrigger as={Button} variant="light">
                             <MoreVertical className="h-5 w-5" />
                         </DropdownTrigger>
                         <DropdownMenu aria-label="User Actions">
