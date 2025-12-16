@@ -161,7 +161,7 @@ class AuthService {
         const response = await apiClient.get<any>("/users/me/");
         // Handle camelCase response wrapper: { success, message, data: { ... } }
         const userData = response.data.data || response.data;
-        
+
         // Normalize field names (handle both camelCase and snake_case)
         return {
             id: userData.id,
@@ -186,13 +186,19 @@ class AuthService {
         return response.data;
     }
 
-    async updateProfile(data: { userData: Partial<UserProfile>; avatar?: File | null }): Promise<UserProfile> {
+    async updateProfile(data: {
+        userData: Partial<UserProfile>;
+        avatar?: File | null;
+    }): Promise<UserProfile> {
         const formData = new FormData();
 
-        if (data.userData.fullName !== undefined) formData.append("full_name", data.userData.fullName || "");
+        if (data.userData.fullName !== undefined)
+            formData.append("full_name", data.userData.fullName || "");
         if (data.userData.email !== undefined) formData.append("email", data.userData.email || "");
-        if (data.userData.phoneNumber !== undefined) formData.append("phone_number", data.userData.phoneNumber || "");
-        if (data.userData.username !== undefined) formData.append("username", data.userData.username || "");
+        if (data.userData.phoneNumber !== undefined)
+            formData.append("phone_number", data.userData.phoneNumber || "");
+        if (data.userData.username !== undefined)
+            formData.append("username", data.userData.username || "");
 
         // Handle avatar: File = upload, null = remove
         if (data.avatar === null) {
@@ -225,6 +231,11 @@ class AuthService {
             new_password: data.new_password,
             confirm_new_password: data.new_password,
         });
+    }
+
+    async factoryReset(data: any): Promise<any> {
+        const response = await apiClient.post("/users/factory_reset/", data);
+        return response.data;
     }
 }
 

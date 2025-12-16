@@ -194,3 +194,37 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({"new_password": "New passwords do not match."})
         return data
 
+class FactoryResetSerializer(serializers.Serializer):
+    """
+    Serializer for factory reset operation.
+    Admin must provide their password and select which data types to delete.
+    """
+    password = serializers.CharField(required=True, write_only=True)
+    
+    # Data types to delete
+    delete_users = serializers.BooleanField(default=False)
+    delete_products = serializers.BooleanField(default=False)
+    delete_ingredients = serializers.BooleanField(default=False)
+    delete_recipes = serializers.BooleanField(default=False)
+    delete_production_runs = serializers.BooleanField(default=False)
+    delete_sales = serializers.BooleanField(default=False)
+    delete_purchases = serializers.BooleanField(default=False)
+    delete_payment_methods = serializers.BooleanField(default=False)
+    delete_audit_logs = serializers.BooleanField(default=False)
+    delete_notifications = serializers.BooleanField(default=False)
+    
+    def validate(self, data):
+        # Check that at least one data type is selected
+        data_types = [
+            'delete_users', 'delete_products', 'delete_ingredients', 'delete_recipes',
+            'delete_production_runs', 'delete_sales', 'delete_purchases', 
+            'delete_payment_methods', 'delete_audit_logs', 'delete_notifications'
+        ]
+        
+        if not any(data.get(dt, False) for dt in data_types):
+            raise serializers.ValidationError({
+                "non_field_errors": ["At least one data type must be selected for deletion."]
+            })
+        
+        return data
+
