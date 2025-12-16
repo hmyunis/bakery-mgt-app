@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { useAppSelector } from "../store";
 import { BakerySettingsForm } from "../components/settings/BakerySettingsForm";
 import { FactoryResetForm } from "../components/settings/FactoryResetForm";
+import { ReportsTab } from "../components/settings/ReportsTab";
+import { BarChart3 } from "lucide-react";
 
 const SettingsPage: React.FC = () => {
     const { user, updateProfile, isUpdatingProfile, changePassword, isChangingPassword } =
@@ -286,6 +288,22 @@ const SettingsPage: React.FC = () => {
                                     )}
                                 </>
                             )}
+                        </div>
+                    </Tab>
+                )}
+
+                {isAdmin && (
+                    <Tab
+                        key="reports"
+                        title={
+                            <div className="flex items-center gap-2">
+                                <BarChart3 className="h-4 w-4" />
+                                <span>Reports</span>
+                            </div>
+                        }
+                    >
+                        <div className="space-y-4">
+                            <ReportsTab />
                         </div>
                     </Tab>
                 )}
