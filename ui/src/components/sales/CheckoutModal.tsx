@@ -166,9 +166,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                 })),
             };
 
-            console.log("Submitting sale data:", saleData);
             await createSale(saleData);
-            toast.success("Sale completed successfully!");
             onSuccess();
             onClose();
             setPayments([]);
@@ -275,6 +273,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                                     }
                                                 }}
                                                 placeholder="Select payment method"
+                                                aria-label="Select payment method"
                                                 classNames={{
                                                     base: "flex-1 !w-full !text-left",
                                                     trigger:

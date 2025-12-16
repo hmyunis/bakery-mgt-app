@@ -27,7 +27,7 @@ const navItems: NavItem[] = [
         label: "Dashboard",
         icon: LayoutDashboard,
         path: "/app/dashboard",
-        roles: ["admin", "storekeeper", "chef", "cashier"],
+        roles: ["admin"],
     },
     {
         label: "Sales",

@@ -64,11 +64,47 @@ export const useAuth = () => {
 
             return response;
         },
-        onSuccess: () => {
+        onSuccess: (response) => {
             queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+
+            // Determine redirect path based on role
+            let redirectPath = "/app/dashboard";
+
+            // Try to get role from response or token
+            let role = response.user?.role;
+            if (!role && response.access) {
+                try {
+                    const tokenParts = response.access.split(".");
+                    if (tokenParts.length === 3) {
+                        const payload = JSON.parse(atob(tokenParts[1]));
+                        role = payload.role;
+                    }
+                } catch (e) {
+                    console.error("Failed to decode token for redirect", e);
+                }
+            }
+
+            if (role) {
+                switch (role) {
+                    case "cashier":
+                        redirectPath = "/app/sales";
+                        break;
+                    case "chef":
+                        redirectPath = "/app/production";
+                        break;
+                    case "storekeeper":
+                        redirectPath = "/app/inventory";
+                        break;
+                    case "admin":
+                    default:
+                        redirectPath = "/app/dashboard";
+                        break;
+                }
+            }
+
             // Navigate after a brief delay to ensure Redux state is persisted
             setTimeout(() => {
-                navigate("/app/dashboard", { replace: true });
+                navigate(redirectPath, { replace: true });
             }, 100);
         },
         onError: (error: any) => {
@@ -108,7 +144,7 @@ export const useAuth = () => {
     useEffect(() => {
         if (currentUser) {
             const fullName = currentUser.fullName || "";
-            
+
             dispatch(
                 setSession({
                     user: {

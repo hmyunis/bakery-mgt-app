@@ -25,7 +25,47 @@ export function Login() {
     useEffect(() => {
         const token = getAuthToken();
         if (isAuthenticated || token) {
-            navigate("/app/dashboard", { replace: true });
+            // Determine redirect path based on role if available
+            // Note: If only token is present (refresh), we might rely on default dashboard
+            // until user profile is loaded. Ideally, we should wait for user profile.
+            // But for now, let's try to decode token if user is not in state yet.
+
+            let role = "admin"; // Default
+
+            // Try to get role from Redux state first (if available)
+            // We need to access the state here, but we can't easily inside useEffect without dependency
+            // However, we can use the token to decode role if needed.
+
+            if (token) {
+                try {
+                    const tokenParts = token.split(".");
+                    if (tokenParts.length === 3) {
+                        const payload = JSON.parse(atob(tokenParts[1]));
+                        if (payload.role) role = payload.role;
+                    }
+                } catch (e) {
+                    // Ignore decode error
+                }
+            }
+
+            let redirectPath = "/app/dashboard";
+            switch (role) {
+                case "cashier":
+                    redirectPath = "/app/sales";
+                    break;
+                case "chef":
+                    redirectPath = "/app/production";
+                    break;
+                case "storekeeper":
+                    redirectPath = "/app/inventory";
+                    break;
+                case "admin":
+                default:
+                    redirectPath = "/app/dashboard";
+                    break;
+            }
+
+            navigate(redirectPath, { replace: true });
         }
     }, [isAuthenticated, navigate]);
 

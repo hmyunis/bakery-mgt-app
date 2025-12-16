@@ -11,6 +11,14 @@ class IsChefOrAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.is_anonymous:
             return False
+        
+        # Cashiers can list/retrieve products (for POS)
+        if request.user.role == 'cashier':
+            # Check if this is the ProductViewSet
+            if view.__class__.__name__ == 'ProductViewSet' and view.action in ['list', 'retrieve']:
+                return True
+            return False
+
         # Chefs can Read/Create ProductionRuns. Only Admin can manage Recipes/Products.
         if view.action in ['create', 'list', 'retrieve']:
             return request.user.role in ['admin', 'chef', 'storekeeper']

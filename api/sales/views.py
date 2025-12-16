@@ -13,6 +13,9 @@ class IsCashierOrAdmin(permissions.BasePermission):
             return False
         if view.action in ['create']: 
             return True # Cashier creates sales
+        # Allow cashiers to list and retrieve sales
+        if view.action in ['list', 'retrieve'] and request.user.role == 'cashier':
+            return True
         return request.user.role == 'admin'
 
 class IsAdmin(permissions.BasePermission):

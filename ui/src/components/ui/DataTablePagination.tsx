@@ -48,7 +48,7 @@ export function DataTablePagination({
                         popoverProps={{ className: "w-20" }}
                     >
                         {[10, 20, 30, 40, 50].map((size) => (
-                            <SelectItem key={size} id={`${size}`}>
+                            <SelectItem key={size} id={`${size}`} textValue={`${size}`}>
                                 {size}
                             </SelectItem>
                         ))}

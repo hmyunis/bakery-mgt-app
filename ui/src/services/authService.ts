@@ -48,15 +48,6 @@ class AuthService {
         try {
             const response = await apiClient.post<any>("/users/auth/login/", payload);
 
-            console.log("Raw login response:", {
-                status: response.status,
-                statusText: response.statusText,
-                data: response.data,
-                dataType: typeof response.data,
-                dataKeys: response.data ? Object.keys(response.data) : null,
-                fullDataStringified: JSON.stringify(response.data, null, 2),
-            });
-
             // Check for error responses first
             if (response.status < 200 || response.status >= 300) {
                 throw new Error(`Login failed with status ${response.status}`);
@@ -71,12 +62,10 @@ class AuthService {
             // Check for wrapped response first (custom renderer format)
             if (response.data?.data && response.data.data.access) {
                 loginData = response.data.data;
-                console.log("Using wrapped data:", loginData);
             }
             // Check for direct access token (snake_case)
             else if (response.data?.access) {
                 loginData = response.data;
-                console.log("Using direct response (snake_case):", loginData);
             }
             // Check for camelCase access token
             else if (response.data?.accessToken) {
@@ -84,7 +73,6 @@ class AuthService {
                     access: response.data.accessToken,
                     refresh: response.data.refreshToken || response.data.refresh,
                 };
-                console.log("Using camelCase tokens:", loginData);
             }
             // Check if it's an error response
             else if (
@@ -104,15 +92,9 @@ class AuthService {
             // Fallback: try response.data directly and log what we got
             else {
                 loginData = response.data;
-                console.warn("Using fallback response.data - structure unknown:", {
-                    keys: Object.keys(response.data),
-                    values: Object.values(response.data),
-                });
             }
 
             const accessToken = loginData?.access;
-
-            console.log("Parsed login data:", { loginData, accessToken });
 
             if (!accessToken || typeof accessToken !== "string") {
                 console.error("No valid access token in response:", {
