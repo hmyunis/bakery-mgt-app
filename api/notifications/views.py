@@ -31,8 +31,31 @@ class PushSubscriptionViewSet(viewsets.ModelViewSet):
             return PushSubscriptionCreateSerializer
         return PushSubscriptionSerializer
     
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        """
+        Override create to use the custom serializer properly.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Log raw request data for debugging
+        logger.debug(f"Create subscription - request.data: {request.data}")
+        logger.debug(f"Create subscription - request.data type: {type(request.data)}")
+        if isinstance(request.data, dict):
+            logger.debug(f"Create subscription - request.data keys: {list(request.data.keys())}")
+            if 'keys' in request.data:
+                logger.debug(f"Create subscription - keys value: {request.data['keys']}")
+                logger.debug(f"Create subscription - keys type: {type(request.data['keys'])}")
+                if isinstance(request.data['keys'], dict):
+                    logger.debug(f"Create subscription - keys dict keys: {list(request.data['keys'].keys())}")
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        subscription = serializer.save()
+        
+        # Return the created subscription using the read serializer
+        read_serializer = PushSubscriptionSerializer(subscription)
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED)
     
     @action(detail=True, methods=['post'])
     def unsubscribe(self, request, pk=None):
@@ -44,6 +67,24 @@ class PushSubscriptionViewSet(viewsets.ModelViewSet):
         subscription.is_active = False
         subscription.save()
         return Response({"message": "Unsubscribed successfully"})
+    
+    @action(detail=False, methods=['get'], url_path='vapid-public-key', permission_classes=[permissions.AllowAny])
+    def vapid_public_key(self, request):
+        """Get VAPID public key for frontend subscription"""
+        from .services import NotificationService
+        
+        # UPDATED: Matches the new method name in services.py
+        credentials = NotificationService.get_vapid_info()
+        # UPDATED: Key is now 'public_key' instead of 'vapid_public_key'
+        public_key = credentials.get('public_key')
+        
+        if not public_key:
+            return Response({
+                'success': False,
+                'message': 'VAPID keys not configured',
+                'errors': {'key': ['VAPID keys are not configured on the server']}
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'key': public_key})
 
 class NotificationPreferenceViewSet(viewsets.ModelViewSet):
     """
@@ -122,6 +163,24 @@ class NotificationPreferenceViewSet(viewsets.ModelViewSet):
         return Response({
             'message': f'Initialized {created_count} default notification preferences'
         })
+
+    @action(detail=False, methods=['get'], url_path='vapid-public-key', permission_classes=[permissions.AllowAny])
+    def vapid_public_key(self, request):
+        """Get VAPID public key for frontend subscription"""
+        from .services import NotificationService
+        
+        # UPDATED: Matches the new method name in services.py
+        credentials = NotificationService.get_vapid_info()
+        # UPDATED: Key is now 'public_key' instead of 'vapid_public_key'
+        public_key = credentials.get('public_key')
+        
+        if not public_key:
+            return Response({
+                'success': False,
+                'message': 'VAPID keys not configured',
+                'errors': {'key': ['VAPID keys are not configured on the server']}
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'key': public_key})
 
 class NotificationLogViewSet(viewsets.ReadOnlyModelViewSet):
     """

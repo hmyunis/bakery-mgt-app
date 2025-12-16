@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from .serializers import CustomTokenObtainPairSerializer, UserSerializer, ChangePasswordSerializer, FactoryResetSerializer
 from .permissions import IsAdminOrOwner
 from django.db.models import ProtectedError
@@ -202,6 +203,21 @@ class UserViewSet(viewsets.ModelViewSet):
         if errors:
             response_status = status.HTTP_207_MULTI_STATUS # Partial content/status
             message = "Factory reset completed with some errors."
+        
+        # Send notification to all admins about factory reset
+        from notifications.services import send_notification
+        from notifications.models import NotificationEvent
+        
+        send_notification(
+            NotificationEvent.FACTORY_RESET,
+            {
+                'admin_name': user.username,
+                'deleted_counts': deleted_counts,
+                'errors_count': len(errors),
+                'reset_time': timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+            },
+            target_roles=['admin']
+        )
         
         return Response({
             "message": message,

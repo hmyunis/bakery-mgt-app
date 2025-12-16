@@ -65,6 +65,21 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
         
+        # Send notification to all admins about user login
+        from notifications.services import send_notification
+        from notifications.models import NotificationEvent
+        from django.contrib.auth import get_user_model
+        
+        send_notification(
+            NotificationEvent.USER_LOGIN,
+            {
+                'username': user.username,
+                'role': user.get_role_display(),
+                'login_time': timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+            },
+            target_roles=['admin']
+        )
+        
         attrs['username'] = user.username
         return super().validate(attrs)
     
@@ -77,6 +92,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         token['phone_number'] = user.phone_number
         token['role'] = user.role
+        token['push_notifications_enabled'] = user.push_notifications_enabled
         
         # Handle Avatar URL
         if user.avatar:
@@ -96,6 +112,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'username', 'full_name', 'email', 
             'phone_number', 'role', 'address', 'avatar', 'avatar_clear',
+            'push_notifications_enabled',
             'password', 'confirm_password', 'date_joined', 'last_login', 'is_active'
         )
         read_only_fields = ('id', 'date_joined', 'last_login')

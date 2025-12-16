@@ -7,6 +7,7 @@ interface UserInfo {
     email?: string;
     avatar?: string;
     role?: UserRole;
+    pushNotificationsEnabled?: boolean;
 }
 
 export interface AuthState {

@@ -13,6 +13,7 @@ export interface User {
     dateJoined?: string;
     lastLogin?: string;
     isActive?: boolean;
+    pushNotificationsEnabled?: boolean;
     // Backend may return camelCase or snake_case
     full_name?: string;
     phone_number?: string;
@@ -142,6 +143,7 @@ class UserService {
             dateJoined: user.dateJoined || user.date_joined,
             lastLogin: user.lastLogin || user.last_login,
             isActive: user.isActive !== undefined ? user.isActive : user.is_active,
+            pushNotificationsEnabled: user.pushNotificationsEnabled || user.push_notifications_enabled,
         };
     }
 

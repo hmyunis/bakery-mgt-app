@@ -11,6 +11,8 @@ class NotificationEvent(models.TextChoices):
     STOCK_ADJUSTMENT = 'stock_adjustment', 'Stock Adjustment Made'
     PURCHASE_CREATED = 'purchase_created', 'Purchase Recorded'
     USER_CREATED = 'user_created', 'New User Created'
+    USER_LOGIN = 'user_login', 'User Login'
+    FACTORY_RESET = 'factory_reset', 'Factory Reset Performed'
 
 class PushSubscription(models.Model):
     """

@@ -18,6 +18,7 @@ import { useAppSelector } from "../store";
 import { BakerySettingsForm } from "../components/settings/BakerySettingsForm";
 import { FactoryResetForm } from "../components/settings/FactoryResetForm";
 import { ReportsTab } from "../components/settings/ReportsTab";
+import { NotificationSettingsCard } from "../components/settings/NotificationSettingsCard";
 import { BarChart3 } from "lucide-react";
 
 const SettingsPage: React.FC = () => {
@@ -61,6 +62,7 @@ const SettingsPage: React.FC = () => {
                 email: user.email,
                 phoneNumber: user.phoneNumber,
                 role: user.role,
+                pushNotificationsEnabled: user.pushNotificationsEnabled,
             });
         }
     }, [user]);
@@ -74,6 +76,7 @@ const SettingsPage: React.FC = () => {
                 email: user.email,
                 phoneNumber: user.phoneNumber,
                 role: user.role,
+                pushNotificationsEnabled: user.pushNotificationsEnabled,
             });
             setIsEditing(true);
         }
@@ -88,6 +91,7 @@ const SettingsPage: React.FC = () => {
                 email: user.email,
                 phoneNumber: user.phoneNumber,
                 role: user.role,
+                pushNotificationsEnabled: user.pushNotificationsEnabled,
             });
             setPasswordForm({ oldPassword: "", newPassword: "" });
             setIsEditing(false);
@@ -129,6 +133,8 @@ const SettingsPage: React.FC = () => {
             if (editForm.phoneNumber !== user?.phoneNumber)
                 changedFields.phoneNumber = editForm.phoneNumber;
             if (editForm.username !== user?.username) changedFields.username = editForm.username;
+            if (editForm.pushNotificationsEnabled !== user?.pushNotificationsEnabled)
+                changedFields.pushNotificationsEnabled = editForm.pushNotificationsEnabled;
 
             // Update profile if there are changes
             if (Object.keys(changedFields).length > 0) {
@@ -231,6 +237,9 @@ const SettingsPage: React.FC = () => {
                             onCancel={handleCancel}
                             isLoading={isUpdatingProfile || isChangingPassword}
                         />
+                        <div className="lg:col-span-3">
+                            <NotificationSettingsCard />
+                        </div>
                     </div>
                 </Tab>
 

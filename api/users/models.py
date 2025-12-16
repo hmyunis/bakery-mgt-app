@@ -22,6 +22,7 @@ class User(AbstractUser):
     address = models.TextField(null=True, blank=True)
     avatar = models.FileField(upload_to=get_upload_path, null=True, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='cashier')
+    push_notifications_enabled = models.BooleanField(default=False, help_text="Receive push notifications")
 
     class Meta:
         ordering = ['-date_joined']

@@ -35,6 +35,8 @@ export const useAuth = () => {
                                     email: payload.email,
                                     avatar: payload.avatar,
                                     role: userRole,
+                                    pushNotificationsEnabled:
+                                        payload.push_notifications_enabled ?? false,
                                 },
                             })
                         );
@@ -153,6 +155,7 @@ export const useAuth = () => {
                         email: currentUser.email,
                         avatar: currentUser.avatar || undefined,
                         role: isValidRole(currentUser.role) ? currentUser.role : undefined,
+                        pushNotificationsEnabled: currentUser.pushNotificationsEnabled ?? false,
                     },
                 })
             );
@@ -169,7 +172,10 @@ export const useAuth = () => {
 
     const updateProfileMutation = useMutation({
         mutationFn: authService.updateProfile,
-        onSuccess: () => {
+        onSuccess: (updatedUser) => {
+            // Immediately update the query cache with the returned user data
+            queryClient.setQueryData(["currentUser"], updatedUser);
+            // Also invalidate to ensure fresh data on next fetch
             queryClient.invalidateQueries({ queryKey: ["currentUser"] });
         },
     });

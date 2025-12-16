@@ -37,7 +37,11 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                         Personal Information
                     </h3>
                     {!isEditing ? (
-                        <Button onPress={onEdit} color="primary" startContent={<User className="h-4 w-4" />}>
+                        <Button
+                            onPress={onEdit}
+                            color="primary"
+                            startContent={<User className="h-4 w-4" />}
+                        >
                             Edit Profile
                         </Button>
                     ) : (
@@ -158,7 +162,10 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                             <h4 className="font-medium mb-4">Change Password</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label htmlFor="current-password" className="text-sm font-medium">
+                                    <label
+                                        htmlFor="current-password"
+                                        className="text-sm font-medium"
+                                    >
                                         Current Password
                                     </label>
                                     <Input

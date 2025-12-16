@@ -29,6 +29,7 @@ export interface UserProfile {
     phoneNumber?: string;
     role: string;
     avatar?: string;
+    pushNotificationsEnabled?: boolean;
 }
 
 class AuthService {
@@ -145,7 +146,7 @@ class AuthService {
         const userData = response.data.data || response.data;
 
         // Normalize field names (handle both camelCase and snake_case)
-        return {
+        const normalized = {
             id: userData.id,
             username: userData.username,
             fullName: userData.fullName || userData.full_name,
@@ -153,7 +154,11 @@ class AuthService {
             phoneNumber: userData.phoneNumber || userData.phone_number,
             role: userData.role,
             avatar: userData.avatar,
+            // Handle both camelCase (from API response) and snake_case (from DB)
+            pushNotificationsEnabled: userData.pushNotificationsEnabled ?? userData.push_notifications_enabled ?? false,
         };
+        
+        return normalized;
     }
 
     async refreshToken(refreshToken: string): Promise<{ access: string }> {
@@ -181,6 +186,11 @@ class AuthService {
             formData.append("phone_number", data.userData.phoneNumber || "");
         if (data.userData.username !== undefined)
             formData.append("username", data.userData.username || "");
+        if (data.userData.pushNotificationsEnabled !== undefined)
+            formData.append(
+                "push_notifications_enabled",
+                String(data.userData.pushNotificationsEnabled)
+            );
 
         // Handle avatar: File = upload, null = remove
         if (data.avatar === null) {
@@ -196,6 +206,7 @@ class AuthService {
         });
 
         const userData = response.data.data || response.data;
+        // Normalize the response (handle both camelCase and snake_case)
         return {
             id: userData.id,
             username: userData.username,
@@ -204,6 +215,8 @@ class AuthService {
             phoneNumber: userData.phoneNumber || userData.phone_number,
             role: userData.role,
             avatar: userData.avatar,
+            // Handle both camelCase (from API response) and snake_case (from DB)
+            pushNotificationsEnabled: userData.pushNotificationsEnabled ?? userData.push_notifications_enabled ?? false,
         };
     }
 

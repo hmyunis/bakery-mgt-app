@@ -38,6 +38,7 @@ export function useAuthInit() {
                 email: payload.email,
                 avatar: payload.avatar,
                 role: userRole,
+                pushNotificationsEnabled: payload.push_notifications_enabled ?? false,
               },
             })
           );
