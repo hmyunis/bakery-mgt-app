@@ -30,6 +30,7 @@ export interface AuditLogListParams {
     table_name?: string;
     actor?: number;
     ordering?: string; // e.g. "-timestamp"
+    start_date?: string;
 }
 
 

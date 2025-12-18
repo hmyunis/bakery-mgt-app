@@ -28,3 +28,10 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
         'actor__full_name',
     ]
     ordering_fields = ['timestamp', 'action', 'table_name']
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        start_date = self.request.query_params.get('start_date')
+        if start_date:
+            queryset = queryset.filter(timestamp__gte=start_date)
+        return queryset

@@ -109,11 +109,13 @@ export interface PurchaseListParams {
     page_size?: number;
     ingredient?: number;
     is_price_anomaly?: boolean;
+    start_date?: string;
 }
 
 export interface StockAdjustmentListParams {
     page?: number;
     page_size?: number;
     ingredient?: number;
+    start_date?: string;
 }
 

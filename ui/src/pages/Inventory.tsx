@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { Button, Tabs, Tab } from "@heroui/react";
+import { Button, Tabs, Tab, DatePicker } from "@heroui/react";
 import { Plus, Package, ShoppingCart, ListChecks, RotateCcw } from "lucide-react";
+import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { IngredientFilterCard } from "../components/inventory/IngredientFilterCard";
 import { DataTable } from "../components/ui/DataTable";
@@ -40,14 +41,16 @@ export function InventoryPage() {
     // Purchases state
     const [purchasePage, setPurchasePage] = useState(1);
     const [purchasePageSize, setPurchasePageSize] = useState(10);
+    const [purchaseStartDate, setPurchaseStartDate] = useState<DateValue | null>(today("UTC"));
     const [isPurchaseFormOpen, setIsPurchaseFormOpen] = useState(false);
     const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
     const [deletingPurchase, setDeletingPurchase] = useState<Purchase | null>(null);
     const [purchaseIngredient, setPurchaseIngredient] = useState<Ingredient | null>(null);
 
-    // Stock Adjustments state
+// Stock Adjustments state
     const [adjustmentPage, setAdjustmentPage] = useState(1);
     const [adjustmentPageSize, setAdjustmentPageSize] = useState(10);
+    const [adjustmentStartDate, setAdjustmentStartDate] = useState<DateValue>(today(getLocalTimeZone()));
     const [isAdjustmentFormOpen, setIsAdjustmentFormOpen] = useState(false);
     const [deletingAdjustment, setDeletingAdjustment] = useState<StockAdjustment | null>(null);
     const [adjustmentIngredient, setAdjustmentIngredient] = useState<Ingredient | null>(null);
@@ -65,12 +68,14 @@ export function InventoryPage() {
     const { data: purchasesData, isLoading: isLoadingPurchases } = usePurchases({
         page: purchasePage,
         page_size: purchasePageSize,
+        start_date: purchaseStartDate?.toString() || undefined,
     });
 
-    // Stock Adjustments data
+// Stock Adjustments data
     const { data: adjustmentsData, isLoading: isLoadingAdjustments } = useStockAdjustments({
         page: adjustmentPage,
         page_size: adjustmentPageSize,
+        start_date: adjustmentStartDate.toString(),
     });
 
     const { mutateAsync: deleteIngredient, isPending: isDeletingIngredient } =
@@ -127,10 +132,22 @@ export function InventoryPage() {
         setDeletingPurchase(null);
     };
 
-    // Stock Adjustment handlers
+    const handlePurchaseStartDateChange = (date: DateValue | null) => {
+        setPurchaseStartDate(date);
+        setPurchasePage(1); // Reset pagination when date filter changes
+    };
+
+// Stock Adjustment handlers
     const handleAddAdjustment = (ingredient?: Ingredient) => {
         setAdjustmentIngredient(ingredient || null);
         setIsAdjustmentFormOpen(true);
+    };
+
+    const handleAdjustmentStartDateChange = (date: DateValue | null) => {
+        if (date) {
+            setAdjustmentStartDate(date);
+            setAdjustmentPage(1); // Reset pagination when date filter changes
+        }
     };
 
     const handleDeleteAdjustment = (adjustment: StockAdjustment) => {
@@ -231,8 +248,18 @@ export function InventoryPage() {
                         </div>
                     }
                 >
-                    <div className="pt-4 space-y-4">
-                        <div className="flex justify-end">
+<div className="pt-4 space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <DatePicker
+                                    label="Filter from Date"
+                                    variant="bordered"
+                                    showMonthAndYearPickers
+                                    value={purchaseStartDate}
+                                    onChange={handlePurchaseStartDateChange}
+                                    className="w-full sm:w-48"
+                                />
+                            </div>
                             <Button
                                 color="primary"
                                 onPress={() => handleAddPurchase()}
@@ -292,8 +319,18 @@ export function InventoryPage() {
                         </div>
                     }
                 >
-                    <div className="pt-4 space-y-4">
-                        <div className="flex justify-end">
+<div className="pt-4 space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <DatePicker
+                                    label="Filter from Date"
+                                    variant="bordered"
+                                    showMonthAndYearPickers
+                                    value={adjustmentStartDate}
+                                    onChange={handleAdjustmentStartDateChange}
+                                    className="w-full sm:w-48"
+                                />
+                            </div>
                             <Button
                                 color="primary"
                                 onPress={() => handleAddAdjustment()}

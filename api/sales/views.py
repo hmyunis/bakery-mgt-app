@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum, F
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import PaymentMethod, Sale, DailyClosing
 from .serializers import PaymentMethodSerializer, SaleSerializer, DailyClosingSerializer
 
@@ -47,6 +48,15 @@ class SaleViewSet(viewsets.ModelViewSet):
     queryset = Sale.objects.select_related('cashier').prefetch_related('items__product', 'payments__method').order_by('-created_at')
     serializer_class = SaleSerializer
     permission_classes = [IsCashierOrAdmin]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['cashier']
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        start_date = self.request.query_params.get('start_date')
+        if start_date:
+            queryset = queryset.filter(created_at__gte=start_date)
+        return queryset
     
     def perform_create(self, serializer):
         # Serializer handles the full transaction (items, payments, stock deduction) in SaleSerializer.create()

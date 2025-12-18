@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { Tabs, Tab, Spinner } from "@heroui/react";
+import { Tabs, Tab, Spinner, DatePicker } from "@heroui/react";
 import { ShoppingCart, History } from "lucide-react";
+import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { POSTerminal } from "../components/sales/POSTerminal";
 import { CheckoutModal } from "../components/sales/CheckoutModal";
@@ -26,14 +27,16 @@ export function SalesPage() {
     const [viewingSale, setViewingSale] = useState<Sale | null>(null);
     const [deletingSale, setDeletingSale] = useState<Sale | null>(null);
 
-    // Sales History state
+// Sales History state
     const [historyPage, setHistoryPage] = useState(1);
     const [historyPageSize, setHistoryPageSize] = useState(10);
+    const [historyStartDate, setHistoryStartDate] = useState<DateValue>(today(getLocalTimeZone()));
 
-    // Sales History data
+// Sales History data
     const { data: salesData, isLoading: isLoadingSales } = useSales({
         page: historyPage,
         page_size: historyPageSize,
+        start_date: historyStartDate.toString(),
     });
     const { mutateAsync: deleteSale, isPending: isDeletingSale } = useDeleteSale();
 
@@ -56,8 +59,15 @@ export function SalesPage() {
         setViewingSale(sale);
     };
 
-    const handleDeleteSaleRequest = (sale: Sale) => {
+const handleDeleteSaleRequest = (sale: Sale) => {
         setDeletingSale(sale);
+    };
+
+    const handleHistoryStartDateChange = (date: DateValue | null) => {
+        if (date) {
+            setHistoryStartDate(date);
+            setHistoryPage(1); // Reset pagination when date filter changes
+        }
     };
 
     const handleDeleteSaleConfirm = async () => {
@@ -108,7 +118,17 @@ export function SalesPage() {
                         </div>
                     }
                 >
-                    <div className="space-y-4">
+<div className="space-y-4">
+                        <div className="flex justify-start">
+                            <DatePicker
+                                label="Filter from Date"
+                                variant="bordered"
+                                showMonthAndYearPickers
+                                value={historyStartDate}
+                                onChange={handleHistoryStartDateChange}
+                                className="w-full sm:w-48"
+                            />
+                        </div>
                         {isLoadingSales ? (
                             <div className="flex justify-center py-12">
                                 <Spinner size="lg" />

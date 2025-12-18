@@ -117,5 +117,6 @@ export interface ProductionRunListParams {
     product?: number;
     chef?: number;
     ordering?: string;
+    start_date?: string;
 }
 

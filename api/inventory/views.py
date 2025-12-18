@@ -52,6 +52,13 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     permission_classes = [IsStoreKeeperOrAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['ingredient', 'is_price_anomaly']
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        start_date = self.request.query_params.get('start_date')
+        if start_date:
+            queryset = queryset.filter(purchase_date__gte=start_date)
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(purchaser=self.request.user)
@@ -60,6 +67,15 @@ class StockAdjustmentViewSet(viewsets.ModelViewSet):
     queryset = StockAdjustment.objects.select_related('ingredient', 'actor').order_by('-timestamp')
     serializer_class = StockAdjustmentSerializer
     permission_classes = [IsStoreKeeperOrAdmin]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['ingredient']
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        start_date = self.request.query_params.get('start_date')
+        if start_date:
+            queryset = queryset.filter(timestamp__gte=start_date)
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(actor=self.request.user)

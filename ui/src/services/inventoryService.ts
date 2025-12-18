@@ -172,7 +172,7 @@ class InventoryService {
     /**
      * Get list of purchases with pagination and filters
      */
-    async getPurchases(
+async getPurchases(
         params: PurchaseListParams = {}
     ): Promise<InventoryListResponse<Purchase>> {
         const queryParams = new URLSearchParams();
@@ -182,6 +182,7 @@ class InventoryService {
         if (params.ingredient) queryParams.append("ingredient", params.ingredient.toString());
         if (params.is_price_anomaly !== undefined)
             queryParams.append("is_price_anomaly", params.is_price_anomaly.toString());
+        if (params.start_date) queryParams.append("start_date", params.start_date);
 
         const response = await apiClient.get<any>(`/inventory/purchases/?${queryParams.toString()}`);
 
@@ -292,7 +293,7 @@ class InventoryService {
     /**
      * Get list of stock adjustments with pagination and filters
      */
-    async getStockAdjustments(
+async getStockAdjustments(
         params: StockAdjustmentListParams = {}
     ): Promise<InventoryListResponse<StockAdjustment>> {
         const queryParams = new URLSearchParams();
@@ -300,6 +301,7 @@ class InventoryService {
         if (params.page) queryParams.append("page", params.page.toString());
         if (params.page_size) queryParams.append("page_size", params.page_size.toString());
         if (params.ingredient) queryParams.append("ingredient", params.ingredient.toString());
+        if (params.start_date) queryParams.append("start_date", params.start_date);
 
         const response = await apiClient.get<any>(
             `/inventory/adjustments/?${queryParams.toString()}`

@@ -60,6 +60,13 @@ class ProductionRunViewSet(viewsets.ModelViewSet):
     permission_classes = [IsChefOrAdmin]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['product', 'chef']
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        start_date = self.request.query_params.get('start_date')
+        if start_date:
+            queryset = queryset.filter(date_produced__gte=start_date)
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(chef=self.request.user)

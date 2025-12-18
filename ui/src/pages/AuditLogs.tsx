@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Input, Select, SelectItem, Spinner } from "@heroui/react";
+import { Input, Select, SelectItem, Spinner, DatePicker } from "@heroui/react";
 import { Search } from "lucide-react";
+import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { DataTable } from "../components/ui/DataTable";
 import { DataTablePagination } from "../components/ui/DataTablePagination";
@@ -16,22 +17,31 @@ export function AuditLogsPage() {
     const [pageSize, setPageSize] = useState(10);
     const [action, setAction] = useState<AuditAction | "ALL">("DELETE"); // most important filter
     const [search, setSearch] = useState("");
+    const [startDate, setStartDate] = useState<DateValue>(today(getLocalTimeZone()));
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
     const debouncedSearch = useDebounce(search, 300);
 
-    const params = useMemo(
+const params = useMemo(
         () => ({
             page,
             page_size: pageSize,
             action: action === "ALL" ? undefined : action,
             search: debouncedSearch?.trim() ? debouncedSearch.trim() : undefined,
             ordering: "-timestamp",
+            start_date: startDate.toString(),
         }),
-        [page, pageSize, action, debouncedSearch]
+        [page, pageSize, action, debouncedSearch, startDate]
     );
 
-    const { data, isLoading } = useAuditLogs(params);
+const { data, isLoading } = useAuditLogs(params);
     const rows = useMemo(() => data?.results ?? [], [data]);
+
+    const handleStartDateChange = (date: DateValue | null) => {
+        if (date) {
+            setStartDate(date);
+            setPage(1); // Reset pagination when date filter changes
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -92,7 +102,17 @@ export function AuditLogsPage() {
                         <SelectItem key="UPDATE">Update</SelectItem>
                         <SelectItem key="CREATE">Create</SelectItem>
                         <SelectItem key="ALL">All</SelectItem>
-                    </Select>
+</Select>
+                </div>
+                <div className="w-full sm:w-48">
+                    <DatePicker
+                        label="Filter from Date"
+                        variant="bordered"
+                        showMonthAndYearPickers
+                        value={startDate}
+                        onChange={handleStartDateChange}
+                        className="w-full"
+                    />
                 </div>
             </div>
 

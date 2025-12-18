@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
-import { Tabs, Tab, Button, Spinner, Input } from "@heroui/react";
+import { Tabs, Tab, Button, Spinner, Input, DatePicker } from "@heroui/react";
 import { Package, Utensils, Plus, Search, History, ChefHat } from "lucide-react";
+import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { DataTable } from "../components/ui/DataTable";
 import { DataTablePagination } from "../components/ui/DataTablePagination";
@@ -49,9 +50,10 @@ export function ProductionPage() {
     const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
     const [selectedProductForRecipe, setSelectedProductForRecipe] = useState<number | null>(null);
 
-    // Production History state
+// Production History state
     const [historyPage, setHistoryPage] = useState(1);
     const [historyPageSize, setHistoryPageSize] = useState(10);
+    const [historyStartDate, setHistoryStartDate] = useState<DateValue>(today(getLocalTimeZone()));
     const [isProductionRunFormOpen, setIsProductionRunFormOpen] = useState(false);
     const [selectedProductForProduction, setSelectedProductForProduction] =
         useState<Product | null>(null);
@@ -90,11 +92,12 @@ export function ProductionPage() {
     // Recipe data for selected product
     const { data: recipeData } = useRecipeByProduct(selectedProductForRecipe);
 
-    // Production History data
+// Production History data
     const { data: historyData, isLoading: isLoadingHistory } = useProductionRuns({
         page: historyPage,
         page_size: historyPageSize,
         ordering: "-date_produced",
+        start_date: historyStartDate.toString(),
     });
 
     const { mutateAsync: deleteProductionRun, isPending: isDeletingProductionRun } =
@@ -218,7 +221,14 @@ export function ProductionPage() {
                 setEditingRecipe(null);
             }
         }
-    }, [recipeData, selectedProductForRecipe, isRecipeBuilderOpen]);
+}, [recipeData, selectedProductForRecipe, isRecipeBuilderOpen]);
+
+    const handleHistoryStartDateChange = (date: DateValue | null) => {
+        if (date) {
+            setHistoryStartDate(date);
+            setHistoryPage(1); // Reset pagination when date filter changes
+        }
+    };
 
     return (
         <div className="space-y-6 lg:space-y-8">
@@ -413,8 +423,18 @@ export function ProductionPage() {
                         </div>
                     }
                 >
-                    <div className="space-y-4">
-                        <div className="flex justify-end">
+<div className="space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <DatePicker
+                                    label="Filter from Date"
+                                    variant="bordered"
+                                    showMonthAndYearPickers
+                                    value={historyStartDate}
+                                    onChange={handleHistoryStartDateChange}
+                                    className="w-full sm:w-48"
+                                />
+                            </div>
                             <Button
                                 color="primary"
                                 onPress={() => {
