@@ -43,7 +43,10 @@ export function UsersPage() {
 
     const handleUpdateUser = async (data: CreateUserData | UpdateUserData) => {
         if (selectedUser) {
-            await updateUser.mutateAsync({ id: selectedUser.id, data: data as UpdateUserData });
+            await updateUser.mutateAsync({
+                id: selectedUser.id,
+                data: data as UpdateUserData,
+            });
             setIsFormModalOpen(false);
             setSelectedUser(null);
         }

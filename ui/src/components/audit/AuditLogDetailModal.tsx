@@ -50,11 +50,7 @@ function formatJSON(value: unknown): string {
     }
 }
 
-export function AuditLogDetailModal({
-    isOpen,
-    onClose,
-    auditLog,
-}: AuditLogDetailModalProps) {
+export function AuditLogDetailModal({ isOpen, onClose, auditLog }: AuditLogDetailModalProps) {
     if (!auditLog) return null;
 
     const full = auditLog.actorFullName?.trim();
@@ -219,8 +215,8 @@ export function AuditLogDetailModal({
                             auditLog.action === "DELETE" && (
                                 <div className="p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-lg text-center">
                                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                        Record was deleted. Old value was captured but is not available
-                                        in this view.
+                                        Record was deleted. Old value was captured but is not
+                                        available in this view.
                                     </p>
                                 </div>
                             )}
@@ -239,4 +235,3 @@ export function AuditLogDetailModal({
         </Modal>
     );
 }
-

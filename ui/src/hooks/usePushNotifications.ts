@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../lib/apiClient";
+import type { ApiError } from "../types/api";
 import { toast } from "sonner";
 import { useAuth } from "./useAuth";
 
@@ -55,26 +56,34 @@ export function usePushNotifications() {
 
             // Also check backend to see if user has active subscriptions
             let backendHasSubscription = false;
-            let subs: any[] = [];
+            let subs: Record<string, unknown>[] = [];
             try {
-                const response = await apiClient.get("/notifications/subscriptions/");
+                const response = await apiClient.get<
+                    Record<string, unknown> | Record<string, unknown>[]
+                >("/notifications/subscriptions/");
+                const responseData = response.data as Record<string, unknown>;
                 // Handle different response formats: paginated or direct array
-                if (response.data?.data) {
+                if (responseData?.data) {
                     // Custom renderer format: { success: true, data: [...] or { results: [...] } }
-                    if (Array.isArray(response.data.data)) {
-                        subs = response.data.data;
-                    } else if (response.data.data.results) {
-                        subs = response.data.data.results;
+                    if (Array.isArray(responseData.data)) {
+                        subs = responseData.data as Record<string, unknown>[];
+                    } else if (
+                        responseData.data &&
+                        typeof responseData.data === "object" &&
+                        "results" in (responseData.data as object)
+                    ) {
+                        subs = (responseData.data as { results: Record<string, unknown>[] })
+                            .results;
                     }
-                } else if (Array.isArray(response.data)) {
-                    subs = response.data;
-                } else if (response.data?.results) {
-                    subs = response.data.results;
+                } else if (Array.isArray(responseData)) {
+                    subs = responseData as Record<string, unknown>[];
+                } else if (responseData?.results) {
+                    subs = responseData.results as Record<string, unknown>[];
                 }
                 backendHasSubscription = subs.some(
-                    (s: any) => s.isActive === true || s.is_active === true
+                    (s) => s.isActive === true || s.is_active === true
                 );
-            } catch (e) {
+            } catch {
                 // Silently handle backend check errors
             }
             const userEnabled = user?.pushNotificationsEnabled ?? false;
@@ -82,7 +91,7 @@ export function usePushNotifications() {
             // User is subscribed if they have browser subscription AND backend subscription AND user setting is enabled
             const subscribed = !!(browserSubscription && backendHasSubscription && userEnabled);
             setIsSubscribed(subscribed);
-        } catch (error) {
+        } catch {
             setIsSubscribed(false);
         }
     }, [user]);
@@ -128,7 +137,7 @@ export function usePushNotifications() {
                 } else if (response.data?.key) {
                     vapidKey = response.data.key;
                 }
-            } catch (e) {
+            } catch {
                 throw new Error("Failed to get VAPID public key from backend");
             }
 
@@ -177,8 +186,10 @@ export function usePushNotifications() {
             }, 500);
 
             toast.success("Successfully subscribed to notifications!");
-        } catch (error: any) {
-            const msg = error?.response?.data?.message || error.message || "Failed to subscribe";
+        } catch (error: unknown) {
+            const apiError = error as ApiError;
+            const msg =
+                apiError?.response?.data?.message || apiError.message || "Failed to subscribe";
             toast.error(msg);
 
             // If subscription failed on backend, try to unsubscribe from browser to stay in sync
@@ -186,7 +197,7 @@ export function usePushNotifications() {
                 const registration = await navigator.serviceWorker.ready;
                 const subscription = await registration.pushManager.getSubscription();
                 if (subscription) await subscription.unsubscribe();
-            } catch (e) {
+            } catch {
                 /* ignore */
             }
 
@@ -214,15 +225,18 @@ export function usePushNotifications() {
                 try {
                     const response = await apiClient.get("/notifications/subscriptions/");
                     const data = response.data?.data || response.data;
-                    const subs = Array.isArray(data) ? data : data?.results || [];
-                    const match = subs.find((s: any) => s.endpoint === subscription.endpoint);
+                    const subs = (Array.isArray(data) ? data : data?.results || []) as Record<
+                        string,
+                        unknown
+                    >[];
+                    const match = subs.find((s) => s.endpoint === subscription.endpoint);
 
                     if (match) {
                         await apiClient.post(
                             `/notifications/subscriptions/${match.id}/unsubscribe/`
                         );
                     }
-                } catch (e) {
+                } catch {
                     // Silently handle backend unsubscribe errors
                 }
 
@@ -239,7 +253,7 @@ export function usePushNotifications() {
             }, 1000);
 
             toast.success("Notifications disabled");
-        } catch (error) {
+        } catch {
             toast.error("Failed to disable notifications");
         } finally {
             setIsLoading(false);

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { salesService } from "../services/salesService";
 import type { CreateSaleData, SaleListParams } from "../types/sales";
+import type { ApiError } from "../types/api";
 import { toast } from "sonner";
 
 /**
@@ -45,10 +46,11 @@ export function useCreateSale() {
             queryClient.invalidateQueries({ queryKey: ["products"] }); // Update product stock
             toast.success("Sale completed successfully!");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to complete sale. Please try again.";
             toast.error(errorMessage);
         },
@@ -70,13 +72,13 @@ export function useDeleteSale() {
             queryClient.invalidateQueries({ queryKey: ["products"] }); // refresh product stock
             toast.success("Sale deleted successfully. Stock changes were reversed.");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to delete sale. Please try again.";
             toast.error(errorMessage);
         },
     });
 }
-

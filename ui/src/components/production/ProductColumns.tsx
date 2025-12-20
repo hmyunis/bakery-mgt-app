@@ -27,9 +27,7 @@ export const getProductColumns = ({
     {
         id: "rowNumber",
         header: "#",
-        cell: ({ row }) => (
-            <span className="text-sm text-muted-foreground">{row.index + 1}</span>
-        ),
+        cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.index + 1}</span>,
         size: 50,
     },
     {
@@ -81,11 +79,7 @@ export const getProductColumns = ({
             const isLowStock = stock <= 0;
 
             return (
-                <Chip
-                    color={isLowStock ? "warning" : "success"}
-                    variant="flat"
-                    size="sm"
-                >
+                <Chip color={isLowStock ? "warning" : "success"} variant="flat" size="sm">
                     {stock} pcs
                 </Chip>
             );
@@ -95,11 +89,7 @@ export const getProductColumns = ({
         accessorKey: "is_active",
         header: "Status",
         cell: ({ row }) => (
-            <Chip
-                color={row.original.is_active ? "success" : "default"}
-                variant="flat"
-                size="sm"
-            >
+            <Chip color={row.original.is_active ? "success" : "default"} variant="flat" size="sm">
                 {row.original.is_active ? "Active" : "Inactive"}
             </Chip>
         ),
@@ -171,4 +161,3 @@ export const getProductColumns = ({
         },
     },
 ];
-

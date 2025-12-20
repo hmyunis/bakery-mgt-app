@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { inventoryService } from "../services/inventoryService";
+import type { ApiError, ApiErrorResponse } from "../types/api";
 import type {
     CreateIngredientData,
     UpdateIngredientData,
@@ -56,14 +57,17 @@ export function useCreateIngredient() {
             queryClient.invalidateQueries({ queryKey: ["ingredients"] });
             toast.success("Ingredient created successfully");
         },
-        onError: (error: any) => {
-            const errorData = error.response?.data;
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
             const errorMessage =
                 errorData?.message ||
-                errorData?.errors?.nonFieldErrors?.[0] ||
+                (errorData?.errors?.nonFieldErrors as string[])?.[0] ||
                 errorData?.non_field_errors?.[0] ||
-                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
-                error.message ||
+                (
+                    Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined
+                )?.[0] ||
+                apiError.message ||
                 "Failed to create ingredient";
             toast.error(errorMessage);
         },
@@ -85,14 +89,17 @@ export function useUpdateIngredient() {
             queryClient.setQueryData(["ingredients", updatedIngredient.id], updatedIngredient);
             toast.success("Ingredient updated successfully");
         },
-        onError: (error: any) => {
-            const errorData = error.response?.data;
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
             const errorMessage =
                 errorData?.message ||
-                errorData?.errors?.nonFieldErrors?.[0] ||
+                (errorData?.errors?.nonFieldErrors as string[])?.[0] ||
                 errorData?.non_field_errors?.[0] ||
-                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
-                error.message ||
+                (
+                    Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined
+                )?.[0] ||
+                apiError.message ||
                 "Failed to update ingredient";
             toast.error(errorMessage);
         },
@@ -115,12 +122,13 @@ export function useDeleteIngredient() {
             queryClient.removeQueries({ queryKey: ["ingredients", id] });
             toast.success("Ingredient deleted successfully");
         },
-        onError: (error: any) => {
-            const errorData = error.response?.data;
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
             const errorMessage =
                 errorData?.message ||
                 errorData?.detail ||
-                error.message ||
+                apiError.message ||
                 "Failed to delete ingredient";
             toast.error(errorMessage);
         },
@@ -184,14 +192,17 @@ export function useCreatePurchase() {
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update stock levels
             toast.success("Purchase recorded successfully");
         },
-        onError: (error: any) => {
-            const errorData = error.response?.data;
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
             const errorMessage =
                 errorData?.message ||
-                errorData?.errors?.nonFieldErrors?.[0] ||
+                (errorData?.errors?.nonFieldErrors as string[])?.[0] ||
                 errorData?.non_field_errors?.[0] ||
-                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
-                error.message ||
+                (
+                    Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined
+                )?.[0] ||
+                apiError.message ||
                 "Failed to record purchase";
             toast.error(errorMessage);
         },
@@ -214,14 +225,17 @@ export function useUpdatePurchase() {
             queryClient.setQueryData(["purchases", updatedPurchase.id], updatedPurchase);
             toast.success("Purchase updated successfully");
         },
-        onError: (error: any) => {
-            const errorData = error.response?.data;
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
             const errorMessage =
                 errorData?.message ||
-                errorData?.errors?.nonFieldErrors?.[0] ||
+                (errorData?.errors?.nonFieldErrors as string[])?.[0] ||
                 errorData?.non_field_errors?.[0] ||
-                (Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined)?.[0] ||
-                error.message ||
+                (
+                    Object.values(errorData?.errors || errorData || {})[0] as string[] | undefined
+                )?.[0] ||
+                apiError.message ||
                 "Failed to update purchase";
             toast.error(errorMessage);
         },
@@ -244,12 +258,13 @@ export function useDeletePurchase() {
             queryClient.removeQueries({ queryKey: ["purchases", id] });
             toast.success("Purchase deleted successfully");
         },
-        onError: (error: any) => {
-            const errorData = error.response?.data;
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
             const errorMessage =
                 errorData?.message ||
                 errorData?.detail ||
-                error.message ||
+                apiError.message ||
                 "Failed to delete purchase";
             toast.error(errorMessage);
         },
@@ -309,19 +324,16 @@ export function useUpdateStockAdjustment() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({
-            id,
-            data,
-        }: {
-            id: number;
-            data: UpdateStockAdjustmentData;
-        }) => {
+        mutationFn: async ({ id, data }: { id: number; data: UpdateStockAdjustmentData }) => {
             return await inventoryService.updateStockAdjustment(id, data);
         },
         onSuccess: (updatedAdjustment) => {
             queryClient.invalidateQueries({ queryKey: ["stock-adjustments"] });
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update stock levels
-            queryClient.setQueryData(["stock-adjustments", updatedAdjustment.id], updatedAdjustment);
+            queryClient.setQueryData(
+                ["stock-adjustments", updatedAdjustment.id],
+                updatedAdjustment
+            );
         },
     });
 }
@@ -342,15 +354,15 @@ export function useDeleteStockAdjustment() {
             queryClient.removeQueries({ queryKey: ["stock-adjustments", id] });
             toast.success("Stock adjustment deleted successfully");
         },
-        onError: (error: any) => {
-            const errorData = error.response?.data;
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
             const errorMessage =
                 errorData?.message ||
                 errorData?.detail ||
-                error.message ||
+                apiError.message ||
                 "Failed to delete stock adjustment";
             toast.error(errorMessage);
         },
     });
 }
-

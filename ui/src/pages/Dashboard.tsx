@@ -84,7 +84,8 @@ export function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-4 text-sm text-white/80">
                         <span>
-                            {data.salesToday.count} sale{data.salesToday.count !== 1 ? "s" : ""}
+                            {data.salesToday.count} sale
+                            {data.salesToday.count !== 1 ? "s" : ""}
                         </span>
                         {data.salesToday.count > 0 && (
                             <span>Avg: {formatMoney(data.salesToday.average)} ETB</span>

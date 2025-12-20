@@ -59,12 +59,7 @@ export interface UpdatePurchaseData {
     notes?: string;
 }
 
-export type StockAdjustmentReason =
-    | "waste"
-    | "theft"
-    | "audit"
-    | "return"
-    | "packaging_usage";
+export type StockAdjustmentReason = "waste" | "theft" | "audit" | "return" | "packaging_usage";
 
 export interface StockAdjustment {
     id: number;
@@ -118,4 +113,3 @@ export interface StockAdjustmentListParams {
     ingredient?: number;
     start_date?: string;
 }
-

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     Modal,
     ModalContent,
@@ -23,47 +23,30 @@ interface PaymentMethodFormModalProps {
     paymentMethod?: PaymentMethod | null;
 }
 
-export function PaymentMethodFormModal({
-    isOpen,
-    onClose,
+// Internal component to handle form state and submission
+// This component mounts freshly whenever the modal opens (due to the key prop in parent)
+function PaymentMethodFormContent({
     paymentMethod,
-}: PaymentMethodFormModalProps) {
+    onClose,
+}: {
+    paymentMethod?: PaymentMethod | null;
+    onClose: () => void;
+}) {
     const isEdit = !!paymentMethod;
 
+    // Initialize state directly from props
     const [formData, setFormData] = useState({
-        name: "",
-        is_active: true,
-        config_details: "",
+        name: paymentMethod?.name || "",
+        is_active: paymentMethod?.is_active ?? true,
+        config_details: paymentMethod?.config_details || "",
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const { mutateAsync: createPaymentMethod, isPending: isCreating } =
-        useCreatePaymentMethod();
-    const { mutateAsync: updatePaymentMethod, isPending: isUpdating } =
-        useUpdatePaymentMethod();
+    const { mutateAsync: createPaymentMethod, isPending: isCreating } = useCreatePaymentMethod();
+    const { mutateAsync: updatePaymentMethod, isPending: isUpdating } = useUpdatePaymentMethod();
 
     const isLoading = isCreating || isUpdating;
-
-    // Reset form when modal opens/closes or paymentMethod changes
-    useEffect(() => {
-        if (isOpen) {
-            if (paymentMethod) {
-                setFormData({
-                    name: paymentMethod.name || "",
-                    is_active: paymentMethod.is_active ?? true,
-                    config_details: paymentMethod.config_details || "",
-                });
-            } else {
-                setFormData({
-                    name: "",
-                    is_active: true,
-                    config_details: "",
-                });
-            }
-            setErrors({});
-        }
-    }, [isOpen, paymentMethod]);
 
     const handleInputChange = (field: string, value: string | boolean) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -110,65 +93,87 @@ export function PaymentMethodFormModal({
                 await createPaymentMethod(createData);
             }
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
 
     return (
+        <>
+            <ModalHeader className="flex flex-col gap-1">
+                {isEdit ? "Edit Payment Method" : "Create Payment Method"}
+            </ModalHeader>
+            <ModalBody>
+                <Input
+                    label="Name"
+                    placeholder="e.g., Cash, Telebirr, CBE"
+                    value={formData.name}
+                    onValueChange={(value) => handleInputChange("name", value)}
+                    errorMessage={errors.name}
+                    isInvalid={!!errors.name}
+                    isRequired
+                    classNames={{
+                        input: "!text-zinc-900 dark:!text-zinc-100",
+                        inputWrapper: "!placeholder:text-zinc-400 dark:!placeholder:text-zinc-500",
+                    }}
+                />
+
+                <Textarea
+                    label="Config Details"
+                    placeholder="e.g., Pay to 0911..."
+                    value={formData.config_details}
+                    onValueChange={(value) => handleInputChange("config_details", value)}
+                    minRows={2}
+                    classNames={{
+                        input: "!text-zinc-900 dark:!text-zinc-100",
+                        inputWrapper: "!placeholder:text-zinc-400 dark:!placeholder:text-zinc-500",
+                    }}
+                />
+
+                <Switch
+                    isSelected={formData.is_active}
+                    onValueChange={(value) => handleInputChange("is_active", value)}
+                >
+                    Active
+                </Switch>
+            </ModalBody>
+            <ModalFooter>
+                <Button
+                    variant="light"
+                    onPress={onClose}
+                    className="!text-zinc-700 dark:!text-zinc-300"
+                >
+                    Cancel
+                </Button>
+                <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
+                    {isEdit ? "Update" : "Create"}
+                </Button>
+            </ModalFooter>
+        </>
+    );
+}
+
+export function PaymentMethodFormModal({
+    isOpen,
+    onClose,
+    paymentMethod,
+}: PaymentMethodFormModalProps) {
+    // Generate a unique key based on the mode (create vs edit) and ID.
+    // This forces React to unmount the old form and mount a new one with fresh state
+    // whenever the modal opens or the selected payment method changes.
+    const formKey = paymentMethod ? `edit-${paymentMethod.id}` : "create-new";
+
+    return (
         <Modal isOpen={isOpen} onClose={onClose} size="lg">
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1">
-                    {isEdit ? "Edit Payment Method" : "Create Payment Method"}
-                </ModalHeader>
-                <ModalBody>
-                    <Input
-                        label="Name"
-                        placeholder="e.g., Cash, Telebirr, CBE"
-                        value={formData.name}
-                        onValueChange={(value) => handleInputChange("name", value)}
-                        errorMessage={errors.name}
-                        isInvalid={!!errors.name}
-                        isRequired
-                        classNames={{
-                            input: "!text-zinc-900 dark:!text-zinc-100",
-                            inputWrapper: "!placeholder:text-zinc-400 dark:!placeholder:text-zinc-500",
-                        }}
+                {(onCloseModal) => (
+                    <PaymentMethodFormContent
+                        key={formKey}
+                        paymentMethod={paymentMethod}
+                        onClose={onCloseModal}
                     />
-
-                    <Textarea
-                        label="Config Details"
-                        placeholder="e.g., Pay to 0911..."
-                        value={formData.config_details}
-                        onValueChange={(value) => handleInputChange("config_details", value)}
-                        minRows={2}
-                        classNames={{
-                            input: "!text-zinc-900 dark:!text-zinc-100",
-                            inputWrapper: "!placeholder:text-zinc-400 dark:!placeholder:text-zinc-500",
-                        }}
-                    />
-
-                    <Switch
-                        isSelected={formData.is_active}
-                        onValueChange={(value) => handleInputChange("is_active", value)}
-                    >
-                        Active
-                    </Switch>
-                </ModalBody>
-                <ModalFooter>
-                    <Button
-                        variant="light"
-                        onPress={onClose}
-                        className="!text-zinc-700 dark:!text-zinc-300"
-                    >
-                        Cancel
-                    </Button>
-                    <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                        {isEdit ? "Update" : "Create"}
-                    </Button>
-                </ModalFooter>
+                )}
             </ModalContent>
         </Modal>
     );
 }
-

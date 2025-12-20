@@ -15,22 +15,12 @@ export function DataTable<TData, TValue>({
     isLoading = false,
     onRowClick,
 }: DataTableProps<TData, TValue>) {
+    // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
     });
-
-    const TableSkeleton = () =>
-        Array.from({ length: 5 }).map((_, i) => (
-            <tr key={`skel-${i}`} className="border-b dark:border-slate-700">
-                {columns.map((_, j) => (
-                    <td key={`skel-cell-${i}-${j}`} className="p-4">
-                        <Skeleton className="h-6 w-full rounded" />
-                    </td>
-                ))}
-            </tr>
-        ));
 
     return (
         <div className="rounded-md border border-slate-300 dark:border-slate-700 overflow-x-auto">
@@ -56,7 +46,16 @@ export function DataTable<TData, TValue>({
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                     {isLoading ? (
-                        <TableSkeleton />
+                        // Render skeleton inline or via helper to avoid defining components inside render
+                        Array.from({ length: 5 }).map((_, i) => (
+                            <tr key={`skel-${i}`} className="border-b dark:border-slate-700">
+                                {columns.map((_, j) => (
+                                    <td key={`skel-cell-${i}-${j}`} className="p-4">
+                                        <Skeleton className="h-6 w-full rounded" />
+                                    </td>
+                                ))}
+                            </tr>
+                        ))
                     ) : table.getRowModel().rows?.length ? (
                         table.getRowModel().rows.map((row) => (
                             <tr

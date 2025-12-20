@@ -1,0 +1,67 @@
+name: CI Quality Checks
+
+on:
+    push:
+        branches: ["main", "master"]
+    pull_request:
+        branches: ["main", "master"]
+
+jobs:
+    backend-check:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Python 3.12
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install Pipenv
+              run: pip install pipenv
+
+            - name: Install Backend Dependencies
+              run: |
+                  cd api
+                  # --system installs directly to python env (faster for CI)
+                  pipenv install --dev --system --deploy
+
+            - name: Run Ruff (Lint)
+              run: |
+                  cd api
+                  ruff check .
+
+            - name: Run Ruff (Format Check)
+              run: |
+                  cd api
+                  ruff format --check .
+
+    frontend-check:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v1
+              with:
+                  bun-version: latest
+
+            - name: Install Frontend Dependencies
+              run: |
+                  cd ui
+                  bun install --frozen-lockfile
+
+            - name: TypeScript Type Check
+              run: |
+                  cd ui
+                  bun run tsc --noEmit
+
+            - name: ESLint Check
+              run: |
+                  cd ui
+                  bun run lint
+
+            - name: Build Test (Smoke Test)
+              run: |
+                  cd ui
+                  bun run build

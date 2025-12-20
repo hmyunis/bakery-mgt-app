@@ -5,19 +5,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('sales', '0002_initial'),
+        ("sales", "0002_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='sale',
-            index=models.Index(fields=['-created_at'], name='sales_sale_created_66311a_idx'),
+            model_name="sale",
+            index=models.Index(
+                fields=["-created_at"], name="sales_sale_created_66311a_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='sale',
-            index=models.Index(fields=['cashier', '-created_at'], name='sales_sale_cashier_62c037_idx'),
+            model_name="sale",
+            index=models.Index(
+                fields=["cashier", "-created_at"], name="sales_sale_cashier_62c037_idx"
+            ),
         ),
     ]

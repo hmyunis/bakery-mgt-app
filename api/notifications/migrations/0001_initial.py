@@ -4,55 +4,137 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='NotificationLog',
+            name="NotificationLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_type', models.CharField(choices=[('low_stock', 'Low Stock Alert'), ('price_anomaly', 'Price Anomaly Detected'), ('production_complete', 'Production Run Completed'), ('sale_complete', 'Sale Completed'), ('eod_closing', 'End of Day Closing'), ('stock_adjustment', 'Stock Adjustment Made'), ('purchase_created', 'Purchase Recorded'), ('user_created', 'New User Created')], max_length=50)),
-                ('title', models.CharField(max_length=200)),
-                ('body', models.TextField()),
-                ('data', models.JSONField(blank=True, default=dict, help_text='Additional notification data')),
-                ('sent_at', models.DateTimeField(auto_now_add=True)),
-                ('success', models.BooleanField(default=False)),
-                ('error_message', models.TextField(blank=True, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "event_type",
+                    models.CharField(
+                        choices=[
+                            ("low_stock", "Low Stock Alert"),
+                            ("price_anomaly", "Price Anomaly Detected"),
+                            ("production_complete", "Production Run Completed"),
+                            ("sale_complete", "Sale Completed"),
+                            ("eod_closing", "End of Day Closing"),
+                            ("stock_adjustment", "Stock Adjustment Made"),
+                            ("purchase_created", "Purchase Recorded"),
+                            ("user_created", "New User Created"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("title", models.CharField(max_length=200)),
+                ("body", models.TextField()),
+                (
+                    "data",
+                    models.JSONField(
+                        blank=True,
+                        default=dict,
+                        help_text="Additional notification data",
+                    ),
+                ),
+                ("sent_at", models.DateTimeField(auto_now_add=True)),
+                ("success", models.BooleanField(default=False)),
+                ("error_message", models.TextField(blank=True, null=True)),
             ],
             options={
-                'ordering': ['-sent_at'],
+                "ordering": ["-sent_at"],
             },
         ),
         migrations.CreateModel(
-            name='NotificationPreference',
+            name="NotificationPreference",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_type', models.CharField(choices=[('low_stock', 'Low Stock Alert'), ('price_anomaly', 'Price Anomaly Detected'), ('production_complete', 'Production Run Completed'), ('sale_complete', 'Sale Completed'), ('eod_closing', 'End of Day Closing'), ('stock_adjustment', 'Stock Adjustment Made'), ('purchase_created', 'Purchase Recorded'), ('user_created', 'New User Created')], max_length=50, unique=True)),
-                ('enabled', models.BooleanField(default=True)),
-                ('target_roles', models.JSONField(default=list, help_text='List of roles that should receive this notification. Empty list means all roles.')),
-                ('title_template', models.CharField(help_text='Notification title template. Use {variable} for dynamic content.', max_length=200)),
-                ('body_template', models.TextField(help_text='Notification body template. Use {variable} for dynamic content.')),
-                ('icon_url', models.URLField(blank=True, help_text='Optional icon URL', null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "event_type",
+                    models.CharField(
+                        choices=[
+                            ("low_stock", "Low Stock Alert"),
+                            ("price_anomaly", "Price Anomaly Detected"),
+                            ("production_complete", "Production Run Completed"),
+                            ("sale_complete", "Sale Completed"),
+                            ("eod_closing", "End of Day Closing"),
+                            ("stock_adjustment", "Stock Adjustment Made"),
+                            ("purchase_created", "Purchase Recorded"),
+                            ("user_created", "New User Created"),
+                        ],
+                        max_length=50,
+                        unique=True,
+                    ),
+                ),
+                ("enabled", models.BooleanField(default=True)),
+                (
+                    "target_roles",
+                    models.JSONField(
+                        default=list,
+                        help_text="List of roles that should receive this notification. Empty list means all roles.",
+                    ),
+                ),
+                (
+                    "title_template",
+                    models.CharField(
+                        help_text="Notification title template. Use {variable} for dynamic content.",
+                        max_length=200,
+                    ),
+                ),
+                (
+                    "body_template",
+                    models.TextField(
+                        help_text="Notification body template. Use {variable} for dynamic content."
+                    ),
+                ),
+                (
+                    "icon_url",
+                    models.URLField(
+                        blank=True, help_text="Optional icon URL", null=True
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'ordering': ['event_type'],
+                "ordering": ["event_type"],
             },
         ),
         migrations.CreateModel(
-            name='PushSubscription',
+            name="PushSubscription",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('endpoint', models.URLField(max_length=500)),
-                ('p256dh', models.CharField(max_length=200)),
-                ('auth', models.CharField(max_length=100)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('is_active', models.BooleanField(default=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("endpoint", models.URLField(max_length=500)),
+                ("p256dh", models.CharField(max_length=200)),
+                ("auth", models.CharField(max_length=100)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("is_active", models.BooleanField(default=True)),
             ],
         ),
     ]

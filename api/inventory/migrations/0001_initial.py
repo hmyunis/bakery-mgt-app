@@ -5,49 +5,127 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Ingredient',
+            name="Ingredient",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True)),
-                ('unit', models.CharField(choices=[('kg', 'Kilogram'), ('g', 'Gram'), ('l', 'Liter'), ('ml', 'Milliliter'), ('pcs', 'Pieces')], default='kg', max_length=5)),
-                ('current_stock', models.DecimalField(decimal_places=3, default=0.0, max_digits=10)),
-                ('reorder_point', models.DecimalField(decimal_places=3, default=10.0, max_digits=10)),
-                ('average_cost_per_unit', models.DecimalField(decimal_places=2, default=0.0, max_digits=10)),
-                ('last_purchased_price', models.DecimalField(decimal_places=2, default=0.0, max_digits=10)),
-                ('is_composite', models.BooleanField(default=False)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100, unique=True)),
+                (
+                    "unit",
+                    models.CharField(
+                        choices=[
+                            ("kg", "Kilogram"),
+                            ("g", "Gram"),
+                            ("l", "Liter"),
+                            ("ml", "Milliliter"),
+                            ("pcs", "Pieces"),
+                        ],
+                        default="kg",
+                        max_length=5,
+                    ),
+                ),
+                (
+                    "current_stock",
+                    models.DecimalField(decimal_places=3, default=0.0, max_digits=10),
+                ),
+                (
+                    "reorder_point",
+                    models.DecimalField(decimal_places=3, default=10.0, max_digits=10),
+                ),
+                (
+                    "average_cost_per_unit",
+                    models.DecimalField(decimal_places=2, default=0.0, max_digits=10),
+                ),
+                (
+                    "last_purchased_price",
+                    models.DecimalField(decimal_places=2, default=0.0, max_digits=10),
+                ),
+                ("is_composite", models.BooleanField(default=False)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
         ),
         migrations.CreateModel(
-            name='StockAdjustment',
+            name="StockAdjustment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('quantity_change', models.DecimalField(decimal_places=3, help_text='Negative for removal, Positive for addition', max_digits=10)),
-                ('reason', models.CharField(choices=[('waste', 'Accidental Waste'), ('theft', 'Theft/Loss'), ('audit', 'Audit Correction'), ('return', 'Return to Vendor'), ('packaging_usage', 'Packaging Usage (Store Output)')], max_length=20)),
-                ('notes', models.TextField(blank=True)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "quantity_change",
+                    models.DecimalField(
+                        decimal_places=3,
+                        help_text="Negative for removal, Positive for addition",
+                        max_digits=10,
+                    ),
+                ),
+                (
+                    "reason",
+                    models.CharField(
+                        choices=[
+                            ("waste", "Accidental Waste"),
+                            ("theft", "Theft/Loss"),
+                            ("audit", "Audit Correction"),
+                            ("return", "Return to Vendor"),
+                            ("packaging_usage", "Packaging Usage (Store Output)"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("notes", models.TextField(blank=True)),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Purchase',
+            name="Purchase",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('quantity', models.DecimalField(decimal_places=3, max_digits=10)),
-                ('total_cost', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('unit_cost', models.DecimalField(decimal_places=2, editable=False, max_digits=10)),
-                ('purchase_date', models.DateTimeField(auto_now_add=True)),
-                ('vendor', models.CharField(blank=True, max_length=100, null=True)),
-                ('notes', models.TextField(blank=True, null=True)),
-                ('is_price_anomaly', models.BooleanField(default=False)),
-                ('ingredient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='purchases', to='inventory.ingredient')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("quantity", models.DecimalField(decimal_places=3, max_digits=10)),
+                ("total_cost", models.DecimalField(decimal_places=2, max_digits=12)),
+                (
+                    "unit_cost",
+                    models.DecimalField(
+                        decimal_places=2, editable=False, max_digits=10
+                    ),
+                ),
+                ("purchase_date", models.DateTimeField(auto_now_add=True)),
+                ("vendor", models.CharField(blank=True, max_length=100, null=True)),
+                ("notes", models.TextField(blank=True, null=True)),
+                ("is_price_anomaly", models.BooleanField(default=False)),
+                (
+                    "ingredient",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="purchases",
+                        to="inventory.ingredient",
+                    ),
+                ),
             ],
         ),
     ]

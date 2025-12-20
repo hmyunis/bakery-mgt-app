@@ -47,10 +47,12 @@ export function InventoryPage() {
     const [deletingPurchase, setDeletingPurchase] = useState<Purchase | null>(null);
     const [purchaseIngredient, setPurchaseIngredient] = useState<Ingredient | null>(null);
 
-// Stock Adjustments state
+    // Stock Adjustments state
     const [adjustmentPage, setAdjustmentPage] = useState(1);
     const [adjustmentPageSize, setAdjustmentPageSize] = useState(10);
-    const [adjustmentStartDate, setAdjustmentStartDate] = useState<DateValue>(today(getLocalTimeZone()));
+    const [adjustmentStartDate, setAdjustmentStartDate] = useState<DateValue>(
+        today(getLocalTimeZone())
+    );
     const [isAdjustmentFormOpen, setIsAdjustmentFormOpen] = useState(false);
     const [deletingAdjustment, setDeletingAdjustment] = useState<StockAdjustment | null>(null);
     const [adjustmentIngredient, setAdjustmentIngredient] = useState<Ingredient | null>(null);
@@ -71,7 +73,7 @@ export function InventoryPage() {
         start_date: purchaseStartDate?.toString() || undefined,
     });
 
-// Stock Adjustments data
+    // Stock Adjustments data
     const { data: adjustmentsData, isLoading: isLoadingAdjustments } = useStockAdjustments({
         page: adjustmentPage,
         page_size: adjustmentPageSize,
@@ -137,7 +139,7 @@ export function InventoryPage() {
         setPurchasePage(1); // Reset pagination when date filter changes
     };
 
-// Stock Adjustment handlers
+    // Stock Adjustment handlers
     const handleAddAdjustment = (ingredient?: Ingredient) => {
         setAdjustmentIngredient(ingredient || null);
         setIsAdjustmentFormOpen(true);
@@ -248,7 +250,7 @@ export function InventoryPage() {
                         </div>
                     }
                 >
-<div className="pt-4 space-y-4">
+                    <div className="pt-4 space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 <DatePicker
@@ -319,7 +321,7 @@ export function InventoryPage() {
                         </div>
                     }
                 >
-<div className="pt-4 space-y-4">
+                    <div className="pt-4 space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 <DatePicker

@@ -38,10 +38,13 @@ export function FactoryResetForm() {
     };
 
     const handleSelectAll = (value: boolean) => {
-        const newOptions = Object.keys(selectedOptions).reduce((acc, key) => {
-            acc[key as keyof typeof selectedOptions] = value;
-            return acc;
-        }, {} as typeof selectedOptions);
+        const newOptions = Object.keys(selectedOptions).reduce(
+            (acc, key) => {
+                acc[key as keyof typeof selectedOptions] = value;
+                return acc;
+            },
+            {} as typeof selectedOptions
+        );
         setSelectedOptions(newOptions);
     };
 
@@ -52,13 +55,13 @@ export function FactoryResetForm() {
 
         try {
             await factoryReset({
-                password,
+                confirmation: password,
                 ...selectedOptions,
             });
             setPassword("");
             // Close modal programmatically if needed, but onOpenChange handles it
             onOpenChange();
-        } catch (error) {
+        } catch {
             // Error handled in hook
         }
     };
@@ -167,8 +170,8 @@ export function FactoryResetForm() {
                                     </p>
                                     <ul className="list-disc list-inside text-sm text-default-700 space-y-1">
                                         {Object.entries(selectedOptions)
-                                            .filter(([_, v]) => v)
-                                            .map(([key, _]) => (
+                                            .filter(([, v]) => v)
+                                            .map(([key]) => (
                                                 <li key={key}>{optionLabels[key]}</li>
                                             ))}
                                     </ul>

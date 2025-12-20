@@ -23,8 +23,22 @@ export function CashVsDigitalPie({ cash, digital, className }: CashVsDigitalPieP
         { name: "Digital", value: digitalV, color: "#6366f1" },
     ];
 
-    const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-        if (percent === 0) return null;
+    const renderCustomLabel = ({
+        cx,
+        cy,
+        midAngle,
+        innerRadius,
+        outerRadius,
+        percent,
+    }: {
+        cx: number;
+        cy: number;
+        midAngle?: number;
+        innerRadius: number;
+        outerRadius: number;
+        percent?: number;
+    }) => {
+        if (percent === 0 || percent === undefined || midAngle === undefined) return null;
         const RADIAN = Math.PI / 180;
         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
         const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -44,16 +58,26 @@ export function CashVsDigitalPie({ cash, digital, className }: CashVsDigitalPieP
         );
     };
 
-    const renderCustomTooltip = ({ active, payload }: any) => {
+    const renderCustomTooltip = ({
+        active,
+        payload,
+    }: {
+        active?: boolean;
+        payload?: readonly {
+            name: string;
+            value: number;
+            [key: string]: unknown;
+        }[];
+    }) => {
         if (active && payload && payload.length) {
-            const data = payload[0];
+            const item = payload[0];
             return (
                 <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-lg">
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {data.name}
+                        {item.name}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {formatMoney(data.value)} ETB
+                        {formatMoney(item.value)} ETB
                     </p>
                 </div>
             );

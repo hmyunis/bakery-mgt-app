@@ -10,5 +10,3 @@ export function useOwnerDashboard(enabled = true) {
         enabled,
     });
 }
-
-

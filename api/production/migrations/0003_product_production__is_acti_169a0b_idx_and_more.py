@@ -4,18 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('production', '0002_initial'),
+        ("production", "0002_initial"),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='product',
-            index=models.Index(fields=['is_active'], name='production__is_acti_169a0b_idx'),
+            model_name="product",
+            index=models.Index(
+                fields=["is_active"], name="production__is_acti_169a0b_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='product',
-            index=models.Index(fields=['-created_at'], name='production__created_05fc62_idx'),
+            model_name="product",
+            index=models.Index(
+                fields=["-created_at"], name="production__created_05fc62_idx"
+            ),
         ),
     ]

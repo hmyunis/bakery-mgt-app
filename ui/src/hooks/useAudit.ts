@@ -11,5 +11,3 @@ export function useAuditLogs(params: AuditLogListParams = {}) {
         placeholderData: (previousData) => previousData,
     });
 }
-
-

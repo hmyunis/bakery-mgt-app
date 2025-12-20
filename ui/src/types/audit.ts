@@ -32,5 +32,3 @@ export interface AuditLogListParams {
     ordering?: string; // e.g. "-timestamp"
     start_date?: string;
 }
-
-

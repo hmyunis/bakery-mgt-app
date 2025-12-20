@@ -1,5 +1,6 @@
 import { apiClient } from "../lib/apiClient";
 import { setAuthToken } from "../lib/apiClient";
+import type { ApiResponse, ApiError } from "../types/api";
 
 export interface LoginCredentials {
     username?: string;
@@ -47,7 +48,9 @@ class AuthService {
         }
 
         try {
-            const response = await apiClient.post<any>("/users/auth/login/", payload);
+            const response = await apiClient.post<
+                ApiResponse<LoginResponse> | LoginResponse | Record<string, unknown>
+            >("/users/auth/login/", payload);
 
             // Check for error responses first
             if (response.status < 200 || response.status >= 300) {
@@ -58,41 +61,39 @@ class AuthService {
             // 1. Direct JWT response: { access: "...", refresh: "..." }
             // 2. Wrapped response: { success: true, message: "...", data: { access: "...", refresh: "..." } }
             // 3. CamelCase: { accessToken: "...", refreshToken: "..." }
-            let loginData: any;
+            let loginData: LoginResponse | null = null;
+
+            const data = response.data as Record<string, unknown>;
 
             // Check for wrapped response first (custom renderer format)
-            if (response.data?.data && response.data.data.access) {
-                loginData = response.data.data;
+            if (data?.data && data.data.access) {
+                loginData = data.data;
             }
             // Check for direct access token (snake_case)
-            else if (response.data?.access) {
-                loginData = response.data;
+            else if (data?.access) {
+                loginData = data as LoginResponse;
             }
             // Check for camelCase access token
-            else if (response.data?.accessToken) {
+            else if (data?.accessToken) {
                 loginData = {
-                    access: response.data.accessToken,
-                    refresh: response.data.refreshToken || response.data.refresh,
-                };
+                    access: data.accessToken,
+                    refresh: data.refreshToken || data.refresh,
+                } as LoginResponse;
             }
             // Check if it's an error response
-            else if (
-                response.data?.errors ||
-                response.data?.nonFieldErrors ||
-                response.data?.non_field_errors
-            ) {
+            else if (data?.errors || data?.nonFieldErrors || data?.non_field_errors) {
                 const errorMsg =
-                    response.data.errors?.nonFieldErrors?.[0] ||
-                    response.data.errors?.non_field_errors?.[0] ||
-                    response.data.nonFieldErrors?.[0] ||
-                    response.data.non_field_errors?.[0] ||
-                    response.data.message ||
+                    data.errors?.nonFieldErrors?.[0] ||
+                    data.errors?.non_field_errors?.[0] ||
+                    data.nonFieldErrors?.[0] ||
+                    data.non_field_errors?.[0] ||
+                    data.message ||
                     "Login failed";
                 throw new Error(errorMsg);
             }
-            // Fallback: try response.data directly and log what we got
+            // Fallback: try response.data directly
             else {
-                loginData = response.data;
+                loginData = data as LoginResponse;
             }
 
             const accessToken = loginData?.access;
@@ -112,23 +113,27 @@ class AuthService {
             // Verify it was saved
             const savedToken = localStorage.getItem("bakery_auth_token");
             if (!savedToken || savedToken !== accessToken) {
-                console.error("Token save verification failed:", { accessToken, savedToken });
+                console.error("Token save verification failed:", {
+                    accessToken,
+                    savedToken,
+                });
                 throw new Error("Failed to save authentication token");
             }
 
-            return loginData;
-        } catch (error: any) {
+            return loginData as LoginResponse;
+        } catch (error: unknown) {
             console.error("Login error:", error);
+            const err = error as ApiError;
             // Re-throw with better error message
-            if (error.response?.data) {
-                const errorData = error.response.data;
+            if (err.response?.data) {
+                const errorData = err.response.data;
                 const errorMsg =
-                    errorData.errors?.nonFieldErrors?.[0] ||
-                    errorData.errors?.non_field_errors?.[0] ||
-                    errorData.nonFieldErrors?.[0] ||
-                    errorData.non_field_errors?.[0] ||
+                    (errorData.errors as Record<string, string[]>)?.nonFieldErrors?.[0] ||
+                    (errorData.errors as Record<string, string[]>)?.non_field_errors?.[0] ||
+                    (errorData.nonFieldErrors as string[])?.[0] ||
+                    (errorData.non_field_errors as string[])?.[0] ||
                     errorData.message ||
-                    error.message ||
+                    err.message ||
                     "Login failed. Please check your credentials.";
                 throw new Error(errorMsg);
             }
@@ -141,23 +146,29 @@ class AuthService {
     }
 
     async getCurrentUser(): Promise<UserProfile> {
-        const response = await apiClient.get<any>("/users/me/");
+        const response = await apiClient.get<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >("/users/me/");
         // Handle camelCase response wrapper: { success, message, data: { ... } }
-        const userData = response.data.data || response.data;
+        const userData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
 
         // Normalize field names (handle both camelCase and snake_case)
-        const normalized = {
-            id: userData.id,
-            username: userData.username,
-            fullName: userData.fullName || userData.full_name,
-            email: userData.email,
-            phoneNumber: userData.phoneNumber || userData.phone_number,
-            role: userData.role,
-            avatar: userData.avatar,
+        const normalized: UserProfile = {
+            id: userData.id as number,
+            username: userData.username as string,
+            fullName: (userData.fullName || userData.full_name) as string,
+            email: userData.email as string,
+            phoneNumber: (userData.phoneNumber || userData.phone_number) as string,
+            role: userData.role as string,
+            avatar: userData.avatar as string,
             // Handle both camelCase (from API response) and snake_case (from DB)
-            pushNotificationsEnabled: userData.pushNotificationsEnabled ?? userData.push_notifications_enabled ?? false,
+            pushNotificationsEnabled: (userData.pushNotificationsEnabled ??
+                userData.push_notifications_enabled ??
+                false) as boolean,
         };
-        
+
         return normalized;
     }
 
@@ -199,24 +210,30 @@ class AuthService {
             formData.append("avatar", data.avatar);
         }
 
-        const response = await apiClient.patch<any>("/users/me/", formData, {
+        const response = await apiClient.patch<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >("/users/me/", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
         });
 
-        const userData = response.data.data || response.data;
+        const userData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         // Normalize the response (handle both camelCase and snake_case)
         return {
-            id: userData.id,
-            username: userData.username,
-            fullName: userData.fullName || userData.full_name,
-            email: userData.email,
-            phoneNumber: userData.phoneNumber || userData.phone_number,
-            role: userData.role,
-            avatar: userData.avatar,
+            id: userData.id as number,
+            username: userData.username as string,
+            fullName: (userData.fullName || userData.full_name) as string,
+            email: userData.email as string,
+            phoneNumber: (userData.phoneNumber || userData.phone_number) as string,
+            role: userData.role as string,
+            avatar: userData.avatar as string,
             // Handle both camelCase (from API response) and snake_case (from DB)
-            pushNotificationsEnabled: userData.pushNotificationsEnabled ?? userData.push_notifications_enabled ?? false,
+            pushNotificationsEnabled: (userData.pushNotificationsEnabled ??
+                userData.push_notifications_enabled ??
+                false) as boolean,
         };
     }
 
@@ -228,8 +245,8 @@ class AuthService {
         });
     }
 
-    async factoryReset(data: any): Promise<any> {
-        const response = await apiClient.post("/users/factory_reset/", data);
+    async factoryReset(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+        const response = await apiClient.post<ApiResponse<unknown>>("/users/factory_reset/", data);
         return response.data;
     }
 }

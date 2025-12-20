@@ -13,7 +13,10 @@ import type {
     IngredientListParams,
     PurchaseListParams,
     StockAdjustmentListParams,
+    StockAdjustmentReason,
+    Unit,
 } from "../types/inventory";
+import type { ApiResponse, WrappedPaginatedResponse, PaginatedResponse } from "../types/api";
 
 export interface InventoryListResponse<T> {
     count: number;
@@ -28,16 +31,28 @@ class InventoryService {
     /**
      * Normalize ingredient data from backend (camelCase or snake_case) to frontend (snake_case)
      */
-    private normalizeIngredient(ingredient: any): Ingredient {
+    private normalizeIngredient(ingredient: Record<string, unknown>): Ingredient {
         return {
-            id: ingredient.id,
-            name: ingredient.name,
-            unit: ingredient.unit,
-            current_stock: parseFloat(ingredient.currentStock || ingredient.current_stock || 0),
-            reorder_point: parseFloat(ingredient.reorderPoint || ingredient.reorder_point || 0),
-            average_cost_per_unit: parseFloat(ingredient.averageCostPerUnit || ingredient.average_cost_per_unit || 0),
-            last_purchased_price: parseFloat(ingredient.lastPurchasedPrice || ingredient.last_purchased_price || 0),
-            updated_at: ingredient.updatedAt || ingredient.updated_at,
+            id: ingredient.id as number,
+            name: ingredient.name as string,
+            unit: ingredient.unit as Unit, // Unit type is a union of strings
+            current_stock: parseFloat(
+                (ingredient.currentStock as string) || (ingredient.current_stock as string) || "0"
+            ),
+            reorder_point: parseFloat(
+                (ingredient.reorderPoint as string) || (ingredient.reorder_point as string) || "0"
+            ),
+            average_cost_per_unit: parseFloat(
+                (ingredient.averageCostPerUnit as string) ||
+                    (ingredient.average_cost_per_unit as string) ||
+                    "0"
+            ),
+            last_purchased_price: parseFloat(
+                (ingredient.lastPurchasedPrice as string) ||
+                    (ingredient.last_purchased_price as string) ||
+                    "0"
+            ),
+            updated_at: (ingredient.updatedAt || ingredient.updated_at) as string,
         };
     }
 
@@ -54,40 +69,57 @@ class InventoryService {
         if (params.search) queryParams.append("search", params.search);
         if (params.ordering) queryParams.append("ordering", params.ordering);
 
-        const response = await apiClient.get<any>(`/inventory/ingredients/?${queryParams.toString()}`);
+        const response = await apiClient.get<
+            | WrappedPaginatedResponse<Record<string, unknown>>
+            | PaginatedResponse<Record<string, unknown>>
+            | Record<string, unknown>[]
+        >(`/inventory/ingredients/?${queryParams.toString()}`);
+
+        const responseData = response.data;
 
         // Handle wrapped response format
-        if (response.data && "data" in response.data && "pagination" in response.data) {
-            const pagination = response.data.pagination;
-            const results = (response.data.data || []).map((item: any) =>
-                this.normalizeIngredient(item)
-            );
+        if (
+            responseData &&
+            !Array.isArray(responseData) &&
+            "data" in responseData &&
+            "pagination" in responseData
+        ) {
+            const wrapped = responseData as WrappedPaginatedResponse<Record<string, unknown>>;
+            const results = (wrapped.data || []).map((item) => this.normalizeIngredient(item));
             return {
-                count: pagination.count || 0,
-                next: pagination.next || null,
-                previous: pagination.previous || null,
+                count: wrapped.pagination.count || 0,
+                next: wrapped.pagination.next || null,
+                previous: wrapped.pagination.previous || null,
                 results,
             };
         }
 
         // Handle direct paginated response
-        if (response.data && "results" in response.data) {
+        if (responseData && !Array.isArray(responseData) && "results" in responseData) {
+            const paginated = responseData as PaginatedResponse<Record<string, unknown>>;
             return {
-                ...response.data,
-                results: (response.data.results || []).map((item: any) =>
-                    this.normalizeIngredient(item)
-                ),
+                ...paginated,
+                results: (paginated.results || []).map((item) => this.normalizeIngredient(item)),
             };
         }
 
         // Fallback for array response
+        if (Array.isArray(responseData)) {
+            return {
+                count: responseData.length,
+                next: null,
+                previous: null,
+                results: responseData.map((item) =>
+                    this.normalizeIngredient(item as Record<string, unknown>)
+                ),
+            };
+        }
+
         return {
-            count: Array.isArray(response.data) ? response.data.length : 0,
+            count: 0,
             next: null,
             previous: null,
-            results: Array.isArray(response.data)
-                ? response.data.map((item: any) => this.normalizeIngredient(item))
-                : [],
+            results: [],
         };
     }
 
@@ -95,8 +127,12 @@ class InventoryService {
      * Get single ingredient by ID
      */
     async getIngredient(id: number): Promise<Ingredient> {
-        const response = await apiClient.get<any>(`/inventory/ingredients/${id}/`);
-        const data = response.data?.data || response.data;
+        const response = await apiClient.get<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/inventory/ingredients/${id}/`);
+        const data =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizeIngredient(data);
     }
 
@@ -109,8 +145,12 @@ class InventoryService {
             unit: data.unit,
             reorder_point: data.reorder_point,
         };
-        const response = await apiClient.post<any>("/inventory/ingredients/", payload);
-        const responseData = response.data?.data || response.data;
+        const response = await apiClient.post<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >("/inventory/ingredients/", payload);
+        const responseData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizeIngredient(responseData);
     }
 
@@ -118,13 +158,17 @@ class InventoryService {
      * Update ingredient
      */
     async updateIngredient(id: number, data: UpdateIngredientData): Promise<Ingredient> {
-        const payload: any = {};
+        const payload: Record<string, unknown> = {};
         if (data.name !== undefined) payload.name = data.name;
         if (data.unit !== undefined) payload.unit = data.unit;
         if (data.reorder_point !== undefined) payload.reorder_point = data.reorder_point;
 
-        const response = await apiClient.patch<any>(`/inventory/ingredients/${id}/`, payload);
-        const responseData = response.data?.data || response.data;
+        const response = await apiClient.patch<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/inventory/ingredients/${id}/`, payload);
+        const responseData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizeIngredient(responseData);
     }
 
@@ -139,11 +183,17 @@ class InventoryService {
      * Get shopping list (low stock items)
      */
     async getShoppingList(): Promise<ShoppingListResponse> {
-        const response = await apiClient.get<any>("/inventory/ingredients/shopping_list/");
-        const data = response.data?.data || response.data;
+        const response = await apiClient.get<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >("/inventory/ingredients/shopping_list/");
+        const data =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return {
-            items: (data.items || []).map((item: any) => this.normalizeIngredient(item)),
-            share_text: data.shareText || data.share_text || "",
+            items: ((data.items as Record<string, unknown>[]) || []).map((item) =>
+                this.normalizeIngredient(item)
+            ),
+            share_text: (data.shareText || data.share_text || "") as string,
         };
     }
 
@@ -152,29 +202,34 @@ class InventoryService {
     /**
      * Normalize purchase data from backend (camelCase or snake_case)
      */
-    private normalizePurchase(purchase: any): Purchase {
+    private normalizePurchase(purchase: Record<string, unknown>): Purchase {
         return {
-            id: purchase.id,
-            purchaser: purchase.purchaser,
-            purchaser_name: purchase.purchaserName || purchase.purchaser_name,
-            ingredient: purchase.ingredient,
-            ingredient_name: purchase.ingredientName || purchase.ingredient_name,
-            quantity: parseFloat(purchase.quantity || 0),
-            total_cost: parseFloat(purchase.totalCost || purchase.total_cost || 0),
-            unit_cost: parseFloat(purchase.unitCost || purchase.unit_cost || 0),
-            purchase_date: purchase.purchaseDate || purchase.purchase_date,
-            vendor: purchase.vendor,
-            notes: purchase.notes,
-            is_price_anomaly: purchase.isPriceAnomaly !== undefined ? purchase.isPriceAnomaly : purchase.is_price_anomaly || false,
+            id: purchase.id as number,
+            purchaser: purchase.purchaser as number,
+            purchaser_name: (purchase.purchaserName || purchase.purchaser_name) as string,
+            ingredient: purchase.ingredient as number,
+            ingredient_name: (purchase.ingredientName || purchase.ingredient_name) as string,
+            quantity: parseFloat((purchase.quantity as string) || "0"),
+            total_cost: parseFloat(
+                (purchase.totalCost as string) || (purchase.total_cost as string) || "0"
+            ),
+            unit_cost: parseFloat(
+                (purchase.unitCost as string) || (purchase.unit_cost as string) || "0"
+            ),
+            purchase_date: (purchase.purchaseDate || purchase.purchase_date) as string,
+            vendor: purchase.vendor as string,
+            notes: purchase.notes as string,
+            is_price_anomaly:
+                purchase.isPriceAnomaly !== undefined
+                    ? (purchase.isPriceAnomaly as boolean)
+                    : (purchase.is_price_anomaly as boolean) || false,
         };
     }
 
     /**
      * Get list of purchases with pagination and filters
      */
-async getPurchases(
-        params: PurchaseListParams = {}
-    ): Promise<InventoryListResponse<Purchase>> {
+    async getPurchases(params: PurchaseListParams = {}): Promise<InventoryListResponse<Purchase>> {
         const queryParams = new URLSearchParams();
 
         if (params.page) queryParams.append("page", params.page.toString());
@@ -184,40 +239,57 @@ async getPurchases(
             queryParams.append("is_price_anomaly", params.is_price_anomaly.toString());
         if (params.start_date) queryParams.append("start_date", params.start_date);
 
-        const response = await apiClient.get<any>(`/inventory/purchases/?${queryParams.toString()}`);
+        const response = await apiClient.get<
+            | WrappedPaginatedResponse<Record<string, unknown>>
+            | PaginatedResponse<Record<string, unknown>>
+            | Record<string, unknown>[]
+        >(`/inventory/purchases/?${queryParams.toString()}`);
+
+        const responseData = response.data;
 
         // Handle wrapped response format
-        if (response.data && "data" in response.data && "pagination" in response.data) {
-            const pagination = response.data.pagination;
-            const results = (response.data.data || []).map((item: any) =>
-                this.normalizePurchase(item)
-            );
+        if (
+            responseData &&
+            !Array.isArray(responseData) &&
+            "data" in responseData &&
+            "pagination" in responseData
+        ) {
+            const wrapped = responseData as WrappedPaginatedResponse<Record<string, unknown>>;
+            const results = (wrapped.data || []).map((item) => this.normalizePurchase(item));
             return {
-                count: pagination.count || 0,
-                next: pagination.next || null,
-                previous: pagination.previous || null,
+                count: wrapped.pagination.count || 0,
+                next: wrapped.pagination.next || null,
+                previous: wrapped.pagination.previous || null,
                 results,
             };
         }
 
         // Handle direct paginated response
-        if (response.data && "results" in response.data) {
+        if (responseData && !Array.isArray(responseData) && "results" in responseData) {
+            const paginated = responseData as PaginatedResponse<Record<string, unknown>>;
             return {
-                ...response.data,
-                results: (response.data.results || []).map((item: any) =>
-                    this.normalizePurchase(item)
-                ),
+                ...paginated,
+                results: (paginated.results || []).map((item) => this.normalizePurchase(item)),
             };
         }
 
         // Fallback for array response
+        if (Array.isArray(responseData)) {
+            return {
+                count: responseData.length,
+                next: null,
+                previous: null,
+                results: responseData.map((item) =>
+                    this.normalizePurchase(item as Record<string, unknown>)
+                ),
+            };
+        }
+
         return {
-            count: Array.isArray(response.data) ? response.data.length : 0,
+            count: 0,
             next: null,
             previous: null,
-            results: Array.isArray(response.data)
-                ? response.data.map((item: any) => this.normalizePurchase(item))
-                : [],
+            results: [],
         };
     }
 
@@ -225,8 +297,12 @@ async getPurchases(
      * Get single purchase by ID
      */
     async getPurchase(id: number): Promise<Purchase> {
-        const response = await apiClient.get<any>(`/inventory/purchases/${id}/`);
-        const data = response.data?.data || response.data;
+        const response = await apiClient.get<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/inventory/purchases/${id}/`);
+        const data =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizePurchase(data);
     }
 
@@ -241,8 +317,12 @@ async getPurchases(
             vendor: data.vendor || "",
             notes: data.notes || "",
         };
-        const response = await apiClient.post<any>("/inventory/purchases/", payload);
-        const responseData = response.data?.data || response.data;
+        const response = await apiClient.post<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >("/inventory/purchases/", payload);
+        const responseData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizePurchase(responseData);
     }
 
@@ -250,15 +330,19 @@ async getPurchases(
      * Update purchase
      */
     async updatePurchase(id: number, data: UpdatePurchaseData): Promise<Purchase> {
-        const payload: any = {};
+        const payload: Record<string, unknown> = {};
         if (data.ingredient !== undefined) payload.ingredient = data.ingredient;
         if (data.quantity !== undefined) payload.quantity = data.quantity;
         if (data.total_cost !== undefined) payload.total_cost = data.total_cost;
         if (data.vendor !== undefined) payload.vendor = data.vendor;
         if (data.notes !== undefined) payload.notes = data.notes;
 
-        const response = await apiClient.patch<any>(`/inventory/purchases/${id}/`, payload);
-        const responseData = response.data?.data || response.data;
+        const response = await apiClient.patch<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/inventory/purchases/${id}/`, payload);
+        const responseData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizePurchase(responseData);
     }
 
@@ -274,26 +358,28 @@ async getPurchases(
     /**
      * Normalize stock adjustment data from backend (camelCase or snake_case)
      */
-    private normalizeStockAdjustment(adjustment: any): StockAdjustment {
+    private normalizeStockAdjustment(adjustment: Record<string, unknown>): StockAdjustment {
         return {
-            id: adjustment.id,
-            ingredient: adjustment.ingredient,
-            ingredient_name: adjustment.ingredientName || adjustment.ingredient_name,
-            actor: adjustment.actor,
-            actor_name: adjustment.actorName || adjustment.actor_name,
+            id: adjustment.id as number,
+            ingredient: adjustment.ingredient as number,
+            ingredient_name: (adjustment.ingredientName || adjustment.ingredient_name) as string,
+            actor: adjustment.actor as number,
+            actor_name: (adjustment.actorName || adjustment.actor_name) as string,
             quantity_change: parseFloat(
-                adjustment.quantityChange || adjustment.quantity_change || 0
+                (adjustment.quantityChange as string) ||
+                    (adjustment.quantity_change as string) ||
+                    "0"
             ),
-            reason: adjustment.reason,
-            notes: adjustment.notes || "",
-            timestamp: adjustment.timestamp,
+            reason: adjustment.reason as StockAdjustmentReason,
+            notes: (adjustment.notes || "") as string,
+            timestamp: adjustment.timestamp as string,
         };
     }
 
     /**
      * Get list of stock adjustments with pagination and filters
      */
-async getStockAdjustments(
+    async getStockAdjustments(
         params: StockAdjustmentListParams = {}
     ): Promise<InventoryListResponse<StockAdjustment>> {
         const queryParams = new URLSearchParams();
@@ -303,42 +389,59 @@ async getStockAdjustments(
         if (params.ingredient) queryParams.append("ingredient", params.ingredient.toString());
         if (params.start_date) queryParams.append("start_date", params.start_date);
 
-        const response = await apiClient.get<any>(
-            `/inventory/adjustments/?${queryParams.toString()}`
-        );
+        const response = await apiClient.get<
+            | WrappedPaginatedResponse<Record<string, unknown>>
+            | PaginatedResponse<Record<string, unknown>>
+            | Record<string, unknown>[]
+        >(`/inventory/adjustments/?${queryParams.toString()}`);
+
+        const responseData = response.data;
 
         // Handle wrapped response format
-        if (response.data && "data" in response.data && "pagination" in response.data) {
-            const pagination = response.data.pagination;
-            const results = (response.data.data || []).map((item: any) =>
-                this.normalizeStockAdjustment(item)
-            );
+        if (
+            responseData &&
+            !Array.isArray(responseData) &&
+            "data" in responseData &&
+            "pagination" in responseData
+        ) {
+            const wrapped = responseData as WrappedPaginatedResponse<Record<string, unknown>>;
+            const results = (wrapped.data || []).map((item) => this.normalizeStockAdjustment(item));
             return {
-                count: pagination.count || 0,
-                next: pagination.next || null,
-                previous: pagination.previous || null,
+                count: wrapped.pagination.count || 0,
+                next: wrapped.pagination.next || null,
+                previous: wrapped.pagination.previous || null,
                 results,
             };
         }
 
         // Handle direct paginated response
-        if (response.data && "results" in response.data) {
+        if (responseData && !Array.isArray(responseData) && "results" in responseData) {
+            const paginated = responseData as PaginatedResponse<Record<string, unknown>>;
             return {
-                ...response.data,
-                results: (response.data.results || []).map((item: any) =>
+                ...paginated,
+                results: (paginated.results || []).map((item) =>
                     this.normalizeStockAdjustment(item)
                 ),
             };
         }
 
         // Fallback for array response
+        if (Array.isArray(responseData)) {
+            return {
+                count: responseData.length,
+                next: null,
+                previous: null,
+                results: responseData.map((item) =>
+                    this.normalizeStockAdjustment(item as Record<string, unknown>)
+                ),
+            };
+        }
+
         return {
-            count: Array.isArray(response.data) ? response.data.length : 0,
+            count: 0,
             next: null,
             previous: null,
-            results: Array.isArray(response.data)
-                ? response.data.map((item: any) => this.normalizeStockAdjustment(item))
-                : [],
+            results: [],
         };
     }
 
@@ -346,8 +449,12 @@ async getStockAdjustments(
      * Get single stock adjustment by ID
      */
     async getStockAdjustment(id: number): Promise<StockAdjustment> {
-        const response = await apiClient.get<any>(`/inventory/adjustments/${id}/`);
-        const data = response.data?.data || response.data;
+        const response = await apiClient.get<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/inventory/adjustments/${id}/`);
+        const data =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizeStockAdjustment(data);
     }
 
@@ -361,8 +468,12 @@ async getStockAdjustments(
             reason: data.reason,
             notes: data.notes || "",
         };
-        const response = await apiClient.post<any>("/inventory/adjustments/", payload);
-        const responseData = response.data?.data || response.data;
+        const response = await apiClient.post<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >("/inventory/adjustments/", payload);
+        const responseData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizeStockAdjustment(responseData);
     }
 
@@ -373,14 +484,18 @@ async getStockAdjustments(
         id: number,
         data: UpdateStockAdjustmentData
     ): Promise<StockAdjustment> {
-        const payload: any = {};
+        const payload: Record<string, unknown> = {};
         if (data.ingredient !== undefined) payload.ingredient = data.ingredient;
         if (data.quantity_change !== undefined) payload.quantity_change = data.quantity_change;
         if (data.reason !== undefined) payload.reason = data.reason;
         if (data.notes !== undefined) payload.notes = data.notes;
 
-        const response = await apiClient.patch<any>(`/inventory/adjustments/${id}/`, payload);
-        const responseData = response.data?.data || response.data;
+        const response = await apiClient.patch<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/inventory/adjustments/${id}/`, payload);
+        const responseData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizeStockAdjustment(responseData);
     }
 
@@ -393,4 +508,3 @@ async getStockAdjustments(
 }
 
 export const inventoryService = new InventoryService();
-

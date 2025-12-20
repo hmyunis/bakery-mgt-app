@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Tabs, Tab, Spinner, Button } from "@heroui/react";
 import { CreditCard, Plus, Store, Trash2 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
@@ -14,6 +14,7 @@ import { usePaymentMethods, useUpdatePaymentMethod } from "../hooks/usePayment";
 import type { UserProfile } from "../services/authService";
 import type { PaymentMethod } from "../types/payment";
 import { toast } from "sonner";
+import type { ApiError, ApiErrorResponse } from "../types/api";
 import { useAppSelector } from "../store";
 import { BakerySettingsForm } from "../components/settings/BakerySettingsForm";
 import { FactoryResetForm } from "../components/settings/FactoryResetForm";
@@ -53,7 +54,10 @@ const SettingsPage: React.FC = () => {
         [paymentMethodsData]
     );
 
-    useEffect(() => {
+    const [prevUser, setPrevUser] = useState(user);
+
+    if (user !== prevUser) {
+        setPrevUser(user);
         if (user) {
             setEditForm({
                 id: user.id,
@@ -65,7 +69,7 @@ const SettingsPage: React.FC = () => {
                 pushNotificationsEnabled: user.pushNotificationsEnabled,
             });
         }
-    }, [user]);
+    }
 
     const handleEdit = () => {
         if (user) {
@@ -119,7 +123,7 @@ const SettingsPage: React.FC = () => {
                 id: paymentMethod.id,
                 data: { is_active: !paymentMethod.is_active },
             });
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
@@ -153,37 +157,38 @@ const SettingsPage: React.FC = () => {
             setIsEditing(false);
             setPasswordForm({ oldPassword: "", newPassword: "" });
             toast.success("Profile updated successfully!");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error saving profile:", error);
+            const apiError = error as ApiError;
 
             // Extract error message from response
-            const errorData = error.response?.data;
+            const errorData = apiError.response?.data as ApiErrorResponse;
             let errorMessage = "Failed to update profile. Please try again.";
 
             if (errorData) {
                 // Handle specific field errors
                 if (errorData.old_password || errorData.oldPassword) {
                     errorMessage =
-                        errorData.old_password?.[0] ||
-                        errorData.oldPassword?.[0] ||
+                        (errorData.old_password as string[])?.[0] ||
+                        (errorData.oldPassword as string[])?.[0] ||
                         "Wrong password.";
                 } else if (errorData.new_password || errorData.newPassword) {
                     errorMessage =
-                        errorData.new_password?.[0] ||
-                        errorData.newPassword?.[0] ||
+                        (errorData.new_password as string[])?.[0] ||
+                        (errorData.newPassword as string[])?.[0] ||
                         "Invalid new password.";
                 } else if (errorData.email) {
                     errorMessage = Array.isArray(errorData.email)
                         ? errorData.email[0]
-                        : errorData.email;
+                        : (errorData.email as string);
                 } else if (errorData.username) {
                     errorMessage = Array.isArray(errorData.username)
                         ? errorData.username[0]
-                        : errorData.username;
+                        : (errorData.username as string);
                 } else if (errorData.phone_number || errorData.phoneNumber) {
                     errorMessage =
-                        errorData.phone_number?.[0] ||
-                        errorData.phoneNumber?.[0] ||
+                        (errorData.phone_number as string[])?.[0] ||
+                        (errorData.phoneNumber as string[])?.[0] ||
                         "Invalid phone number.";
                 } else if (errorData.message) {
                     errorMessage = errorData.message;

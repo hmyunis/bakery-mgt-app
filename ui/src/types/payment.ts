@@ -27,4 +27,3 @@ export interface PaymentMethodListParams {
     page_size?: number;
     is_active?: boolean;
 }
-

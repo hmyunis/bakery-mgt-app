@@ -1,18 +1,19 @@
-from rest_framework.decorators import api_view, permission_classes
 from datetime import datetime
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from django.db import connection
-from django.utils import timezone
-from django.db.models import Sum, F
 from decimal import Decimal
 
-from sales.models import Sale, SalePayment, SaleItem
-from inventory.models import Ingredient
-from production.models import IngredientUsage, Product, ProductionRun
+from django.db import connection
+from django.db.models import Avg, F, Sum
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+
 from audit.models import AuditLog
-from django.db.models import Count, Avg, Q
+from inventory.models import Ingredient
+from production.models import IngredientUsage, ProductionRun
+from sales.models import Sale, SaleItem, SalePayment
+
 from .models import BakerySettings
 from .serializers import BakerySettingsSerializer, BakerySettingsUpdateSerializer
 
@@ -33,7 +34,7 @@ def _to_float(value):
     return float(value)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def health_check(request):
     """
@@ -43,19 +44,25 @@ def health_check(request):
         # Check database connection
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
-        
-        return Response({
-            'status': 'healthy',
-            'service': 'bakery-management-api',
-            'database': 'connected'
-        }, status=status.HTTP_200_OK)
+
+        return Response(
+            {
+                "status": "healthy",
+                "service": "bakery-management-api",
+                "database": "connected",
+            },
+            status=status.HTTP_200_OK,
+        )
     except Exception as e:
-        return Response({
-            'status': 'unhealthy',
-            'service': 'bakery-management-api',
-            'database': 'disconnected',
-            'error': str(e)
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response(
+            {
+                "status": "unhealthy",
+                "service": "bakery-management-api",
+                "database": "disconnected",
+                "error": str(e),
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
 
 
 @api_view(["GET"])
@@ -70,12 +77,13 @@ def owner_dashboard(request):
     - topProductsToday: [{ productName, quantity, revenue }]
     - salesByHour: [{ hour, count, total }] (last 12 hours)
     - criticalStockAlerts: [{ id, name, unit, currentStock, reorderPoint, shortfall }]
-    - recentProductionWastage: [{ productionRunId, producedAt, producedItemName, ingredientName, unit, wastage }]
+    - recentProductionWastage: [{ productionRunId, producedAt, producedItemName,
+      ingredientName, unit, wastage }]
     - inventoryStats: { totalValue, totalItems, lowStockCount }
     """
     today = timezone.localdate()
     now = timezone.now()
-    
+
     # Calculate start and end of day in local time, then convert to aware datetimes
     # This avoids DB-level timezone conversion issues
     start_of_day = timezone.make_aware(datetime.combine(today, datetime.min.time()))
@@ -83,7 +91,9 @@ def owner_dashboard(request):
 
     # Sales Today
     sales_qs = Sale.objects.filter(created_at__range=(start_of_day, end_of_day))
-    sales_today_total = sales_qs.aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
+    sales_today_total = sales_qs.aggregate(total=Sum("total_amount"))[
+        "total"
+    ] or Decimal("0")
     sales_today_count = sales_qs.count()
     sales_today_avg = sales_qs.aggregate(avg=Avg("total_amount"))["avg"] or Decimal("0")
 
@@ -128,12 +138,16 @@ def owner_dashboard(request):
             created_at__gte=hour_start, created_at__lt=hour_end
         )
         hour_count = hour_sales.count()
-        hour_total = hour_sales.aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
-        sales_by_hour.append({
-            "hour": hour_start.hour,
-            "count": hour_count,
-            "total": _to_float(hour_total),
-        })
+        hour_total = hour_sales.aggregate(total=Sum("total_amount"))[
+            "total"
+        ] or Decimal("0")
+        sales_by_hour.append(
+            {
+                "hour": hour_start.hour,
+                "count": hour_count,
+                "total": _to_float(hour_total),
+            }
+        )
 
     # Critical Stock Alerts (raw ingredients)
     low_stock_qs = (
@@ -189,7 +203,9 @@ def owner_dashboard(request):
         _to_float(ing.current_stock) * _to_float(ing.average_cost_per_unit)
         for ing in all_ingredients
     )
-    low_stock_count = Ingredient.objects.filter(current_stock__lte=F("reorder_point")).count()
+    low_stock_count = Ingredient.objects.filter(
+        current_stock__lte=F("reorder_point")
+    ).count()
     inventory_stats = {
         "total_value": total_inventory_value,
         "total_items": all_ingredients.count(),
@@ -209,23 +225,25 @@ def owner_dashboard(request):
             item_name = run.product.name
         elif run.composite_ingredient_id:
             item_name = run.composite_ingredient.name
-        
-        recent_production_runs.append({
-            "id": run.id,
-            "item_name": item_name,
-            "quantity_produced": _to_float(run.quantity_produced),
-            "produced_at": run.date_produced,
-            "chef_name": run.chef.username if run.chef else None,
-        })
+
+        recent_production_runs.append(
+            {
+                "id": run.id,
+                "item_name": item_name,
+                "quantity_produced": _to_float(run.quantity_produced),
+                "produced_at": run.date_produced,
+                "chef_name": run.chef.username if run.chef else None,
+            }
+        )
 
     # Audit Insights (last 24 hours)
     twenty_four_hours_ago = now - timezone.timedelta(hours=24)
     recent_audits_qs = AuditLog.objects.filter(timestamp__gte=twenty_four_hours_ago)
-    
+
     delete_count = recent_audits_qs.filter(action="DELETE").count()
     update_count = recent_audits_qs.filter(action="UPDATE").count()
     create_count = recent_audits_qs.filter(action="CREATE").count()
-    
+
     recent_delete_actions = (
         AuditLog.objects.filter(action="DELETE", timestamp__gte=twenty_four_hours_ago)
         .select_related("actor")
@@ -234,13 +252,15 @@ def owner_dashboard(request):
     recent_deletes = []
     for log in recent_delete_actions:
         actor_name = log.actor.username if log.actor else "System"
-        recent_deletes.append({
-            "id": log.id,
-            "table_name": log.table_name,
-            "record_id": log.record_id,
-            "actor_name": actor_name,
-            "timestamp": log.timestamp,
-        })
+        recent_deletes.append(
+            {
+                "id": log.id,
+                "table_name": log.table_name,
+                "record_id": log.record_id,
+                "actor_name": actor_name,
+                "timestamp": log.timestamp,
+            }
+        )
 
     audit_insights = {
         "delete_count": delete_count,
@@ -256,7 +276,10 @@ def owner_dashboard(request):
                 "count": sales_today_count,
                 "average": _to_float(sales_today_avg),
             },
-            "cash_vs_digital_split": {"cash": _to_float(cash_total), "digital": _to_float(digital_total)},
+            "cash_vs_digital_split": {
+                "cash": _to_float(cash_total),
+                "digital": _to_float(digital_total),
+            },
             "top_products_today": top_products_today,
             "sales_by_hour": sales_by_hour,
             "critical_stock_alerts": critical_stock_alerts,
@@ -277,25 +300,32 @@ def bakery_settings(request):
     PATCH: Admin-only endpoint to update bakery settings.
     """
     instance = BakerySettings.get_instance()
-    
+
     if request.method == "GET":
-        serializer = BakerySettingsSerializer(instance, context={'request': request})
+        serializer = BakerySettingsSerializer(instance, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     elif request.method == "PATCH":
         # Check admin permission
-        if not request.user.is_authenticated or getattr(request.user, "role", None) != "admin":
+        if (
+            not request.user.is_authenticated
+            or getattr(request.user, "role", None) != "admin"
+        ):
             return Response(
                 {"detail": "You do not have permission to perform this action."},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
-        
-        serializer = BakerySettingsUpdateSerializer(instance, data=request.data, partial=True)
-        
+
+        serializer = BakerySettingsUpdateSerializer(
+            instance, data=request.data, partial=True
+        )
+
         if serializer.is_valid():
             serializer.save()
             # Return updated data with full serializer
-            full_serializer = BakerySettingsSerializer(instance, context={'request': request})
+            full_serializer = BakerySettingsSerializer(
+                instance, context={"request": request}
+            )
             return Response(full_serializer.data, status=status.HTTP_200_OK)
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

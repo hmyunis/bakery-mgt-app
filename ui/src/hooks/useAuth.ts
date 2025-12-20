@@ -7,6 +7,7 @@ import { authService, type LoginCredentials } from "../services/authService";
 import { clearSession, setSession } from "../store/authSlice";
 import { setAuthToken } from "../lib/apiClient";
 import { isValidRole } from "../constants/roles";
+import type { ApiError } from "../types/api";
 
 export const useAuth = () => {
     const dispatch = useDispatch();
@@ -109,11 +110,12 @@ export const useAuth = () => {
                 navigate(redirectPath, { replace: true });
             }, 100);
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const message =
-                error.response?.data?.non_field_errors?.[0] ||
-                error.response?.data?.detail ||
-                error.message ||
+                apiError.response?.data?.non_field_errors?.[0] ||
+                apiError.response?.data?.detail ||
+                apiError.message ||
                 "Login failed. Please check your credentials.";
             toast.error(message);
         },

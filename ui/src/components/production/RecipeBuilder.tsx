@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
     Modal,
     ModalContent,
@@ -52,15 +52,16 @@ export function RecipeBuilder({
     const { data: productsWithRecipesIds } = useProductsWithRecipes();
 
     // Ensure productsWithRecipesIds is always an array
-    const productsWithRecipesArray = Array.isArray(productsWithRecipesIds)
-        ? productsWithRecipesIds
-        : [];
+    const productsWithRecipesArray = useMemo(
+        () => (Array.isArray(productsWithRecipesIds) ? productsWithRecipesIds : []),
+        [productsWithRecipesIds]
+    );
     const { mutateAsync: createRecipe, isPending: isCreating } = useCreateRecipe();
     const { mutateAsync: updateRecipe, isPending: isUpdating } = useUpdateRecipe();
 
     const isLoading = isCreating || isUpdating;
-    const allProducts = productsData?.results ?? [];
-    const ingredients = ingredientsData?.results ?? [];
+    const allProducts = useMemo(() => productsData?.results ?? [], [productsData]);
+    const ingredients = useMemo(() => ingredientsData?.results ?? [], [ingredientsData]);
 
     // Filter products to exclude those that already have recipes (unless editing)
     const availableProducts = useMemo(() => {
@@ -100,8 +101,18 @@ export function RecipeBuilder({
         return selectedIngredientIds.size >= ingredients.length;
     }, [items, ingredients]);
 
-    // Reset form when modal opens/closes or recipe changes
-    useEffect(() => {
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+    const [prevRecipe, setPrevRecipe] = useState(recipe);
+    const [prevPreselectedId, setPrevPreselectedId] = useState(preselectedProductId);
+
+    if (
+        isOpen !== prevIsOpen ||
+        recipe !== prevRecipe ||
+        preselectedProductId !== prevPreselectedId
+    ) {
+        setPrevIsOpen(isOpen);
+        setPrevRecipe(recipe);
+        setPrevPreselectedId(preselectedProductId);
         if (isOpen) {
             if (recipe) {
                 setFormData({
@@ -125,7 +136,7 @@ export function RecipeBuilder({
             }
             setErrors({});
         }
-    }, [isOpen, recipe, preselectedProductId]);
+    }
 
     const handleInputChange = (field: string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -251,7 +262,7 @@ export function RecipeBuilder({
                 await createRecipe(createData);
             }
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };

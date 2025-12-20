@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { productionService } from "../services/productionService";
+import type { ApiError } from "../types/api";
 import type {
     CreateProductData,
     UpdateProductData,
@@ -55,10 +56,11 @@ export function useCreateProduct() {
             queryClient.invalidateQueries({ queryKey: ["products"] });
             toast.success("Product created successfully!");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to create product. Please try again.";
             toast.error(errorMessage);
         },
@@ -80,10 +82,11 @@ export function useUpdateProduct() {
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
             toast.success("Product updated successfully!");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to update product. Please try again.";
             toast.error(errorMessage);
         },
@@ -105,10 +108,11 @@ export function useDeleteProduct() {
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
             toast.success("Product deleted successfully!");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to delete product. Please try again.";
             toast.error(errorMessage);
         },
@@ -172,10 +176,11 @@ export function useCreateRecipe() {
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
             toast.success("Recipe created successfully!");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to create recipe. Please try again.";
             toast.error(errorMessage);
         },
@@ -196,13 +201,16 @@ export function useUpdateRecipe() {
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
             queryClient.invalidateQueries({ queryKey: ["productsWithRecipes"] });
             // Invalidate the specific recipe query to refresh detail modal
-            queryClient.invalidateQueries({ queryKey: ["recipes", updatedRecipe.id] });
+            queryClient.invalidateQueries({
+                queryKey: ["recipes", updatedRecipe.id],
+            });
             toast.success("Recipe updated successfully!");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to update recipe. Please try again.";
             toast.error(errorMessage);
         },
@@ -224,10 +232,11 @@ export function useDeleteRecipe() {
             queryClient.invalidateQueries({ queryKey: ["productsWithRecipes"] });
             toast.success("Recipe deleted successfully!");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to delete recipe. Please try again.";
             toast.error(errorMessage);
         },
@@ -291,10 +300,11 @@ export function useCreateProductionRun() {
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update ingredient stock
             toast.success("Production run recorded successfully!");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to record production run. Please try again.";
             toast.error(errorMessage);
         },
@@ -317,13 +327,13 @@ export function useDeleteProductionRun() {
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update ingredient stock
             toast.success("Production run deleted successfully. Stock changes have been reversed.");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to delete production run. Please try again.";
             toast.error(errorMessage);
         },
     });
 }
-

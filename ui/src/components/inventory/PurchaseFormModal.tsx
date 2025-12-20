@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
     Modal,
     ModalContent,
@@ -34,7 +34,8 @@ interface PurchaseFormModalProps {
 const RECENT_VENDORS_KEY = "bakery_recent_vendors";
 const MAX_RECENT_VENDORS = 5;
 
-// Helper functions for recent vendors
+// --- Helper functions for recent vendors ---
+
 const getRecentVendors = (): string[] => {
     try {
         const stored = localStorage.getItem(RECENT_VENDORS_KEY);
@@ -62,25 +63,32 @@ const removeRecentVendor = (vendor: string): string[] => {
 
 type CostInputMode = "total" | "unit";
 
-export function PurchaseFormModal({
-    isOpen,
-    onClose,
+// --- Internal Form Component ---
+// This component handles all state and logic. It is mounted freshly
+// whenever the modal opens or the purchase/ingredient changes.
+function PurchaseFormContent({
     purchase,
     preselectedIngredient,
-}: PurchaseFormModalProps) {
+    onClose,
+}: {
+    purchase?: Purchase | null;
+    preselectedIngredient?: Ingredient | null;
+    onClose: () => void;
+}) {
     const isEdit = !!purchase;
 
+    // Initialize state directly from props
     const [formData, setFormData] = useState({
-        ingredient: "",
-        quantity: "",
-        total_cost: "",
-        unit_cost: "",
-        vendor: "",
-        notes: "",
+        ingredient: purchase?.ingredient.toString() || preselectedIngredient?.id.toString() || "",
+        quantity: purchase?.quantity.toString() || "",
+        total_cost: purchase?.total_cost.toString() || "",
+        unit_cost: purchase?.unit_cost.toString() || "",
+        vendor: purchase?.vendor || "",
+        notes: purchase?.notes || "",
     });
 
     const [costInputMode, setCostInputMode] = useState<CostInputMode>("total");
-    const [recentVendors, setRecentVendors] = useState<string[]>([]);
+    const [recentVendors, setRecentVendors] = useState<string[]>(getRecentVendors());
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const { data: ingredientsData } = useIngredients({ page_size: 100 });
@@ -88,7 +96,7 @@ export function PurchaseFormModal({
     const { mutateAsync: updatePurchase, isPending: isUpdating } = useUpdatePurchase();
 
     const isLoading = isCreating || isUpdating;
-    const ingredients = ingredientsData?.results || [];
+    const ingredients = useMemo(() => ingredientsData?.results || [], [ingredientsData]);
 
     // Memoize selectedKeys Set for ingredient select
     const ingredientSelectedKeys = useMemo(() => {
@@ -102,50 +110,6 @@ export function PurchaseFormModal({
             label: `${ing.name} (${ing.unit})`,
         }));
     }, [ingredients]);
-
-    // Load recent vendors on mount
-    useEffect(() => {
-        setRecentVendors(getRecentVendors());
-    }, []);
-
-    // Reset form when modal opens/closes or purchase changes
-    useEffect(() => {
-        if (isOpen) {
-            setRecentVendors(getRecentVendors());
-            if (purchase) {
-                setFormData({
-                    ingredient: purchase.ingredient.toString(),
-                    quantity: purchase.quantity.toString(),
-                    total_cost: purchase.total_cost.toString(),
-                    unit_cost: purchase.unit_cost.toString(),
-                    vendor: purchase.vendor || "",
-                    notes: purchase.notes || "",
-                });
-                setCostInputMode("total");
-            } else if (preselectedIngredient) {
-                setFormData({
-                    ingredient: preselectedIngredient.id.toString(),
-                    quantity: "",
-                    total_cost: "",
-                    unit_cost: "",
-                    vendor: "",
-                    notes: "",
-                });
-                setCostInputMode("total");
-            } else {
-                setFormData({
-                    ingredient: "",
-                    quantity: "",
-                    total_cost: "",
-                    unit_cost: "",
-                    vendor: "",
-                    notes: "",
-                });
-                setCostInputMode("total");
-            }
-            setErrors({});
-        }
-    }, [isOpen, purchase, preselectedIngredient]);
 
     const handleInputChange = (field: string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -195,18 +159,14 @@ export function PurchaseFormModal({
             newErrors.ingredient = "Ingredient is required";
         }
 
-        if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
+        const qty = parseFloat(formData.quantity);
+        if (!formData.quantity || isNaN(qty) || qty <= 0) {
             newErrors.quantity = "Quantity must be greater than 0";
         }
 
-        if (costInputMode === "total") {
-            if (!formData.total_cost || parseFloat(formData.total_cost) < 0) {
-                newErrors.total_cost = "Total cost must be 0 or greater";
-            }
-        } else {
-            if (!formData.unit_cost || parseFloat(formData.unit_cost) < 0) {
-                newErrors.unit_cost = "Unit cost must be 0 or greater";
-            }
+        const totalCost = calculateTotalCost();
+        if (isNaN(totalCost) || totalCost < 0) {
+            newErrors.total_cost = "Total cost cannot be negative";
         }
 
         setErrors(newErrors);
@@ -218,21 +178,18 @@ export function PurchaseFormModal({
             return;
         }
 
-        // Save vendor to recent vendors
-        if (formData.vendor.trim()) {
-            saveRecentVendor(formData.vendor);
-        }
-
-        const totalCost = calculateTotalCost();
-
         try {
+            const totalCost = calculateTotalCost();
+            const unitCost = calculateUnitCost();
+
             if (isEdit && purchase) {
                 const updateData: UpdatePurchaseData = {
                     ingredient: parseInt(formData.ingredient),
                     quantity: parseFloat(formData.quantity),
                     total_cost: totalCost,
-                    vendor: formData.vendor || undefined,
-                    notes: formData.notes || undefined,
+                    unit_cost: unitCost,
+                    vendor: formData.vendor.trim() || undefined,
+                    notes: formData.notes.trim() || undefined,
                 };
 
                 await updatePurchase({ id: purchase.id, data: updateData });
@@ -241,272 +198,232 @@ export function PurchaseFormModal({
                     ingredient: parseInt(formData.ingredient),
                     quantity: parseFloat(formData.quantity),
                     total_cost: totalCost,
-                    vendor: formData.vendor || undefined,
-                    notes: formData.notes || undefined,
+                    unit_cost: unitCost,
+                    vendor: formData.vendor.trim() || undefined,
+                    notes: formData.notes.trim() || undefined,
                 };
 
                 await createPurchase(createData);
             }
+
+            if (formData.vendor.trim()) {
+                saveRecentVendor(formData.vendor.trim());
+            }
+
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
 
-    // Preview values
-    const previewTotalCost = calculateTotalCost().toFixed(2);
-    const previewUnitCost = calculateUnitCost().toFixed(2);
-
-    // Check for price anomaly (>30% above average cost)
-    const selectedIngredient =
-        ingredients.find((ing) => ing.id.toString() === formData.ingredient) ||
-        preselectedIngredient;
-    const unitCostValue = calculateUnitCost();
-    const isPriceAnomaly =
-        selectedIngredient &&
-        selectedIngredient.average_cost_per_unit > 0 &&
-        unitCostValue > 0 &&
-        unitCostValue > selectedIngredient.average_cost_per_unit * 1.3;
+    const selectedIngredient = useMemo(
+        () => ingredients.find((ing) => ing.id.toString() === formData.ingredient),
+        [ingredients, formData.ingredient]
+    );
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="2xl" backdrop="blur">
-            <ModalContent className="max-h-screen overflow-y-auto">
+        <>
+            <ModalHeader className="flex flex-col gap-1">
+                {isEdit ? "Edit Purchase Record" : "Record New Purchase"}
+                {selectedIngredient && (
+                    <p className="text-sm font-normal text-slate-500">
+                        Purchasing {selectedIngredient.name}
+                    </p>
+                )}
+            </ModalHeader>
+            <ModalBody className="space-y-4">
+                <Select
+                    label="Ingredient"
+                    placeholder="Select an ingredient"
+                    selectedKeys={ingredientSelectedKeys}
+                    onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0] as string;
+                        if (selected) {
+                            handleInputChange("ingredient", selected);
+                        }
+                    }}
+                    isRequired
+                    isInvalid={!!errors.ingredient}
+                    errorMessage={errors.ingredient}
+                    isDisabled={isEdit || !!preselectedIngredient}
+                    classNames={{
+                        trigger: "!w-full !text-left",
+                        label: "!w-full !text-left",
+                        base: "!w-full !text-left",
+                        value: "!text-slate-900 dark:!text-slate-100",
+                    }}
+                >
+                    {ingredientItems.map((item) => (
+                        <SelectItem key={item.key} textValue={item.label}>
+                            {item.label}
+                        </SelectItem>
+                    ))}
+                </Select>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                        label="Quantity"
+                        type="number"
+                        placeholder="0.000"
+                        value={formData.quantity}
+                        onValueChange={(v) => handleInputChange("quantity", v)}
+                        isRequired
+                        isInvalid={!!errors.quantity}
+                        errorMessage={errors.quantity}
+                        endContent={
+                            <span className="text-xs text-slate-500">
+                                {selectedIngredient?.unit || ""}
+                            </span>
+                        }
+                        classNames={{
+                            input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
+                        }}
+                    />
+
+                    <RadioGroup
+                        label="Cost Input Mode"
+                        orientation="horizontal"
+                        value={costInputMode}
+                        onValueChange={(v) => setCostInputMode(v as CostInputMode)}
+                        classNames={{
+                            label: "text-xs",
+                        }}
+                    >
+                        <Radio value="total">Total Cost</Radio>
+                        <Radio value="unit">Unit Cost</Radio>
+                    </RadioGroup>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                        label="Total Cost"
+                        type="number"
+                        placeholder="0.00"
+                        value={
+                            costInputMode === "total"
+                                ? formData.total_cost
+                                : calculateTotalCost().toFixed(2)
+                        }
+                        onValueChange={(v) => handleInputChange("total_cost", v)}
+                        isDisabled={costInputMode === "unit"}
+                        isRequired={costInputMode === "total"}
+                        isInvalid={!!errors.total_cost}
+                        errorMessage={errors.total_cost}
+                        startContent={<span className="text-xs text-slate-500">ETB</span>}
+                        classNames={{
+                            input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
+                        }}
+                    />
+
+                    <Input
+                        label="Unit Cost"
+                        type="number"
+                        placeholder="0.00"
+                        value={
+                            costInputMode === "unit"
+                                ? formData.unit_cost
+                                : calculateUnitCost().toFixed(2)
+                        }
+                        onValueChange={(v) => handleInputChange("unit_cost", v)}
+                        isDisabled={costInputMode === "total"}
+                        isRequired={costInputMode === "unit"}
+                        startContent={<span className="text-xs text-slate-500">ETB</span>}
+                        classNames={{
+                            input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
+                        }}
+                    />
+                </div>
+
+                {selectedIngredient &&
+                    selectedIngredient.reorder_point > selectedIngredient.current_stock && (
+                        <Alert
+                            color="warning"
+                            title="Low Stock Warning"
+                            icon={<AlertTriangle className="h-4 w-4" />}
+                        >
+                            Current stock ({selectedIngredient.current_stock}{" "}
+                            {selectedIngredient.unit}) is below reorder point (
+                            {selectedIngredient.reorder_point} {selectedIngredient.unit}).
+                        </Alert>
+                    )}
+
+                <div className="space-y-2">
+                    <Input
+                        label="Vendor"
+                        placeholder="Enter vendor name"
+                        value={formData.vendor}
+                        onValueChange={(v) => handleInputChange("vendor", v)}
+                        classNames={{
+                            input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
+                        }}
+                    />
+
+                    {recentVendors.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-1">
+                            <span className="text-xs text-slate-500 self-center">Recent:</span>
+                            {recentVendors.map((vendor) => (
+                                <Chip
+                                    key={vendor}
+                                    size="sm"
+                                    variant="flat"
+                                    onPress={() => handleSelectRecentVendor(vendor)}
+                                    onClose={() => handleRemoveRecentVendor(vendor)}
+                                    className="cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700"
+                                    endContent={<X className="h-3 w-3" />}
+                                >
+                                    {vendor}
+                                </Chip>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <Textarea
+                    label="Notes"
+                    placeholder="Any additional details..."
+                    value={formData.notes}
+                    onValueChange={(v) => handleInputChange("notes", v)}
+                    classNames={{
+                        input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
+                    }}
+                />
+            </ModalBody>
+            <ModalFooter>
+                <Button variant="flat" onPress={onClose} isDisabled={isLoading}>
+                    Cancel
+                </Button>
+                <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
+                    {isEdit ? "Update Record" : "Record Purchase"}
+                </Button>
+            </ModalFooter>
+        </>
+    );
+}
+
+// --- Main Modal Component ---
+export function PurchaseFormModal({
+    isOpen,
+    onClose,
+    purchase,
+    preselectedIngredient,
+}: PurchaseFormModalProps) {
+    // We generate a key based on the 'mode' (create vs edit) and the IDs involved.
+    // This forces React to destroy and recreate PurchaseFormContent when the modal opens
+    // for a different task, resetting all internal state automatically.
+    const formKey = purchase
+        ? `edit-${purchase.id}`
+        : `create-${preselectedIngredient?.id ?? "new"}`;
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
+            <ModalContent>
                 {(onCloseModal) => (
-                    <>
-                        <ModalHeader>
-                            {isEdit
-                                ? "Edit Purchase"
-                                : preselectedIngredient
-                                ? `Record Purchase for ${preselectedIngredient.name}`
-                                : "Record New Purchase"}
-                        </ModalHeader>
-                        <ModalBody className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Show ingredient selector only when no preselected ingredient */}
-                            {!preselectedIngredient ? (
-                                <Select
-                                    label="Ingredient"
-                                    placeholder="Select an ingredient"
-                                    selectionMode="single"
-                                    selectedKeys={ingredientSelectedKeys}
-                                    onSelectionChange={(keys) => {
-                                        const selected = Array.from(keys)[0] as string;
-                                        if (selected) {
-                                            handleInputChange("ingredient", selected);
-                                        } else {
-                                            handleInputChange("ingredient", "");
-                                        }
-                                    }}
-                                    isRequired
-                                    isInvalid={!!errors.ingredient}
-                                    errorMessage={errors.ingredient}
-                                    items={ingredientItems}
-                                    classNames={{
-                                        trigger: "!w-full !text-left",
-                                        label: "!w-full !text-left",
-                                        base: "!w-full !text-left",
-                                        value: "!text-slate-900 dark:!text-slate-100",
-                                    }}
-                                >
-                                    {(ingredient) => <SelectItem>{ingredient.label}</SelectItem>}
-                                </Select>
-                            ) : (
-                                <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3">
-                                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                        Ingredient
-                                    </p>
-                                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                                        {preselectedIngredient.name}{" "}
-                                        <span className="text-zinc-500">
-                                            ({preselectedIngredient.unit})
-                                        </span>
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Quantity input */}
-                            <Input
-                                label="Quantity"
-                                type="number"
-                                value={formData.quantity}
-                                onValueChange={(v) => handleInputChange("quantity", v)}
-                                isRequired
-                                placeholder="0.000"
-                                step="0.001"
-                                min="0"
-                                isInvalid={!!errors.quantity}
-                                errorMessage={errors.quantity}
-                                classNames={{
-                                    input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
-                                }}
-                            />
-
-                            {/* Cost input mode selector */}
-                            <div className="space-y-3 lg:col-span-2">
-                                <RadioGroup
-                                    label="Cost Input Method"
-                                    orientation="horizontal"
-                                    value={costInputMode}
-                                    onValueChange={(v) => setCostInputMode(v as CostInputMode)}
-                                    classNames={{
-                                        label: "text-sm text-zinc-600 dark:text-zinc-400",
-                                    }}
-                                >
-                                    <Radio value="total">Total Cost</Radio>
-                                    <Radio value="unit">Unit Cost</Radio>
-                                </RadioGroup>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {costInputMode === "total" ? (
-                                        <Input
-                                            label="Total Cost (ETB)"
-                                            type="number"
-                                            value={formData.total_cost}
-                                            onValueChange={(v) =>
-                                                handleInputChange("total_cost", v)
-                                            }
-                                            isRequired
-                                            placeholder="0.00"
-                                            step="0.01"
-                                            min="0"
-                                            isInvalid={!!errors.total_cost}
-                                            errorMessage={errors.total_cost}
-                                            classNames={{
-                                                input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
-                                            }}
-                                        />
-                                    ) : (
-                                        <Input
-                                            label="Unit Cost (ETB)"
-                                            type="number"
-                                            value={formData.unit_cost}
-                                            onValueChange={(v) => handleInputChange("unit_cost", v)}
-                                            isRequired
-                                            placeholder="0.00"
-                                            step="0.01"
-                                            min="0"
-                                            isInvalid={!!errors.unit_cost}
-                                            errorMessage={errors.unit_cost}
-                                            classNames={{
-                                                input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
-                                            }}
-                                        />
-                                    )}
-
-                                    {/* Calculated preview */}
-                                    <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3 flex flex-col justify-center">
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                            {costInputMode === "total" ? "Unit Cost" : "Total Cost"}
-                                        </p>
-                                        <p className="font-semibold text-zinc-900 dark:text-zinc-100">
-                                            {costInputMode === "total"
-                                                ? previewUnitCost
-                                                : previewTotalCost}{" "}
-                                            ETB
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Price Anomaly Warning */}
-                                {isPriceAnomaly && selectedIngredient && (
-                                    <Alert
-                                        color="warning"
-                                        variant="flat"
-                                        title="Price Anomaly Detected"
-                                        startContent={<AlertTriangle className="h-5 w-5" />}
-                                        className="lg:col-span-2"
-                                    >
-                                        <div className="text-sm">
-                                            <p className="mb-1">
-                                                The entered unit cost (
-                                                <strong>{unitCostValue.toFixed(2)} ETB</strong>) is
-                                                more than 30% higher than the average cost (
-                                                <strong>
-                                                    {selectedIngredient.average_cost_per_unit.toFixed(
-                                                        2
-                                                    )}{" "}
-                                                    ETB
-                                                </strong>
-                                                ).
-                                            </p>
-                                            <p className="text-xs opacity-80">
-                                                Please verify the cost before proceeding. This
-                                                purchase will be flagged as a price anomaly.
-                                            </p>
-                                        </div>
-                                    </Alert>
-                                )}
-                            </div>
-
-                            {/* Vendor input with recent vendors */}
-                            <div className="space-y-2">
-                                <Input
-                                    label="Vendor (Optional)"
-                                    value={formData.vendor}
-                                    onValueChange={(v) => handleInputChange("vendor", v)}
-                                    placeholder="Enter vendor name"
-                                    classNames={{
-                                        input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
-                                    }}
-                                />
-
-                                {recentVendors.length > 0 && (
-                                    <div className="space-y-1">
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                            Recent Vendors
-                                        </p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {recentVendors.map((vendor) => (
-                                                <Chip
-                                                    key={vendor}
-                                                    variant="flat"
-                                                    size="sm"
-                                                    className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700"
-                                                    onClick={() => handleSelectRecentVendor(vendor)}
-                                                    endContent={
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleRemoveRecentVendor(vendor);
-                                                            }}
-                                                            className="ml-1 hover:text-danger focus:outline-none"
-                                                        >
-                                                            <X className="h-3 w-3" />
-                                                        </button>
-                                                    }
-                                                >
-                                                    {vendor}
-                                                </Chip>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <Textarea
-                                label="Notes (Optional)"
-                                value={formData.notes}
-                                onValueChange={(v) => handleInputChange("notes", v)}
-                                placeholder="Additional notes about this purchase"
-                                classNames={{
-                                    input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
-                                }}
-                            />
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button
-                                variant="flat"
-                                onPress={onCloseModal}
-                                disabled={isLoading}
-                                className="!text-zinc-700 dark:!text-zinc-300"
-                            >
-                                Cancel
-                            </Button>
-                            <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                                {isEdit ? "Save Changes" : "Record Purchase"}
-                            </Button>
-                        </ModalFooter>
-                    </>
+                    <PurchaseFormContent
+                        key={formKey}
+                        purchase={purchase}
+                        preselectedIngredient={preselectedIngredient}
+                        onClose={onCloseModal}
+                    />
                 )}
             </ModalContent>
         </Modal>

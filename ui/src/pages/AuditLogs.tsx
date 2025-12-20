@@ -21,7 +21,7 @@ export function AuditLogsPage() {
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
     const debouncedSearch = useDebounce(search, 300);
 
-const params = useMemo(
+    const params = useMemo(
         () => ({
             page,
             page_size: pageSize,
@@ -33,7 +33,7 @@ const params = useMemo(
         [page, pageSize, action, debouncedSearch, startDate]
     );
 
-const { data, isLoading } = useAuditLogs(params);
+    const { data, isLoading } = useAuditLogs(params);
     const rows = useMemo(() => data?.results ?? [], [data]);
 
     const handleStartDateChange = (date: DateValue | null) => {
@@ -102,7 +102,7 @@ const { data, isLoading } = useAuditLogs(params);
                         <SelectItem key="UPDATE">Update</SelectItem>
                         <SelectItem key="CREATE">Create</SelectItem>
                         <SelectItem key="ALL">All</SelectItem>
-</Select>
+                    </Select>
                 </div>
                 <div className="w-full sm:w-48">
                     <DatePicker

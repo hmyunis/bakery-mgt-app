@@ -29,7 +29,7 @@ export function DeleteProductionRunModal({
         try {
             await onConfirm();
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
@@ -57,7 +57,10 @@ export function DeleteProductionRunModal({
                             This will undo all side effects from this production run:
                         </p>
                         <ul className="list-disc list-inside mt-2 text-xs space-y-1">
-                            <li>Decrease product stock by {productionRun.quantity_produced.toFixed(2)} pcs</li>
+                            <li>
+                                Decrease product stock by{" "}
+                                {productionRun.quantity_produced.toFixed(2)} pcs
+                            </li>
                             <li>Restore ingredient stock (add back actual usage amounts)</li>
                             <li>Remove all usage records</li>
                         </ul>
@@ -106,4 +109,3 @@ export function DeleteProductionRunModal({
         </Modal>
     );
 }
-

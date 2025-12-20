@@ -1,11 +1,4 @@
-import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-} from "@heroui/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import { AlertTriangle } from "lucide-react";
 import type { StockAdjustment } from "../../types/inventory";
 
@@ -28,7 +21,7 @@ export function DeleteStockAdjustmentModal({
         try {
             await onConfirm();
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
@@ -44,21 +37,17 @@ export function DeleteStockAdjustmentModal({
                 </ModalHeader>
                 <ModalBody>
                     <p className="text-zinc-600 dark:text-zinc-400">
-                        Are you sure you want to delete this stock adjustment for{" "}
+                        Are you sure you want to delete the stock adjustment for{" "}
                         <span className="font-semibold text-zinc-900 dark:text-zinc-100">
                             {adjustment?.ingredient_name || "Unknown"}
                         </span>
-                        ? This action cannot be undone and will revert the stock change.
+                        ? This action will reverse the stock change.
                     </p>
                     {adjustment && (
-                        <div className="text-sm text-zinc-500 dark:text-zinc-500 space-y-1">
-                            <p>
-                                Quantity Change:{" "}
-                                {adjustment.quantity_change > 0 ? "+" : ""}
-                                {adjustment.quantity_change.toFixed(3)}
-                            </p>
-                            <p>Reason: {adjustment.reason}</p>
-                        </div>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-500">
+                            Adjustment: {adjustment.quantity_change > 0 ? "+" : ""}
+                            {adjustment.quantity_change.toFixed(3)}
+                        </p>
                     )}
                 </ModalBody>
                 <ModalFooter>
@@ -83,4 +72,3 @@ export function DeleteStockAdjustmentModal({
         </Modal>
     );
 }
-

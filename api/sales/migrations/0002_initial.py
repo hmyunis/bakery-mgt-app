@@ -6,44 +6,63 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('production', '0002_initial'),
-        ('sales', '0001_initial'),
+        ("production", "0002_initial"),
+        ("sales", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dailyclosing',
-            name='closed_by',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="dailyclosing",
+            name="closed_by",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='sale',
-            name='cashier',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="sale",
+            name="cashier",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='saleitem',
-            name='product',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='production.product'),
+            model_name="saleitem",
+            name="product",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="production.product"
+            ),
         ),
         migrations.AddField(
-            model_name='saleitem',
-            name='sale',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='sales.sale'),
+            model_name="saleitem",
+            name="sale",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="items",
+                to="sales.sale",
+            ),
         ),
         migrations.AddField(
-            model_name='salepayment',
-            name='method',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='sales.paymentmethod'),
+            model_name="salepayment",
+            name="method",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="sales.paymentmethod"
+            ),
         ),
         migrations.AddField(
-            model_name='salepayment',
-            name='sale',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='payments', to='sales.sale'),
+            model_name="salepayment",
+            name="sale",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="payments",
+                to="sales.sale",
+            ),
         ),
     ]

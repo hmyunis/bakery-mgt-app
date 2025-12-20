@@ -12,16 +12,16 @@ export const getImageBaseUrl = () => {
 };
 
 export const getAuthToken = () => {
-  // Always read fresh from localStorage to ensure we have the latest value
-  return localStorage.getItem("bakery_auth_token");
+    // Always read fresh from localStorage to ensure we have the latest value
+    return localStorage.getItem("bakery_auth_token");
 };
 
 export const setAuthToken = (token: string | null) => {
-  if (token) {
-    localStorage.setItem("bakery_auth_token", token);
-  } else {
-    localStorage.removeItem("bakery_auth_token");
-  }
+    if (token) {
+        localStorage.setItem("bakery_auth_token", token);
+    } else {
+        localStorage.removeItem("bakery_auth_token");
+    }
 };
 
 export const apiClient = axios.create({

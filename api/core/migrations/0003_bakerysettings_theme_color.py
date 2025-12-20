@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0002_bakerysettings_facebook_enabled_and_more'),
+        ("core", "0002_bakerysettings_facebook_enabled_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bakerysettings',
-            name='theme_color',
-            field=models.CharField(default='#06b6d4', help_text='Hex color code for app accent/theme color (e.g., #06b6d4)', max_length=7),
+            model_name="bakerysettings",
+            name="theme_color",
+            field=models.CharField(
+                default="#06b6d4",
+                help_text="Hex color code for app accent/theme color (e.g., #06b6d4)",
+                max_length=7,
+            ),
         ),
     ]

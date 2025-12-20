@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { paymentService } from "../services/paymentService";
+import type { ApiError, ApiErrorResponse } from "../types/api";
 import type {
     CreatePaymentMethodData,
     UpdatePaymentMethodData,
@@ -50,12 +51,15 @@ export function useCreatePaymentMethod() {
             queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
             toast.success("Payment method created successfully!");
         },
-        onError: (error: any) => {
-            const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
+            const paymentErrorMessage =
+                errorData?.message ||
+                errorData?.detail ||
+                apiError.message ||
                 "Failed to create payment method. Please try again.";
-            toast.error(errorMessage);
+            toast.error(paymentErrorMessage);
         },
     });
 }
@@ -67,25 +71,22 @@ export function useUpdatePaymentMethod() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({
-            id,
-            data,
-        }: {
-            id: number;
-            data: UpdatePaymentMethodData;
-        }) => {
+        mutationFn: async ({ id, data }: { id: number; data: UpdatePaymentMethodData }) => {
             return await paymentService.updatePaymentMethod(id, data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
             toast.success("Payment method updated successfully!");
         },
-        onError: (error: any) => {
-            const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
+            const updatePaymentErrorMessage =
+                errorData?.message ||
+                errorData?.detail ||
+                apiError.message ||
                 "Failed to update payment method. Please try again.";
-            toast.error(errorMessage);
+            toast.error(updatePaymentErrorMessage);
         },
     });
 }
@@ -104,13 +105,15 @@ export function useDeletePaymentMethod() {
             queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
             toast.success("Payment method deleted successfully!");
         },
-        onError: (error: any) => {
-            const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
+            const deletePaymentErrorMessage =
+                errorData?.message ||
+                errorData?.detail ||
+                apiError.message ||
                 "Failed to delete payment method. Please try again.";
-            toast.error(errorMessage);
+            toast.error(deletePaymentErrorMessage);
         },
     });
 }
-

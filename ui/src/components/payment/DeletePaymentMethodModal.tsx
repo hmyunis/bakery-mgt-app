@@ -1,11 +1,4 @@
-import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-} from "@heroui/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import type { PaymentMethod } from "../../types/payment";
 import { useDeletePaymentMethod } from "../../hooks/usePayment";
 
@@ -20,8 +13,7 @@ export function DeletePaymentMethodModal({
     onClose,
     paymentMethod,
 }: DeletePaymentMethodModalProps) {
-    const { mutateAsync: deletePaymentMethod, isPending: isDeleting } =
-        useDeletePaymentMethod();
+    const { mutateAsync: deletePaymentMethod, isPending: isDeleting } = useDeletePaymentMethod();
 
     const handleDelete = async () => {
         if (!paymentMethod) return;
@@ -29,7 +21,7 @@ export function DeletePaymentMethodModal({
         try {
             await deletePaymentMethod(paymentMethod.id);
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
@@ -60,4 +52,3 @@ export function DeletePaymentMethodModal({
         </Modal>
     );
 }
-

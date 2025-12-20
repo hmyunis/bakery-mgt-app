@@ -1,5 +1,6 @@
 import { apiClient } from "../lib/apiClient";
-import type { AuditLog, AuditLogListParams } from "../types/audit";
+import type { AuditLog, AuditLogListParams, AuditAction } from "../types/audit";
+import type { WrappedPaginatedResponse, PaginatedResponse } from "../types/api";
 
 export interface AuditLogListResponse {
     count: number;
@@ -9,23 +10,23 @@ export interface AuditLogListResponse {
 }
 
 class AuditService {
-    private normalizeAuditLog(row: any): AuditLog {
+    private normalizeAuditLog(row: Record<string, unknown>): AuditLog {
         return {
             id: Number(row.id),
-            actor: row.actor ?? null,
-            actorName: row.actorName ?? row.actor_name ?? null,
-            actorFullName: row.actorFullName ?? row.actor_full_name ?? null,
-            ipAddress: row.ipAddress ?? row.ip_address ?? null,
-            timestamp: row.timestamp,
-            action: row.action,
-            tableName: row.tableName ?? row.table_name,
-            recordId: row.recordId ?? row.record_id,
-            oldValue: row.oldValue ?? row.old_value,
-            newValue: row.newValue ?? row.new_value,
+            actor: (row.actor as number) ?? null,
+            actorName: (row.actorName ?? row.actor_name ?? null) as string | null,
+            actorFullName: (row.actorFullName ?? row.actor_full_name ?? null) as string | null,
+            ipAddress: (row.ipAddress ?? row.ip_address ?? null) as string | null,
+            timestamp: row.timestamp as string,
+            action: row.action as AuditAction, // Cast to any then to AuditAction if needed, or just AuditAction if imported
+            tableName: (row.tableName ?? row.table_name) as string,
+            recordId: (row.recordId ?? row.record_id) as string,
+            oldValue: (row.oldValue ?? row.old_value) as string,
+            newValue: (row.newValue ?? row.new_value) as string,
         };
     }
 
-async getAuditLogs(params: AuditLogListParams = {}): Promise<AuditLogListResponse> {
+    async getAuditLogs(params: AuditLogListParams = {}): Promise<AuditLogListResponse> {
         const queryParams = new URLSearchParams();
         if (params.page) queryParams.append("page", params.page.toString());
         if (params.page_size) queryParams.append("page_size", params.page_size.toString());
@@ -36,38 +37,58 @@ async getAuditLogs(params: AuditLogListParams = {}): Promise<AuditLogListRespons
         if (params.ordering) queryParams.append("ordering", params.ordering);
         if (params.start_date) queryParams.append("start_date", params.start_date);
 
-        const response = await apiClient.get<any>(`/audit/?${queryParams.toString()}`);
+        const response = await apiClient.get<
+            | WrappedPaginatedResponse<Record<string, unknown>>
+            | PaginatedResponse<Record<string, unknown>>
+            | Record<string, unknown>[]
+        >(`/audit/?${queryParams.toString()}`);
+
+        const responseData = response.data;
 
         // Handle custom response format: { success, message, data: [...], pagination: { count, next, previous } }
-        if (response.data && "data" in response.data && "pagination" in response.data) {
-            const pagination = response.data.pagination || {};
+        if (
+            responseData &&
+            !Array.isArray(responseData) &&
+            "data" in responseData &&
+            "pagination" in responseData
+        ) {
+            const wrapped = responseData as WrappedPaginatedResponse<Record<string, unknown>>;
             return {
-                count: pagination.count || 0,
-                next: pagination.next || null,
-                previous: pagination.previous || null,
-                results: (response.data.data || []).map((r: any) => this.normalizeAuditLog(r)),
+                count: wrapped.pagination.count || 0,
+                next: wrapped.pagination.next || null,
+                previous: wrapped.pagination.previous || null,
+                results: (wrapped.data || []).map((r) => this.normalizeAuditLog(r)),
             };
         }
 
         // Handle standard DRF pagination format: { count, next, previous, results: [...] }
-        if (response.data && "results" in response.data) {
+        if (responseData && !Array.isArray(responseData) && "results" in responseData) {
+            const paginated = responseData as PaginatedResponse<Record<string, unknown>>;
             return {
-                ...response.data,
-                results: (response.data.results || []).map((r: any) => this.normalizeAuditLog(r)),
+                ...paginated,
+                results: (paginated.results || []).map((r) => this.normalizeAuditLog(r)),
             };
         }
 
         // Fallback (non-paginated array)
-        const rows = Array.isArray(response.data) ? response.data : [];
+        if (Array.isArray(responseData)) {
+            return {
+                count: responseData.length,
+                next: null,
+                previous: null,
+                results: responseData.map((r) =>
+                    this.normalizeAuditLog(r as Record<string, unknown>)
+                ),
+            };
+        }
+
         return {
-            count: rows.length,
+            count: 0,
             next: null,
             previous: null,
-            results: rows.map((r: any) => this.normalizeAuditLog(r)),
+            results: [],
         };
     }
 }
 
 export const auditService = new AuditService();
-
-

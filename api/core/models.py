@@ -6,8 +6,9 @@ class BakerySettings(models.Model):
     Singleton model for bakery information.
     Only one instance should exist.
     """
+
     name = models.CharField(max_length=200, blank=True, null=True)
-    logo = models.ImageField(upload_to='uploads/bakery/', blank=True, null=True)
+    logo = models.ImageField(upload_to="uploads/bakery/", blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
@@ -29,8 +30,8 @@ class BakerySettings(models.Model):
     # Theme customization
     theme_color = models.CharField(
         max_length=7,
-        default='#f2751a',
-        help_text='Hex color code for app accent/theme color (e.g., #f2751a)'
+        default="#f2751a",
+        help_text="Hex color code for app accent/theme color (e.g., #f2751a)",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -48,4 +49,3 @@ class BakerySettings(models.Model):
         """Get or create the singleton instance."""
         instance, created = cls.objects.get_or_create(pk=1)
         return instance
-

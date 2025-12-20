@@ -1,17 +1,19 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
 from .views import (
-    PushSubscriptionViewSet,
+    NotificationLogViewSet,
     NotificationPreferenceViewSet,
-    NotificationLogViewSet
+    PushSubscriptionViewSet,
 )
 
 router = DefaultRouter()
-router.register(r'subscriptions', PushSubscriptionViewSet, basename='push-subscription')
-router.register(r'preferences', NotificationPreferenceViewSet, basename='notification-preference')
-router.register(r'logs', NotificationLogViewSet, basename='notification-log')
+router.register(r"subscriptions", PushSubscriptionViewSet, basename="push-subscription")
+router.register(
+    r"preferences", NotificationPreferenceViewSet, basename="notification-preference"
+)
+router.register(r"logs", NotificationLogViewSet, basename="notification-log")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
-

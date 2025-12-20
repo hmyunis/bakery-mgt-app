@@ -6,30 +6,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('audit', '0001_initial'),
+        ("audit", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='auditlog',
-            name='actor',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="auditlog",
+            name="actor",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddIndex(
-            model_name='auditlog',
-            index=models.Index(fields=['table_name', 'record_id'], name='audit_audit_table_n_dc0494_idx'),
+            model_name="auditlog",
+            index=models.Index(
+                fields=["table_name", "record_id"],
+                name="audit_audit_table_n_dc0494_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='auditlog',
-            index=models.Index(fields=['timestamp'], name='audit_audit_timesta_19e18a_idx'),
+            model_name="auditlog",
+            index=models.Index(
+                fields=["timestamp"], name="audit_audit_timesta_19e18a_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='auditlog',
-            index=models.Index(fields=['actor'], name='audit_audit_actor_i_17b775_idx'),
+            model_name="auditlog",
+            index=models.Index(fields=["actor"], name="audit_audit_actor_i_17b775_idx"),
         ),
     ]

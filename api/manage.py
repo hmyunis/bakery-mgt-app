@@ -8,15 +8,16 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 # Now we import that alias so we can change its version setting
-import MySQLdb
+import MySQLdb  # noqa: E402
 
 # We overwrite the version to trick Django (2.2.2 is safe)
 if MySQLdb.version_info < (2, 2, 2):
-    MySQLdb.version_info = (2, 2, 2, 'final', 0)
+    MySQLdb.version_info = (2, 2, 2, "final", 0)
+
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -27,5 +28,6 @@ def main():
         ) from exc
     execute_from_command_line(sys.argv)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

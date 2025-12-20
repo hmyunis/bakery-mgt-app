@@ -5,49 +5,50 @@ from django.db import migrations, models
 
 def migrate_first_last_to_full_name(apps, schema_editor):
     """Migrate existing first_name and last_name to full_name"""
-    User = apps.get_model('users', 'User')
+    User = apps.get_model("users", "User")
     for user in User.objects.all():
         if user.first_name or user.last_name:
             full_name_parts = [user.first_name, user.last_name]
-            full_name = ' '.join([part for part in full_name_parts if part]).strip()
+            full_name = " ".join([part for part in full_name_parts if part]).strip()
             if full_name:
                 user.full_name = full_name
-                user.save(update_fields=['full_name'])
+                user.save(update_fields=["full_name"])
 
 
 def reverse_migrate_full_name_to_first_last(apps, schema_editor):
     """Reverse migration: split full_name back to first_name and last_name"""
-    User = apps.get_model('users', 'User')
+    User = apps.get_model("users", "User")
     for user in User.objects.all():
         if user.full_name:
-            name_parts = user.full_name.split(' ', 1)
-            user.first_name = name_parts[0] if name_parts else ''
-            user.last_name = name_parts[1] if len(name_parts) > 1 else ''
-            user.save(update_fields=['first_name', 'last_name'])
+            name_parts = user.full_name.split(" ", 1)
+            user.first_name = name_parts[0] if name_parts else ""
+            user.last_name = name_parts[1] if len(name_parts) > 1 else ""
+            user.save(update_fields=["first_name", "last_name"])
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         # Add full_name field first
         migrations.AddField(
-            model_name='user',
-            name='full_name',
+            model_name="user",
+            name="full_name",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         # Migrate data from first_name/last_name to full_name
-        migrations.RunPython(migrate_first_last_to_full_name, reverse_migrate_full_name_to_first_last),
+        migrations.RunPython(
+            migrate_first_last_to_full_name, reverse_migrate_full_name_to_first_last
+        ),
         # Remove old fields
         migrations.RemoveField(
-            model_name='user',
-            name='first_name',
+            model_name="user",
+            name="first_name",
         ),
         migrations.RemoveField(
-            model_name='user',
-            name='last_name',
+            model_name="user",
+            name="last_name",
         ),
     ]

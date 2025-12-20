@@ -6,54 +6,90 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('inventory', '0002_initial'),
-        ('production', '0001_initial'),
+        ("inventory", "0002_initial"),
+        ("production", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='productionrun',
-            name='chef',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="productionrun",
+            name="chef",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='productionrun',
-            name='composite_ingredient',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='inventory.ingredient'),
+            model_name="productionrun",
+            name="composite_ingredient",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="inventory.ingredient",
+            ),
         ),
         migrations.AddField(
-            model_name='productionrun',
-            name='product',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='production.product'),
+            model_name="productionrun",
+            name="product",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="production.product",
+            ),
         ),
         migrations.AddField(
-            model_name='ingredientusage',
-            name='production_run',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='usages', to='production.productionrun'),
+            model_name="ingredientusage",
+            name="production_run",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="usages",
+                to="production.productionrun",
+            ),
         ),
         migrations.AddField(
-            model_name='recipe',
-            name='composite_ingredient',
-            field=models.OneToOneField(blank=True, limit_choices_to={'is_composite': True}, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='recipe', to='inventory.ingredient'),
+            model_name="recipe",
+            name="composite_ingredient",
+            field=models.OneToOneField(
+                blank=True,
+                limit_choices_to={"is_composite": True},
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="recipe",
+                to="inventory.ingredient",
+            ),
         ),
         migrations.AddField(
-            model_name='recipe',
-            name='product',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='recipe', to='production.product'),
+            model_name="recipe",
+            name="product",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="recipe",
+                to="production.product",
+            ),
         ),
         migrations.AddField(
-            model_name='recipeitem',
-            name='ingredient',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='inventory.ingredient'),
+            model_name="recipeitem",
+            name="ingredient",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="inventory.ingredient"
+            ),
         ),
         migrations.AddField(
-            model_name='recipeitem',
-            name='recipe',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='production.recipe'),
+            model_name="recipeitem",
+            name="recipe",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="items",
+                to="production.recipe",
+            ),
         ),
     ]

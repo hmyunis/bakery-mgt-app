@@ -4,70 +4,69 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bakerysettings',
-            name='facebook_enabled',
+            model_name="bakerysettings",
+            name="facebook_enabled",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='facebook_url',
+            model_name="bakerysettings",
+            name="facebook_url",
             field=models.URLField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='instagram_enabled',
+            model_name="bakerysettings",
+            name="instagram_enabled",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='instagram_url',
+            model_name="bakerysettings",
+            name="instagram_url",
             field=models.URLField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='telegram_enabled',
+            model_name="bakerysettings",
+            name="telegram_enabled",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='telegram_url',
+            model_name="bakerysettings",
+            name="telegram_url",
             field=models.URLField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='tiktok_enabled',
+            model_name="bakerysettings",
+            name="tiktok_enabled",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='tiktok_url',
+            model_name="bakerysettings",
+            name="tiktok_url",
             field=models.URLField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='x_enabled',
+            model_name="bakerysettings",
+            name="x_enabled",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='x_url',
+            model_name="bakerysettings",
+            name="x_url",
             field=models.URLField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='youtube_enabled',
+            model_name="bakerysettings",
+            name="youtube_enabled",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='bakerysettings',
-            name='youtube_url',
+            model_name="bakerysettings",
+            name="youtube_url",
             field=models.URLField(blank=True, null=True),
         ),
     ]

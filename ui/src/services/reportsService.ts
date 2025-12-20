@@ -1,4 +1,5 @@
 import { apiClient } from "../lib/apiClient";
+import type { ApiResponse } from "../types/api";
 
 export interface DashboardStats {
     hourlySales: { hour: string; total: number }[];
@@ -12,14 +13,17 @@ export interface DashboardStats {
 
 export const reportsService = {
     getDashboardStats: async (date?: string): Promise<DashboardStats> => {
-        const response = await apiClient.get("/reports/dashboard-stats/", {
-            params: { date },
-        });
+        const response = await apiClient.get<ApiResponse<DashboardStats>>(
+            "/reports/dashboard-stats/",
+            {
+                params: { date },
+            }
+        );
         return response.data.data;
     },
 
-    exportReport: async (startDate: string, endDate: string) => {
-        const response = await apiClient.get("/reports/export/", {
+    exportReport: async (startDate: string, endDate: string): Promise<void> => {
+        const response = await apiClient.get<Blob>("/reports/export/", {
             params: { start_date: startDate, end_date: endDate },
             responseType: "blob",
         });

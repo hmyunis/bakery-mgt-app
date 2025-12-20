@@ -1,0 +1,13 @@
+[tool.ruff]
+# Python 3.12 target
+target-version = "py312"
+line-length = 88
+
+# Enable Pyflakes (F), pycodestyle (E, W), and isort (I)
+lint.select = ["E", "F", "I", "W"]
+lint.fixable = ["ALL"]
+exclude = ["**/migrations/*"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

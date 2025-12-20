@@ -1,11 +1,4 @@
-import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-} from "@heroui/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import type { Product } from "../../types/production";
 import { useDeleteProduct } from "../../hooks/useProduction";
 
@@ -15,11 +8,7 @@ interface DeleteProductModalProps {
     product: Product | null;
 }
 
-export function DeleteProductModal({
-    isOpen,
-    onClose,
-    product,
-}: DeleteProductModalProps) {
+export function DeleteProductModal({ isOpen, onClose, product }: DeleteProductModalProps) {
     const { mutateAsync: deleteProduct, isPending: isDeleting } = useDeleteProduct();
 
     const handleDelete = async () => {
@@ -28,7 +17,7 @@ export function DeleteProductModal({
         try {
             await deleteProduct(product.id);
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
@@ -64,4 +53,3 @@ export function DeleteProductModal({
         </Modal>
     );
 }
-

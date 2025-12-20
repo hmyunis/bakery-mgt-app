@@ -119,4 +119,3 @@ export interface ProductionRunListParams {
     ordering?: string;
     start_date?: string;
 }
-

@@ -32,9 +32,7 @@ export function ProductionRunDetailModal({
     const ingredients = ingredientsData?.results || [];
 
     // Create ingredient map for unit lookup
-    const ingredientMap = new Map(
-        ingredients.map((ing) => [ing.name.toLowerCase(), ing])
-    );
+    const ingredientMap = new Map(ingredients.map((ing) => [ing.name.toLowerCase(), ing]));
 
     if (!productionRun) return null;
 
@@ -173,7 +171,11 @@ export function ProductionRunDetailModal({
                             <Alert
                                 color={productWastage.isWaste ? "danger" : "success"}
                                 variant="flat"
-                                title={productWastage.isWaste ? "Wastage Detected" : "Potential Savings"}
+                                title={
+                                    productWastage.isWaste
+                                        ? "Wastage Detected"
+                                        : "Potential Savings"
+                                }
                                 startContent={<AlertTriangle className="h-5 w-5" />}
                             >
                                 <p className="text-sm">
@@ -270,20 +272,28 @@ export function ProductionRunDetailModal({
                                                                 hasWastage
                                                                     ? "text-danger-600 dark:text-danger-400 font-semibold"
                                                                     : hasSavings
-                                                                    ? "text-success-600 dark:text-success-400 font-semibold"
-                                                                    : "text-zinc-600 dark:text-zinc-400 font-semibold"
+                                                                      ? "text-success-600 dark:text-success-400 font-semibold"
+                                                                      : "text-zinc-600 dark:text-zinc-400 font-semibold"
                                                             }
                                                         >
                                                             {hasWastage ? "+" : ""}
                                                             {wastage.toFixed(3)} {unit}
                                                         </span>
                                                         {hasWastage && (
-                                                            <Chip color="danger" variant="flat" size="sm">
+                                                            <Chip
+                                                                color="danger"
+                                                                variant="flat"
+                                                                size="sm"
+                                                            >
                                                                 Waste
                                                             </Chip>
                                                         )}
                                                         {hasSavings && (
-                                                            <Chip color="success" variant="flat" size="sm">
+                                                            <Chip
+                                                                color="success"
+                                                                variant="flat"
+                                                                size="sm"
+                                                            >
                                                                 Saved
                                                             </Chip>
                                                         )}
@@ -345,4 +355,3 @@ export function ProductionRunDetailModal({
         </Modal>
     );
 }
-

@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0002_add_full_name_field'),
+        ("users", "0002_add_full_name_field"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='push_notifications_enabled',
-            field=models.BooleanField(default=True, help_text='Receive push notifications'),
+            model_name="user",
+            name="push_notifications_enabled",
+            field=models.BooleanField(
+                default=True, help_text="Receive push notifications"
+            ),
         ),
     ]

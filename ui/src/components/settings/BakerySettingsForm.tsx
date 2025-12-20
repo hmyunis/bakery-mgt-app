@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button, Input, Textarea, Spinner, Switch, Divider } from "@heroui/react";
 import { Save, Upload, X, Facebook, Instagram, Send, Youtube, Twitter, Music2 } from "lucide-react";
 import { useBakerySettings, useUpdateBakerySettings } from "../../hooks/useBakery";
@@ -30,7 +30,10 @@ export function BakerySettingsForm() {
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-    useEffect(() => {
+    const [prevBakerySettings, setPrevBakerySettings] = useState(bakerySettings);
+
+    if (bakerySettings !== prevBakerySettings) {
+        setPrevBakerySettings(bakerySettings);
         if (bakerySettings) {
             setFormData({
                 name: bakerySettings.name || "",
@@ -53,10 +56,10 @@ export function BakerySettingsForm() {
             });
             setLogoPreview(bakerySettings.logoUrl);
         }
-    }, [bakerySettings]);
+    }
 
     const handleInputChange = (field: string, value: string | boolean) => {
-        setFormData((prev) => ({ ...prev, [field]: value as any }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,9 +131,7 @@ export function BakerySettingsForm() {
             <div className="space-y-4">
                 {/* Logo Upload */}
                 <div>
-                    <label className="block text-sm font-medium text-[var(--fg)] mb-2">
-                        Logo
-                    </label>
+                    <label className="block text-sm font-medium text-[var(--fg)] mb-2">Logo</label>
                     <div className="flex items-center gap-4">
                         {logoPreview && (
                             <div className="relative">
@@ -419,4 +420,3 @@ export function BakerySettingsForm() {
         </form>
     );
 }
-

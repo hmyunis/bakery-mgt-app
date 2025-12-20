@@ -1,11 +1,4 @@
-import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-} from "@heroui/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import { AlertTriangle } from "lucide-react";
 import type { Purchase } from "../../types/inventory";
 
@@ -28,7 +21,7 @@ export function DeletePurchaseModal({
         try {
             await onConfirm();
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
@@ -44,17 +37,16 @@ export function DeletePurchaseModal({
                 </ModalHeader>
                 <ModalBody>
                     <p className="text-zinc-600 dark:text-zinc-400">
-                        Are you sure you want to delete this purchase record for{" "}
+                        Are you sure you want to delete the purchase for{" "}
                         <span className="font-semibold text-zinc-900 dark:text-zinc-100">
                             {purchase?.ingredient_name || "Unknown"}
                         </span>
-                        ? This action cannot be undone.
+                        ? This action will reverse the stock addition.
                     </p>
                     {purchase && (
-                        <div className="text-sm text-zinc-500 dark:text-zinc-500 space-y-1">
-                            <p>Quantity: {purchase.quantity.toFixed(3)}</p>
-                            <p>Total Cost: {purchase.total_cost.toFixed(2)} ETB</p>
-                        </div>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-500">
+                            Quantity: {purchase.quantity.toFixed(3)}
+                        </p>
                     )}
                 </ModalBody>
                 <ModalFooter>
@@ -79,4 +71,3 @@ export function DeletePurchaseModal({
         </Modal>
     );
 }
-

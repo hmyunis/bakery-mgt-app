@@ -30,9 +30,7 @@ export const getStockAdjustmentColumns = ({
     {
         id: "rowNumber",
         header: "#",
-        cell: ({ row }) => (
-            <span className="text-sm text-muted-foreground">{row.index + 1}</span>
-        ),
+        cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.index + 1}</span>,
         size: 50,
     },
     {
@@ -126,4 +124,3 @@ export const getStockAdjustmentColumns = ({
         },
     },
 ];
-

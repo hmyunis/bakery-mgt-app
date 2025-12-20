@@ -1,13 +1,17 @@
 import os
+
 from django.db import models
-from django.dispatch import receiver
 from django.db.models.signals import post_delete, pre_save
+from django.dispatch import receiver
+
 from .utils import compress_image
+
 
 def _delete_file(path):
     """Deletes file from filesystem."""
     if os.path.isfile(path):
         os.remove(path)
+
 
 @receiver(post_delete)
 def delete_files_when_row_deleted_from_db(sender, instance, **kwargs):
@@ -24,6 +28,7 @@ def delete_files_when_row_deleted_from_db(sender, instance, **kwargs):
                 except Exception:
                     # Silently fail if file doesn't exist or can't be deleted
                     pass
+
 
 @receiver(pre_save)
 def auto_delete_file_on_change_and_compress(sender, instance, **kwargs):
@@ -54,8 +59,7 @@ def auto_delete_file_on_change_and_compress(sender, instance, **kwargs):
                 # Delete old file
                 if old_file and old_file.name:
                     _delete_file(old_file.path)
-                
+
                 # Compress new file
                 if new_file:
                     compress_image(new_file)
-

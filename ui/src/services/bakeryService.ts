@@ -1,10 +1,36 @@
 import { apiClient } from "../lib/apiClient";
 import type { BakerySettings } from "../types/bakery";
+import type { ApiResponse } from "../types/api";
+
+interface BakerySettingsResponse extends Partial<BakerySettings> {
+    id: number;
+    logo_url?: string | null;
+    phone_number?: string;
+    facebook_enabled?: boolean;
+    facebook_url?: string;
+    instagram_enabled?: boolean;
+    instagram_url?: string;
+    telegram_enabled?: boolean;
+    telegram_url?: string;
+    tiktok_enabled?: boolean;
+    tiktok_url?: string;
+    youtube_enabled?: boolean;
+    youtube_url?: string;
+    x_enabled?: boolean;
+    x_url?: string;
+    theme_color?: string;
+    created_at?: string;
+    updated_at?: string;
+}
 
 class BakeryService {
     async getBakerySettings(): Promise<BakerySettings> {
-        const response = await apiClient.get<any>("/core/bakery-settings/");
-        const data = response.data?.data ?? response.data;
+        const response = await apiClient.get<
+            ApiResponse<BakerySettingsResponse> | BakerySettingsResponse
+        >("/core/bakery-settings/");
+        const data =
+            (response.data as ApiResponse<BakerySettingsResponse>).data ??
+            (response.data as BakerySettingsResponse);
 
         return {
             id: Number(data.id),
@@ -27,18 +53,22 @@ class BakeryService {
             xEnabled: Boolean(data.xEnabled ?? data.x_enabled ?? false),
             xUrl: (data.xUrl ?? data.x_url ?? "") as string,
             themeColor: data.themeColor ?? data.theme_color ?? "#f2751a",
-            createdAt: data.createdAt ?? data.created_at,
-            updatedAt: data.updatedAt ?? data.updated_at,
+            createdAt: (data.createdAt ?? data.created_at) as string,
+            updatedAt: (data.updatedAt ?? data.updated_at) as string,
         };
     }
 
     async updateBakerySettings(formData: FormData): Promise<BakerySettings> {
-        const response = await apiClient.patch<any>("/core/bakery-settings/", formData, {
+        const response = await apiClient.patch<
+            ApiResponse<BakerySettingsResponse> | BakerySettingsResponse
+        >("/core/bakery-settings/", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
         });
-        const data = response.data?.data ?? response.data;
+        const data =
+            (response.data as ApiResponse<BakerySettingsResponse>).data ??
+            (response.data as BakerySettingsResponse);
 
         return {
             id: Number(data.id),
@@ -61,8 +91,8 @@ class BakeryService {
             xEnabled: Boolean(data.xEnabled ?? data.x_enabled ?? false),
             xUrl: (data.xUrl ?? data.x_url ?? "") as string,
             themeColor: data.themeColor ?? data.theme_color ?? "#f2751a",
-            createdAt: data.createdAt ?? data.created_at,
-            updatedAt: data.updatedAt ?? data.updated_at,
+            createdAt: (data.createdAt ?? data.created_at) as string,
+            updatedAt: (data.updatedAt ?? data.updated_at) as string,
         };
     }
 }

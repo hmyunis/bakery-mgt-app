@@ -1,11 +1,4 @@
-import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-} from "@heroui/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import { AlertTriangle } from "lucide-react";
 import type { Ingredient } from "../../types/inventory";
 
@@ -28,7 +21,7 @@ export function DeleteIngredientModal({
         try {
             await onConfirm();
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
@@ -78,4 +71,3 @@ export function DeleteIngredientModal({
         </Modal>
     );
 }
-

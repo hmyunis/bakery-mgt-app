@@ -5,16 +5,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('inventory', '0003_remove_ingredient_is_composite'),
-        ('production', '0003_product_production__is_acti_169a0b_idx_and_more'),
+        ("inventory", "0003_remove_ingredient_is_composite"),
+        ("production", "0003_product_production__is_acti_169a0b_idx_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='recipe',
-            name='composite_ingredient',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='recipe', to='inventory.ingredient'),
+            model_name="recipe",
+            name="composite_ingredient",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="recipe",
+                to="inventory.ingredient",
+            ),
         ),
     ]

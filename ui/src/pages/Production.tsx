@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Tabs, Tab, Button, Spinner, Input, DatePicker } from "@heroui/react";
 import { Package, Utensils, Plus, Search, History, ChefHat } from "lucide-react";
 import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
@@ -50,7 +50,7 @@ export function ProductionPage() {
     const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
     const [selectedProductForRecipe, setSelectedProductForRecipe] = useState<number | null>(null);
 
-// Production History state
+    // Production History state
     const [historyPage, setHistoryPage] = useState(1);
     const [historyPageSize, setHistoryPageSize] = useState(10);
     const [historyStartDate, setHistoryStartDate] = useState<DateValue>(today(getLocalTimeZone()));
@@ -68,9 +68,9 @@ export function ProductionPage() {
     const { data: productsWithRecipesIds } = useProductsWithRecipes();
 
     // Ensure productsWithRecipesIds is always an array
-    const productsWithRecipesArray = Array.isArray(productsWithRecipesIds)
-        ? productsWithRecipesIds
-        : [];
+    const productsWithRecipesArray = useMemo(() => {
+        return Array.isArray(productsWithRecipesIds) ? productsWithRecipesIds : [];
+    }, [productsWithRecipesIds]);
 
     // Products data
     const { data: productsData, isLoading: isLoadingProducts } = useProducts({
@@ -92,7 +92,7 @@ export function ProductionPage() {
     // Recipe data for selected product
     const { data: recipeData } = useRecipeByProduct(selectedProductForRecipe);
 
-// Production History data
+    // Production History data
     const { data: historyData, isLoading: isLoadingHistory } = useProductionRuns({
         page: historyPage,
         page_size: historyPageSize,
@@ -207,13 +207,28 @@ export function ProductionPage() {
         setSelectedProductForRecipe(null);
     };
 
-    // Reset recipe page when search changes
-    useEffect(() => {
-        setRecipePage(1);
-    }, [debouncedRecipeSearch]);
+    const [prevDebouncedRecipeSearch, setPrevDebouncedRecipeSearch] =
+        useState(debouncedRecipeSearch);
 
-    // Update recipe when recipeData changes
-    useEffect(() => {
+    if (debouncedRecipeSearch !== prevDebouncedRecipeSearch) {
+        setPrevDebouncedRecipeSearch(debouncedRecipeSearch);
+        setRecipePage(1);
+    }
+
+    const [prevRecipeData, setPrevRecipeData] = useState(recipeData);
+    const [prevSelectedProductForRecipe, setPrevSelectedProductForRecipe] =
+        useState(selectedProductForRecipe);
+    const [prevIsRecipeBuilderOpen, setPrevIsRecipeBuilderOpen] = useState(isRecipeBuilderOpen);
+
+    if (
+        recipeData !== prevRecipeData ||
+        selectedProductForRecipe !== prevSelectedProductForRecipe ||
+        isRecipeBuilderOpen !== prevIsRecipeBuilderOpen
+    ) {
+        setPrevRecipeData(recipeData);
+        setPrevSelectedProductForRecipe(selectedProductForRecipe);
+        setPrevIsRecipeBuilderOpen(isRecipeBuilderOpen);
+
         if (selectedProductForRecipe && isRecipeBuilderOpen) {
             if (recipeData) {
                 setEditingRecipe(recipeData);
@@ -221,7 +236,7 @@ export function ProductionPage() {
                 setEditingRecipe(null);
             }
         }
-}, [recipeData, selectedProductForRecipe, isRecipeBuilderOpen]);
+    }
 
     const handleHistoryStartDateChange = (date: DateValue | null) => {
         if (date) {
@@ -423,7 +438,7 @@ export function ProductionPage() {
                         </div>
                     }
                 >
-<div className="space-y-4">
+                    <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 <DatePicker

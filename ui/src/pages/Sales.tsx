@@ -27,12 +27,12 @@ export function SalesPage() {
     const [viewingSale, setViewingSale] = useState<Sale | null>(null);
     const [deletingSale, setDeletingSale] = useState<Sale | null>(null);
 
-// Sales History state
+    // Sales History state
     const [historyPage, setHistoryPage] = useState(1);
     const [historyPageSize, setHistoryPageSize] = useState(10);
     const [historyStartDate, setHistoryStartDate] = useState<DateValue>(today(getLocalTimeZone()));
 
-// Sales History data
+    // Sales History data
     const { data: salesData, isLoading: isLoadingSales } = useSales({
         page: historyPage,
         page_size: historyPageSize,
@@ -59,7 +59,7 @@ export function SalesPage() {
         setViewingSale(sale);
     };
 
-const handleDeleteSaleRequest = (sale: Sale) => {
+    const handleDeleteSaleRequest = (sale: Sale) => {
         setDeletingSale(sale);
     };
 
@@ -118,7 +118,7 @@ const handleDeleteSaleRequest = (sale: Sale) => {
                         </div>
                     }
                 >
-<div className="space-y-4">
+                    <div className="space-y-4">
                         <div className="flex justify-start">
                             <DatePicker
                                 label="Filter from Date"

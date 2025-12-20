@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
     Modal,
     ModalContent,
@@ -17,6 +17,7 @@ import type { Product } from "../../types/production";
 import type { PaymentMethod } from "../../types/payment";
 import { usePaymentMethods } from "../../hooks/usePayment";
 import { useCreateSale } from "../../hooks/useSales";
+import type { ApiError } from "../../types/api";
 import { toast } from "sonner";
 
 interface CartItem {
@@ -55,22 +56,26 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
     const remainingAmount = totalAmount - paidAmount;
     const isFullyPaid = remainingAmount <= 0;
 
-    // Filter out any inactive payment methods from current payments
-    useEffect(() => {
-        if (paymentMethods.length === 0 || payments.length === 0) return;
-        
-        const activePaymentMethodIds = new Set(paymentMethods.map((m) => m.id));
-        const hasInactivePayments = payments.some((p) => !activePaymentMethodIds.has(p.method.id));
-        
-        if (hasInactivePayments) {
-            setPayments((prev) =>
-                prev.filter((p) => activePaymentMethodIds.has(p.method.id))
-            );
-        }
-    }, [paymentMethods]);
+    const [prevPaymentMethods, setPrevPaymentMethods] = useState(paymentMethods);
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-    // Initialize with first payment method if available
-    useEffect(() => {
+    if (paymentMethods !== prevPaymentMethods || isOpen !== prevIsOpen) {
+        setPrevPaymentMethods(paymentMethods);
+        setPrevIsOpen(isOpen);
+
+        // Filter out any inactive payment methods from current payments
+        if (paymentMethods.length > 0 && payments.length > 0) {
+            const activePaymentMethodIds = new Set(paymentMethods.map((m) => m.id));
+            const hasInactivePayments = payments.some(
+                (p) => !activePaymentMethodIds.has(p.method.id)
+            );
+
+            if (hasInactivePayments) {
+                setPayments((prev) => prev.filter((p) => activePaymentMethodIds.has(p.method.id)));
+            }
+        }
+
+        // Initialize with first payment method if available
         if (isOpen && paymentMethods.length > 0 && payments.length === 0) {
             const firstActiveMethod = paymentMethods.find((m) => m.is_active === true);
             if (firstActiveMethod) {
@@ -82,7 +87,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                 ]);
             }
         }
-    }, [isOpen, paymentMethods, totalAmount, payments.length]);
+    }
 
     const addPaymentMethod = () => {
         if (paymentMethods.length === 0) return;
@@ -143,7 +148,9 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
         const activePaymentMethodIds = new Set(paymentMethods.map((m) => m.id));
         const inactivePayments = payments.filter((p) => !activePaymentMethodIds.has(p.method.id));
         if (inactivePayments.length > 0) {
-            toast.error("One or more selected payment methods are no longer active. Please select different payment methods.");
+            toast.error(
+                "One or more selected payment methods are no longer active. Please select different payment methods."
+            );
             return;
         }
 
@@ -170,9 +177,12 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
             onSuccess();
             onClose();
             setPayments([]);
-        } catch (error: any) {
+        } catch (error) {
             console.error("Sale creation error:", error);
-            toast.error(error?.response?.data?.message || "Failed to create sale");
+            const apiError = error as ApiError;
+            const errorMessage =
+                apiError.response?.data?.message || apiError.message || "Failed to create sale";
+            toast.error(errorMessage);
         }
     };
 

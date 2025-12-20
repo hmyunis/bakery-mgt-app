@@ -9,6 +9,7 @@ import { useAppSelector } from "../store";
 import { getAuthToken } from "../lib/apiClient";
 import { toast } from "sonner";
 import { useBakerySettings } from "../hooks/useBakery";
+import type { ApiError, ApiErrorResponse } from "../types/api";
 
 export function Login() {
     const navigate = useNavigate();
@@ -43,7 +44,7 @@ export function Login() {
                         const payload = JSON.parse(atob(tokenParts[1]));
                         if (payload.role) role = payload.role;
                     }
-                } catch (e) {
+                } catch {
                     // Ignore decode error
                 }
             }
@@ -93,24 +94,15 @@ export function Login() {
         toast.promise(loginPromise, {
             loading: "Signing in...",
             success: "Welcome back!",
-            error: (err: any) => {
-                const errorData = err.response?.data;
-                // Handle wrapped error response: { success: false, message, errors: { ... } }
-                if (errorData?.errors) {
-                    return (
-                        errorData.errors.nonFieldErrors?.[0] ||
-                        errorData.errors.non_field_errors?.[0] ||
-                        errorData.errors.detail ||
-                        errorData.message ||
-                        "Login failed. Please check your credentials."
-                    );
-                }
+            error: (err: unknown) => {
+                const apiError = err as ApiError;
+                const errorData = apiError.response?.data as ApiErrorResponse;
                 return (
-                    errorData?.nonFieldErrors?.[0] ||
-                    errorData?.non_field_errors?.[0] ||
-                    errorData?.detail ||
-                    errorData?.message ||
-                    err.message ||
+                    (errorData?.nonFieldErrors as string[])?.[0] ||
+                    (errorData?.non_field_errors as string[])?.[0] ||
+                    (errorData?.detail as string) ||
+                    (errorData?.message as string) ||
+                    apiError.message ||
                     "Login failed. Please check your credentials."
                 );
             },

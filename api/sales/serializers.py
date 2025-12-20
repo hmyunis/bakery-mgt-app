@@ -1,140 +1,174 @@
-from rest_framework import serializers
 from django.db import transaction
 from django.db.models import F
-from .models import PaymentMethod, Sale, SaleItem, SalePayment, DailyClosing
+from rest_framework import serializers
+
 from production.models import Product
+
+from .models import DailyClosing, PaymentMethod, Sale, SaleItem, SalePayment
+
 
 class PaymentMethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentMethod
-        fields = '__all__'
+        fields = "__all__"
+
 
 class SaleItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
-    
+    product_name = serializers.CharField(source="product.name", read_only=True)
+
     class Meta:
         model = SaleItem
-        fields = ['product', 'product_name', 'quantity', 'unit_price', 'subtotal']
-        read_only_fields = ('unit_price', 'subtotal')
+        fields = ["product", "product_name", "quantity", "unit_price", "subtotal"]
+        read_only_fields = ("unit_price", "subtotal")
+
 
 class SalePaymentInputSerializer(serializers.Serializer):
     method_id = serializers.IntegerField()
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
 
+
 class SaleSerializer(serializers.ModelSerializer):
-    items = SaleItemSerializer(many=True, read_only=True) # For Output
+    items = SaleItemSerializer(many=True, read_only=True)  # For Output
     payments = serializers.SerializerMethodField()
-    cashier_name = serializers.CharField(source='cashier.username', read_only=True)
-    
+    cashier_name = serializers.CharField(source="cashier.username", read_only=True)
+
     # Inputs
-    items_input = serializers.ListField(child=serializers.DictField(), write_only=True, required=True)
-    payments_input = SalePaymentInputSerializer(many=True, write_only=True, required=True)
+    items_input = serializers.ListField(
+        child=serializers.DictField(), write_only=True, required=True
+    )
+    payments_input = SalePaymentInputSerializer(
+        many=True, write_only=True, required=True
+    )
 
     class Meta:
         model = Sale
-        fields = ['id', 'total_amount', 'created_at', 'cashier', 'cashier_name', 'items', 'payments', 'items_input', 'payments_input']
-        read_only_fields = ('total_amount', 'created_at', 'cashier', 'cashier_name')
+        fields = [
+            "id",
+            "total_amount",
+            "created_at",
+            "cashier",
+            "cashier_name",
+            "items",
+            "payments",
+            "items_input",
+            "payments_input",
+        ]
+        read_only_fields = ("total_amount", "created_at", "cashier", "cashier_name")
 
     def get_payments(self, obj):
         # Handle both Sale instance and dict (during creation)
         if isinstance(obj, dict):
             return []
-        return list(obj.payments.values('method__name', 'amount'))
+        return list(obj.payments.values("method__name", "amount"))
 
     def create(self, validated_data):
-        items_data = validated_data.pop('items_input')
-        payments_data = validated_data.pop('payments_input')
-        
+        items_data = validated_data.pop("items_input")
+        payments_data = validated_data.pop("payments_input")
+
         with transaction.atomic():
             # 1. Create Sale
-            sale = Sale.objects.create(cashier=self.context['request'].user)
-            
+            sale = Sale.objects.create(cashier=self.context["request"].user)
+
             total_amount = 0
-            
+
             # 2. Process Items
             for item in items_data:
-                product_id = item.get('product_id')
-                qty = item.get('quantity', 0)
-                
+                product_id = item.get("product_id")
+                qty = item.get("quantity", 0)
+
                 # Validate quantity
                 if qty <= 0:
-                    raise serializers.ValidationError(f"Quantity must be greater than 0 for product {product_id}")
-                
+                    raise serializers.ValidationError(
+                        f"Quantity must be greater than 0 for product {product_id}"
+                    )
+
                 try:
-                    product = Product.objects.select_for_update().get(id=product_id, is_active=True)
+                    product = Product.objects.select_for_update().get(
+                        id=product_id, is_active=True
+                    )
                 except Product.DoesNotExist:
-                    raise serializers.ValidationError(f"Product with id {product_id} not found or inactive")
-                
+                    raise serializers.ValidationError(
+                        f"Product with id {product_id} not found or inactive"
+                    )
+
                 # Check stock availability
                 if product.stock_quantity < qty:
                     raise serializers.ValidationError(
-                        f"Insufficient stock for {product.name}. Available: {product.stock_quantity}, Requested: {qty}"
+                        f"Insufficient stock for {product.name}. "
+                        f"Available: {product.stock_quantity}, Requested: {qty}"
                     )
-                
+
                 price = product.selling_price
-                
+
                 SaleItem.objects.create(
                     sale=sale,
                     product=product,
                     quantity=qty,
                     unit_price=price,
-                    subtotal=price * qty
+                    subtotal=price * qty,
                 )
-                total_amount += (price * qty)
-                
+                total_amount += price * qty
+
                 # Deduct stock
-                product.stock_quantity = F('stock_quantity') - qty
-                product.save(update_fields=['stock_quantity'])
-            
+                product.stock_quantity = F("stock_quantity") - qty
+                product.save(update_fields=["stock_quantity"])
+
             # 3. Process Payments
             payment_total = 0
             for pay in payments_data:
-                method_id = pay.get('method_id')
-                amount = pay.get('amount', 0)
-                
+                method_id = pay.get("method_id")
+                amount = pay.get("amount", 0)
+
                 # Validate amount
                 if amount <= 0:
-                    raise serializers.ValidationError(f"Payment amount must be greater than 0")
-                
+                    raise serializers.ValidationError(
+                        "Payment amount must be greater than 0"
+                    )
+
                 try:
                     method = PaymentMethod.objects.get(id=method_id, is_active=True)
                 except PaymentMethod.DoesNotExist:
-                    raise serializers.ValidationError(f"Payment method with id {method_id} not found or inactive")
-                
-                SalePayment.objects.create(
-                    sale=sale,
-                    method=method,
-                    amount=amount
-                )
+                    raise serializers.ValidationError(
+                        f"Payment method with id {method_id} not found or inactive"
+                    )
+
+                SalePayment.objects.create(sale=sale, method=method, amount=amount)
                 payment_total += amount
-            
+
             # Validate Totals
             if payment_total < total_amount:
-                raise serializers.ValidationError("Payment amount is less than Total Bill.")
-            
+                raise serializers.ValidationError(
+                    "Payment amount is less than Total Bill."
+                )
+
             sale.total_amount = total_amount
             sale.save()
-            
+
             # Send notification
-            from notifications.services import send_notification
             from notifications.models import NotificationEvent
-            
+            from notifications.services import send_notification
+
             send_notification(
                 NotificationEvent.SALE_COMPLETE,
                 {
-                    'sale_id': str(sale.id),
-                    'total_amount': str(total_amount),
-                    'cashier_name': sale.cashier.username if sale.cashier else 'System'
-                }
+                    "sale_id": str(sale.id),
+                    "total_amount": str(total_amount),
+                    "cashier_name": sale.cashier.username if sale.cashier else "System",
+                },
             )
-            
+
         return sale
 
+
 class DailyClosingSerializer(serializers.ModelSerializer):
-    closed_by_name = serializers.CharField(source='closed_by.username', read_only=True)
-    
+    closed_by_name = serializers.CharField(source="closed_by.username", read_only=True)
+
     class Meta:
         model = DailyClosing
-        fields = '__all__'
-        read_only_fields = ('total_sales_expected', 'cash_discrepancy', 'closed_by', 'date')
-
+        fields = "__all__"
+        read_only_fields = (
+            "total_sales_expected",
+            "cash_discrepancy",
+            "closed_by",
+            "date",
+        )

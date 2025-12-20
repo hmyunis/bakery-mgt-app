@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input, Button } from "@heroui/react";
 import { Search, Grid3X3, List, ShoppingCart } from "lucide-react";
 import { useProducts } from "../../hooks/useProduction";
@@ -33,10 +33,12 @@ export function POSTerminal({ onCheckout }: POSTerminalProps) {
     const totalCount = productsData?.count ?? 0;
     const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-    // When search changes, reset to first page to avoid empty pages.
-    useEffect(() => {
+    const [prevDebouncedSearch, setPrevDebouncedSearch] = useState(debouncedSearch);
+
+    if (debouncedSearch !== prevDebouncedSearch) {
+        setPrevDebouncedSearch(debouncedSearch);
         setPage(1);
-    }, [debouncedSearch]);
+    }
 
     const getKnownProduct = (productId: number) => {
         return (

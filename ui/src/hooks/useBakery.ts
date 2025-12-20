@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { bakeryService } from "../services/bakeryService";
 import type { BakerySettings } from "../types/bakery";
 import { toast } from "sonner";
+import type { ApiError } from "../types/api";
 
 export function useBakerySettings() {
     return useQuery({
@@ -25,13 +26,13 @@ export function useUpdateBakerySettings() {
             queryClient.setQueryData<BakerySettings>(["bakerySettings"], data);
             toast.success("Bakery settings updated successfully!");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
             const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
                 "Failed to update bakery settings. Please try again.";
             toast.error(errorMessage);
         },
     });
 }
-

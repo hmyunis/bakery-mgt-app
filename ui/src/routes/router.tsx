@@ -14,86 +14,86 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <LandingPage />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/app",
-    element: (
-      <ProtectedRoute allowedRoles={["admin", "storekeeper", "chef", "cashier"]}>
-        <DashboardLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <DashboardPage />,
-      },
-      {
-        path: "dashboard",
-        element: <DashboardPage />,
-      },
-      {
-        path: "inventory",
+    {
+        path: "/",
+        element: <LandingPage />,
+    },
+    {
+        path: "/login",
+        element: <Login />,
+    },
+    {
+        path: "/app",
         element: (
-          <ProtectedRoute allowedRoles={["admin", "storekeeper"]}>
-            <InventoryPage />
-          </ProtectedRoute>
+            <ProtectedRoute allowedRoles={["admin", "storekeeper", "chef", "cashier"]}>
+                <DashboardLayout />
+            </ProtectedRoute>
         ),
-      },
-      {
-        path: "production",
-        element: (
-          <ProtectedRoute allowedRoles={["admin", "chef"]}>
-            <ProductionPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "sales",
-        element: (
-          <ProtectedRoute allowedRoles={["admin", "cashier"]}>
-            <SalesPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "users",
-        element: (
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <UsersPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "settings",
-        element: (
-          <ProtectedRoute allowedRoles={["admin", "storekeeper", "chef", "cashier"]}>
-            <SettingsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "audit-logs",
-        element: (
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AuditLogsPage />
-          </ProtectedRoute>
-        ),
-      },
-    ],
-  },
-  {
-    path: "/access-denied",
-    element: <AccessDeniedPage />,
-  },
-  {
-    path: "*",
-    element: <NotFoundPage />,
-  },
+        children: [
+            {
+                index: true,
+                element: <DashboardPage />,
+            },
+            {
+                path: "dashboard",
+                element: <DashboardPage />,
+            },
+            {
+                path: "inventory",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin", "storekeeper"]}>
+                        <InventoryPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "production",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin", "chef"]}>
+                        <ProductionPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "sales",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin", "cashier"]}>
+                        <SalesPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "users",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                        <UsersPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "settings",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin", "storekeeper", "chef", "cashier"]}>
+                        <SettingsPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "audit-logs",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                        <AuditLogsPage />
+                    </ProtectedRoute>
+                ),
+            },
+        ],
+    },
+    {
+        path: "/access-denied",
+        element: <AccessDeniedPage />,
+    },
+    {
+        path: "*",
+        element: <NotFoundPage />,
+    },
 ]);

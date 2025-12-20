@@ -1,4 +1,13 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Cell,
+} from "recharts";
 import { cn } from "../../lib/utils";
 
 function formatMoney(n: number) {
@@ -15,7 +24,12 @@ interface TopProductsChartProps {
 export function TopProductsChart({ data, className }: TopProductsChartProps) {
     if (!data || data.length === 0) {
         return (
-            <div className={cn("flex items-center justify-center h-32 text-sm text-slate-500", className)}>
+            <div
+                className={cn(
+                    "flex items-center justify-center h-32 text-sm text-slate-500",
+                    className
+                )}
+            >
                 No product sales today
             </div>
         );
@@ -27,27 +41,29 @@ export function TopProductsChart({ data, className }: TopProductsChartProps) {
         quantity: item.quantity,
     }));
 
-    const colors = [
-        "#a855f7",
-        "#c084fc",
-        "#d946ef",
-        "#e879f9",
-        "#f0abfc",
-    ];
+    const colors = ["#a855f7", "#c084fc", "#d946ef", "#e879f9", "#f0abfc"];
 
-    const renderCustomTooltip = ({ active, payload }: any) => {
+    const renderCustomTooltip = ({
+        active,
+        payload,
+    }: {
+        active?: boolean;
+        payload?: readonly {
+            payload: { name: string; revenue: number; quantity: number };
+        }[];
+    }) => {
         if (active && payload && payload.length) {
-            const data = payload[0].payload;
+            const item = payload[0].payload;
             return (
                 <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-lg">
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {data.name}
+                        {item.name}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Revenue: {formatMoney(data.revenue)} ETB
+                        Revenue: {formatMoney(item.revenue)} ETB
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Quantity: {data.quantity} sold
+                        Quantity: {item.quantity} sold
                     </p>
                 </div>
             );
@@ -67,7 +83,11 @@ export function TopProductsChart({ data, className }: TopProductsChartProps) {
                         layout="vertical"
                         margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#e2e8f0"
+                            className="dark:stroke-slate-700"
+                        />
                         <XAxis
                             type="number"
                             tick={{ fontSize: 12, fill: "currentColor" }}

@@ -1,11 +1,4 @@
-import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-} from "@heroui/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import type { Recipe } from "../../types/production";
 import { useDeleteRecipe } from "../../hooks/useProduction";
 
@@ -15,11 +8,7 @@ interface DeleteRecipeModalProps {
     recipe: Recipe | null;
 }
 
-export function DeleteRecipeModal({
-    isOpen,
-    onClose,
-    recipe,
-}: DeleteRecipeModalProps) {
+export function DeleteRecipeModal({ isOpen, onClose, recipe }: DeleteRecipeModalProps) {
     const { mutateAsync: deleteRecipe, isPending: isDeleting } = useDeleteRecipe();
 
     const handleDelete = async () => {
@@ -28,7 +17,7 @@ export function DeleteRecipeModal({
         try {
             await deleteRecipe(recipe.id);
             onClose();
-        } catch (error) {
+        } catch {
             // Error handling is done in the hook
         }
     };
@@ -58,4 +47,3 @@ export function DeleteRecipeModal({
         </Modal>
     );
 }
-

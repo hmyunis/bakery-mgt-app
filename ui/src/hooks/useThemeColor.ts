@@ -43,4 +43,3 @@ export function useThemeColor(color: string | undefined) {
         };
     }, [color]);
 }
-

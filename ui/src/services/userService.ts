@@ -1,5 +1,6 @@
 import { apiClient } from "../lib/apiClient";
 import { type UserRole } from "../constants/roles";
+import type { ApiResponse, WrappedPaginatedResponse, PaginatedResponse } from "../types/api";
 
 export interface User {
     id: number;
@@ -79,36 +80,57 @@ class UserService {
         }
         if (params.ordering) queryParams.append("ordering", params.ordering);
 
-        const response = await apiClient.get<any>(`/users/?${queryParams.toString()}`);
+        const response = await apiClient.get<
+            | WrappedPaginatedResponse<Record<string, unknown>>
+            | PaginatedResponse<Record<string, unknown>>
+            | Record<string, unknown>[]
+        >(`/users/?${queryParams.toString()}`);
+
+        const responseData = response.data;
 
         // Handle wrapped response format: { success, message, data: [...], pagination: {...} }
-        if (response.data && "data" in response.data && "pagination" in response.data) {
-            const pagination = response.data.pagination;
-            const results = (response.data.data || []).map((user: any) => this.normalizeUser(user));
+        if (
+            responseData &&
+            !Array.isArray(responseData) &&
+            "data" in responseData &&
+            "pagination" in responseData
+        ) {
+            const wrapped = responseData as WrappedPaginatedResponse<Record<string, unknown>>;
+            const results = (wrapped.data || []).map((user) => this.normalizeUser(user));
             return {
-                count: pagination.count || 0,
-                next: pagination.next || null,
-                previous: pagination.previous || null,
+                count: wrapped.pagination.count || 0,
+                next: wrapped.pagination.next || null,
+                previous: wrapped.pagination.previous || null,
                 results,
             };
         }
 
         // Handle direct paginated response: { count, next, previous, results }
-        if (response.data && "results" in response.data) {
+        if (responseData && !Array.isArray(responseData) && "results" in responseData) {
+            const paginated = responseData as PaginatedResponse<Record<string, unknown>>;
             return {
-                ...response.data,
-                results: (response.data.results || []).map((user: any) => this.normalizeUser(user)),
+                ...paginated,
+                results: (paginated.results || []).map((user) => this.normalizeUser(user)),
             };
         }
 
         // Fallback: assume it's the data array directly
+        if (Array.isArray(responseData)) {
+            return {
+                count: responseData.length,
+                next: null,
+                previous: null,
+                results: responseData.map((user) =>
+                    this.normalizeUser(user as Record<string, unknown>)
+                ),
+            };
+        }
+
         return {
-            count: Array.isArray(response.data) ? response.data.length : 0,
+            count: 0,
             next: null,
             previous: null,
-            results: Array.isArray(response.data)
-                ? response.data.map((user: any) => this.normalizeUser(user))
-                : [],
+            results: [],
         };
     }
 
@@ -116,10 +138,14 @@ class UserService {
      * Get a single user by ID
      */
     async getUser(id: number): Promise<User> {
-        const response = await apiClient.get<any>(`/users/${id}/`);
+        const response = await apiClient.get<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/users/${id}/`);
 
         // Handle wrapped response format: { success, message, data: {...} }
-        const user = response.data?.data || response.data;
+        const user =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
 
         // Normalize field names (handle both camelCase and snake_case)
         return this.normalizeUser(user);
@@ -128,22 +154,23 @@ class UserService {
     /**
      * Normalize user object to handle both camelCase and snake_case from backend
      */
-    private normalizeUser(user: any): User {
-        if (!user) return user;
+    private normalizeUser(user: Record<string, unknown>): User {
+        if (!user) return user as unknown as User;
 
         return {
-            id: user.id,
-            username: user.username,
-            fullName: user.fullName || user.full_name,
-            email: user.email,
-            phoneNumber: user.phoneNumber || user.phone_number,
-            role: user.role,
-            address: user.address,
-            avatar: user.avatar,
-            dateJoined: user.dateJoined || user.date_joined,
-            lastLogin: user.lastLogin || user.last_login,
-            isActive: user.isActive !== undefined ? user.isActive : user.is_active,
-            pushNotificationsEnabled: user.pushNotificationsEnabled || user.push_notifications_enabled,
+            id: user.id as number,
+            username: user.username as string,
+            fullName: (user.fullName || user.full_name) as string,
+            email: user.email as string,
+            phoneNumber: (user.phoneNumber || user.phone_number) as string,
+            role: user.role as UserRole,
+            address: user.address as string,
+            avatar: user.avatar as string,
+            dateJoined: (user.dateJoined || user.date_joined) as string,
+            lastLogin: (user.lastLogin || user.last_login) as string,
+            isActive: (user.isActive !== undefined ? user.isActive : user.is_active) as boolean,
+            pushNotificationsEnabled: (user.pushNotificationsEnabled ||
+                user.push_notifications_enabled) as boolean,
         };
     }
 
@@ -163,14 +190,18 @@ class UserService {
         formData.append("confirm_password", data.confirmPassword);
         if (data.avatar) formData.append("avatar", data.avatar);
 
-        const response = await apiClient.post<any>("/users/", formData, {
+        const response = await apiClient.post<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >("/users/", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
         });
 
         // Handle wrapped response format: { success, message, data: {...} }
-        const user = response.data?.data || response.data;
+        const user =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizeUser(user);
     }
 
@@ -204,14 +235,18 @@ class UserService {
             }
         }
 
-        const response = await apiClient.patch<any>(`/users/${id}/`, formData, {
+        const response = await apiClient.patch<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/users/${id}/`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
         });
 
         // Handle wrapped response format: { success, message, data: {...} }
-        const user = response.data?.data || response.data;
+        const user =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
         return this.normalizeUser(user);
     }
 

@@ -118,7 +118,7 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({ profile 
                 <div className="flex justify-center">
                     {profile.role && (
                         <Chip
-                            color={getRoleColor(profile.role as any)}
+                            color={getRoleColor(profile.role)}
                             variant="flat"
                             className="capitalize"
                         >

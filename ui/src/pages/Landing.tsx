@@ -136,12 +136,14 @@ export function LandingPage() {
                         ) : (
                             <div className="size-10 rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 flex items-center justify-center shadow-sm">
                                 <span className="text-lg">🍞</span>
-                    </div>
+                            </div>
                         )}
                         <div className="text-left leading-tight">
                             <div className="font-bold text-base sm:text-lg">{bakeryName}</div>
-                            <div className="text-[11px] text-[var(--muted)]">Freshly baked, every day</div>
-                    </div>
+                            <div className="text-[11px] text-[var(--muted)]">
+                                Freshly baked, every day
+                            </div>
+                        </div>
                     </button>
 
                     <nav className="hidden md:flex items-center gap-6">
@@ -158,20 +160,20 @@ export function LandingPage() {
                     </nav>
 
                     <div className="flex items-center gap-2">
-                    <Tooltip content={mode === "dark" ? "Light mode" : "Dark mode"}>
-                        <Switch
-                            aria-label="toggle theme"
-                            isSelected={mode === "dark"}
-                            onValueChange={() => dispatch(toggleMode())}
-                            thumbIcon={
-                                mode === "dark" ? (
-                                    <Moon className="size-4" />
-                                ) : (
-                                    <Sun className="size-4" />
-                                )
-                            }
-                        />
-                    </Tooltip>
+                        <Tooltip content={mode === "dark" ? "Light mode" : "Dark mode"}>
+                            <Switch
+                                aria-label="toggle theme"
+                                isSelected={mode === "dark"}
+                                onValueChange={() => dispatch(toggleMode())}
+                                thumbIcon={
+                                    mode === "dark" ? (
+                                        <Moon className="size-4" />
+                                    ) : (
+                                        <Sun className="size-4" />
+                                    )
+                                }
+                            />
+                        </Tooltip>
                         <Button
                             size="sm"
                             color="primary"
@@ -208,18 +210,18 @@ export function LandingPage() {
                                     {l.label}
                                 </button>
                             ))}
-                        <Button
+                            <Button
                                 size="sm"
                                 color="primary"
                                 className="bg-[var(--accent)] text-white justify-center"
                                 endContent={<ArrowRight className="size-4" />}
-                            onPress={() => navigate("/login")}
-                        >
-                            Login
-                        </Button>
+                                onPress={() => navigate("/login")}
+                            >
+                                Login
+                            </Button>
                         </div>
                     </div>
-                    )}
+                )}
             </header>
 
             {/* Hero */}
@@ -232,28 +234,29 @@ export function LandingPage() {
                     <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
                             <div className="space-y-6">
-                        <Chip
-                            variant="flat"
+                                <Chip
+                                    variant="flat"
                                     className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
-                        >
+                                >
                                     <Sparkles className="size-4 mr-1" />
                                     Freshly baked daily
-                        </Chip>
+                                </Chip>
                                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">
                                     Artisan breads, cakes & pastries — made with love at{" "}
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500">
                                         {bakeryName}
                                     </span>
                                     .
-                        </h1>
+                                </h1>
                                 <p className="text-base sm:text-lg text-[var(--muted)] max-w-xl">
-                                    From warm sourdough to celebration cakes, we bring you the comfort of
-                                    fresh-baked goodness — perfect for mornings, events, and everything in between.
-                        </p>
+                                    From warm sourdough to celebration cakes, we bring you the
+                                    comfort of fresh-baked goodness — perfect for mornings, events,
+                                    and everything in between.
+                                </p>
 
                                 <div className="flex flex-col sm:flex-row gap-3">
-                                <Button
-                                    color="primary"
+                                    <Button
+                                        color="primary"
                                         className="bg-[var(--accent)] text-white"
                                         startContent={<ShoppingBag className="size-4" />}
                                         onPress={() => scrollToSection("cta")}
@@ -283,8 +286,8 @@ export function LandingPage() {
                                         <Coffee className="size-4" />
                                         <span>Perfect with coffee</span>
                                     </div>
-                        </div>
-                    </div>
+                                </div>
+                            </div>
 
                             <div className="relative">
                                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)]/70 backdrop-blur-xl p-6 shadow-xl">
@@ -320,7 +323,8 @@ export function LandingPage() {
                                             <CakeSlice className="size-5 text-rose-500" />
                                         </div>
                                         <div className="text-sm text-[var(--muted)] mt-1">
-                                            Ask for our fresh-baked specials when you visit {bakeryName}.
+                                            Ask for our fresh-baked specials when you visit{" "}
+                                            {bakeryName}.
                                         </div>
                                     </div>
                                 </div>
@@ -342,22 +346,29 @@ export function LandingPage() {
                                 A neighborhood bakery with a big heart.
                             </h2>
                             <p className="text-[var(--muted)]">
-                                At {bakeryName}, we bake in small batches so every loaf and pastry feels freshly made
-                                for you. We focus on quality, consistency, and beautiful presentation for your family
-                                table or your biggest celebration.
+                                At {bakeryName}, we bake in small batches so every loaf and pastry
+                                feels freshly made for you. We focus on quality, consistency, and
+                                beautiful presentation for your family table or your biggest
+                                celebration.
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)]/60 p-4">
                                     <div className="text-lg font-bold">Fresh</div>
-                                    <div className="text-xs text-[var(--muted)] mt-1">Baked daily</div>
+                                    <div className="text-xs text-[var(--muted)] mt-1">
+                                        Baked daily
+                                    </div>
                                 </div>
                                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)]/60 p-4">
                                     <div className="text-lg font-bold">Local</div>
-                                    <div className="text-xs text-[var(--muted)] mt-1">Community-first</div>
+                                    <div className="text-xs text-[var(--muted)] mt-1">
+                                        Community-first
+                                    </div>
                                 </div>
                                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)]/60 p-4">
                                     <div className="text-lg font-bold">Custom</div>
-                                    <div className="text-xs text-[var(--muted)] mt-1">Made to order</div>
+                                    <div className="text-xs text-[var(--muted)] mt-1">
+                                        Made to order
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -386,7 +397,7 @@ export function LandingPage() {
                             </div>
                         </div>
                     </div>
-                                </div>
+                </div>
             </section>
 
             {/* Services */}
@@ -400,15 +411,15 @@ export function LandingPage() {
                             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
                                 Everything you need — from daily bread to event catering.
                             </h2>
-                                </div>
-                                            <Button
+                        </div>
+                        <Button
                             variant="bordered"
                             className="border-[var(--border)]"
                             endContent={<ArrowRight className="size-4" />}
                             onPress={() => scrollToSection("contact")}
                         >
                             Contact us
-                                            </Button>
+                        </Button>
                     </div>
 
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -444,8 +455,8 @@ export function LandingPage() {
                                 <div className="font-bold">{title}</div>
                                 <div className="text-sm text-[var(--muted)] mt-1">{desc}</div>
                             </div>
-                                        ))}
-                                    </div>
+                        ))}
+                    </div>
                 </div>
             </section>
 
@@ -465,8 +476,9 @@ export function LandingPage() {
                                     Let {bakeryName} bake for your next moment.
                                 </h3>
                                 <p className="text-[var(--muted)]">
-                                    Need a custom cake, a bulk bread order, or a weekly office delivery? Reach out and
-                                    we’ll get back quickly with options and pricing.
+                                    Need a custom cake, a bulk bread order, or a weekly office
+                                    delivery? Reach out and we’ll get back quickly with options and
+                                    pricing.
                                 </p>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 justify-start lg:justify-end">
@@ -589,11 +601,14 @@ export function LandingPage() {
                                 )}
                                 <div>
                                     <div className="font-bold">{bakeryName}</div>
-                                    <div className="text-xs text-[var(--muted)]">Freshly baked, every day</div>
+                                    <div className="text-xs text-[var(--muted)]">
+                                        Freshly baked, every day
                                     </div>
                                 </div>
-                                    <p className="text-sm text-[var(--muted)]">
-                                {bakeryName} is your neighborhood bakery for artisan breads, pastries, and custom cakes.
+                            </div>
+                            <p className="text-sm text-[var(--muted)]">
+                                {bakeryName} is your neighborhood bakery for artisan breads,
+                                pastries, and custom cakes.
                             </p>
                         </div>
 
@@ -609,9 +624,9 @@ export function LandingPage() {
                                     >
                                         {l.label}
                                     </button>
-                                        ))}
-                                    </div>
-                                </div>
+                                ))}
+                            </div>
+                        </div>
 
                         <div className="space-y-3">
                             <div className="font-semibold">Contact</div>
@@ -629,14 +644,14 @@ export function LandingPage() {
                                     <span>{bakerySettings?.address?.trim() || "—"}</span>
                                 </div>
                             </div>
-                    </div>
+                        </div>
 
                         <div className="space-y-3">
                             <div className="font-semibold">Social</div>
                             {socialLinks.length === 0 ? (
                                 <div className="text-sm text-[var(--muted)]">
                                     No social links configured.
-                            </div>
+                                </div>
                             ) : (
                                 <div className="flex items-center gap-2 flex-wrap">
                                     {socialLinks.map(({ key, url, Icon, label }) => (
@@ -655,7 +670,7 @@ export function LandingPage() {
                                 </div>
                             )}
                         </div>
-                </div>
+                    </div>
 
                     <div className="mt-10 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-[var(--muted)]">
                         <div>
@@ -674,5 +689,3 @@ export function LandingPage() {
         </div>
     );
 }
-
-

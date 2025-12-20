@@ -7,7 +7,11 @@ import { AlertTriangle } from "lucide-react";
 const formatDateTime = (dateString?: string) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return (
+        date.toLocaleDateString() +
+        " " +
+        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
 };
 
 // Helper function to calculate wastage in terms of product pieces
@@ -56,9 +60,7 @@ export const getProductionHistoryColumns = (): ColumnDef<ProductionRun>[] => [
     {
         id: "rowNumber",
         header: "#",
-        cell: ({ row }) => (
-            <span className="text-sm text-muted-foreground">{row.index + 1}</span>
-        ),
+        cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.index + 1}</span>,
         size: 50,
     },
     {
@@ -77,9 +79,7 @@ export const getProductionHistoryColumns = (): ColumnDef<ProductionRun>[] => [
             const run = row.original;
             const productName = run.product_name || run.composite_name || "N/A";
             return (
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                    {productName}
-                </span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">{productName}</span>
             );
         },
     },
@@ -119,8 +119,8 @@ export const getProductionHistoryColumns = (): ColumnDef<ProductionRun>[] => [
                             hasWastage && wastage.isWaste
                                 ? "text-danger-600 dark:text-danger-400 font-semibold"
                                 : hasWastage && !wastage.isWaste
-                                ? "text-success-600 dark:text-success-400 font-semibold"
-                                : "text-zinc-500 dark:text-zinc-400"
+                                  ? "text-success-600 dark:text-success-400 font-semibold"
+                                  : "text-zinc-500 dark:text-zinc-400"
                         }
                     >
                         {hasWastage
@@ -144,4 +144,3 @@ export const getProductionHistoryColumns = (): ColumnDef<ProductionRun>[] => [
         },
     },
 ];
-
