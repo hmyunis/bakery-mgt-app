@@ -58,4 +58,14 @@ export interface OwnerDashboardResponse {
             timestamp: string;
         }>;
     };
+    salesPerformance: {
+        todayTotal: number;
+        lastThreeDays: Array<{
+            date: string;
+            salesTotal: number;
+            productionCost: number;
+        }>;
+        lastThreeDaysAverage: number;
+        changePercent: number | null;
+    };
 }

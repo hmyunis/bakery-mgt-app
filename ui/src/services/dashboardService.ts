@@ -48,6 +48,10 @@ class DashboardService {
             string,
             unknown
         >;
+        const salesPerformance = (data.salesPerformance ?? data.sales_performance ?? {}) as Record<
+            string,
+            unknown
+        >;
 
         return {
             salesToday: {
@@ -119,6 +123,30 @@ class DashboardService {
                     actorName: (d.actorName ?? d.actor_name) as string,
                     timestamp: d.timestamp as string,
                 })),
+            },
+            salesPerformance: {
+                todayTotal: this.normalizeNumber(
+                    salesPerformance.todayTotal ?? salesPerformance.today_total
+                ),
+                lastThreeDays:
+                    (
+                        (salesPerformance.lastThreeDays ??
+                            salesPerformance.last_three_days) as Record<string, unknown>[]
+                    )?.map((d) => ({
+                        date: String(d.date),
+                        salesTotal: this.normalizeNumber(d.salesTotal ?? d.sales_total),
+                        productionCost: this.normalizeNumber(d.productionCost ?? d.production_cost),
+                    })) ?? [],
+                lastThreeDaysAverage: this.normalizeNumber(
+                    salesPerformance.lastThreeDaysAverage ??
+                        salesPerformance.last_three_days_average
+                ),
+                changePercent:
+                    (salesPerformance.changePercent ?? salesPerformance.change_percent) === null
+                        ? null
+                        : this.normalizeNumber(
+                              salesPerformance.changePercent ?? salesPerformance.change_percent
+                          ),
             },
         };
     }

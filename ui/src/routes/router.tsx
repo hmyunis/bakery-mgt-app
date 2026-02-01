@@ -10,8 +10,12 @@ import { ProductionPage } from "../pages/Production";
 import { SalesPage } from "../pages/Sales";
 import { UsersPage } from "../pages/Users";
 import { SettingsPage } from "../pages/Settings";
+import { EmployeesPage } from "../pages/Employees";
+import { EmployeeDetailPage } from "../pages/EmployeeDetail";
+import { HrPage } from "../pages/Hr";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
+import { Navigate } from "react-router-dom";
 
 export const router = createBrowserRouter([
     {
@@ -67,6 +71,54 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute allowedRoles={["admin"]}>
                         <UsersPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "employees",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                        <EmployeesPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "employees/:employeeId",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                        <EmployeeDetailPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "hr",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                        <HrPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "attendance",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                        <Navigate to="/app/hr?tab=attendance" replace />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "leaves",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                        <Navigate to="/app/hr?tab=leaves" replace />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "shifts",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                        <Navigate to="/app/hr?tab=shifts" replace />
                     </ProtectedRoute>
                 ),
             },

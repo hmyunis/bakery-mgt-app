@@ -27,6 +27,17 @@ function formatDateTime(iso: string) {
     }
 }
 
+function formatDateShort(isoOrDate: string) {
+    try {
+        return new Date(isoOrDate).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+        });
+    } catch {
+        return isoOrDate;
+    }
+}
+
 export function DashboardPage() {
     const { user } = useAppSelector((s) => s.auth);
     const isAdmin = user?.role === "admin";
@@ -66,6 +77,17 @@ export function DashboardPage() {
             </div>
         );
     }
+
+    const salesPerformance = data.salesPerformance ?? {
+        todayTotal: 0,
+        lastThreeDays: [] as Array<{
+            date: string;
+            salesTotal: number;
+            productionCost: number;
+        }>,
+        lastThreeDaysAverage: 0,
+        changePercent: null as number | null,
+    };
 
     return (
         <div className="space-y-6">
@@ -198,66 +220,103 @@ export function DashboardPage() {
                     )}
                 </div>
 
-                {/* Audit Insights */}
+                {/* Sales Performance */}
                 <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-[var(--panel)]/80 backdrop-blur-xl p-6">
                     <div className="mb-4">
                         <div className="flex items-center gap-2 mb-1">
-                            <ShieldAlert className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                            <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                             <div className="text-base font-medium text-[var(--fg)]">
-                                Audit Insights
+                                Sales Performance
                             </div>
                         </div>
-                        <div className="text-sm text-[var(--muted)]">Last 24 hours activity</div>
+                        <div className="text-sm text-[var(--muted)]">
+                            Compared to the previous 3 days
+                        </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-3">
-                            <div className="text-center p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                                <div className="text-lg font-bold text-red-600 dark:text-red-400">
-                                    {data.auditInsights.deleteCount}
-                                </div>
-                                <div className="text-xs text-[var(--muted)]">Deletes</div>
-                            </div>
-                            <div className="text-center p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                                <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
-                                    {data.auditInsights.updateCount}
-                                </div>
-                                <div className="text-xs text-[var(--muted)]">Updates</div>
-                            </div>
-                            <div className="text-center p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                                <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                                    {data.auditInsights.createCount}
-                                </div>
-                                <div className="text-xs text-[var(--muted)]">Creates</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
+                            <div className="text-xs text-[var(--muted)]">Today</div>
+                            <div className="text-lg font-bold text-[var(--fg)]">
+                                {formatMoney(salesPerformance.todayTotal)} ETB
                             </div>
                         </div>
-
-                        {data.auditInsights.recentDeletes.length > 0 && (
-                            <div>
-                                <div className="text-xs font-medium text-[var(--muted)] mb-2">
-                                    Recent Delete Actions
-                                </div>
-                                <div className="space-y-2">
-                                    {data.auditInsights.recentDeletes.map((del) => (
-                                        <div
-                                            key={del.id}
-                                            className="flex items-center justify-between gap-2 text-xs p-2 rounded border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10"
-                                        >
-                                            <div className="min-w-0 flex-1">
-                                                <div className="font-medium text-[var(--fg)] truncate">
-                                                    {del.tableName} #{del.recordId}
-                                                </div>
-                                                <div className="text-[var(--muted)] truncate">
-                                                    {del.actorName} ·{" "}
-                                                    {formatDateTime(del.timestamp)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
+                            <div className="text-xs text-[var(--muted)]">Avg (last 3 days)</div>
+                            <div className="text-lg font-bold text-[var(--fg)]">
+                                {formatMoney(salesPerformance.lastThreeDaysAverage)} ETB
                             </div>
-                        )}
+                        </div>
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
+                            <div className="text-xs text-[var(--muted)]">Change</div>
+                            {salesPerformance.changePercent === null ? (
+                                <div className="text-lg font-bold text-[var(--muted)]">—</div>
+                            ) : (
+                                <div
+                                    className={[
+                                        "text-lg font-bold",
+                                        salesPerformance.changePercent >= 0
+                                            ? "text-emerald-600 dark:text-emerald-400"
+                                            : "text-red-600 dark:text-red-400",
+                                    ].join(" ")}
+                                >
+                                    {salesPerformance.changePercent >= 0 ? "+" : ""}
+                                    {salesPerformance.changePercent.toFixed(1)}%
+                                </div>
+                            )}
+                        </div>
                     </div>
+
+                    {salesPerformance.lastThreeDays.length > 0 && (
+                        <div className="mt-4 overflow-auto rounded-lg border border-slate-200 dark:border-slate-800">
+                            <table className="min-w-full text-sm">
+                                <thead className="bg-slate-50 dark:bg-slate-900/50">
+                                    <tr className="text-left">
+                                        <th className="px-3 py-2 text-xs font-medium text-[var(--muted)]">
+                                            Day
+                                        </th>
+                                        <th className="px-3 py-2 text-xs font-medium text-[var(--muted)]">
+                                            Sales
+                                        </th>
+                                        <th className="px-3 py-2 text-xs font-medium text-[var(--muted)]">
+                                            Production Cost
+                                        </th>
+                                        <th className="px-3 py-2 text-xs font-medium text-[var(--muted)]">
+                                            Net
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                                    {salesPerformance.lastThreeDays.map((d) => {
+                                        const net = d.salesTotal - d.productionCost;
+                                        return (
+                                            <tr key={d.date}>
+                                                <td className="px-3 py-2 font-medium text-[var(--fg)]">
+                                                    {formatDateShort(d.date)}
+                                                </td>
+                                                <td className="px-3 py-2 text-[var(--fg)]">
+                                                    {formatMoney(d.salesTotal)} ETB
+                                                </td>
+                                                <td className="px-3 py-2 text-[var(--fg)]">
+                                                    {formatMoney(d.productionCost)} ETB
+                                                </td>
+                                                <td
+                                                    className={[
+                                                        "px-3 py-2 font-medium",
+                                                        net >= 0
+                                                            ? "text-emerald-600 dark:text-emerald-400"
+                                                            : "text-red-600 dark:text-red-400",
+                                                    ].join(" ")}
+                                                >
+                                                    {formatMoney(net)} ETB
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -320,9 +379,12 @@ export function DashboardPage() {
                         </div>
                     )}
                 </div>
+            </div>
 
-                {/* Recent Production Wastage */}
-                <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-[var(--panel)]/80 backdrop-blur-xl p-6">
+            {/* Bottom Insights */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Recent Production Wastage (wider on large devices) */}
+                <div className="lg:col-span-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-[var(--panel)]/80 backdrop-blur-xl p-6">
                     <div className="mb-4">
                         <div className="text-base font-medium text-[var(--fg)]">
                             Recent Production Wastage
@@ -360,6 +422,68 @@ export function DashboardPage() {
                             ))}
                         </div>
                     )}
+                </div>
+
+                {/* Audit Insights (moved to bottom) */}
+                <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-[var(--panel)]/80 backdrop-blur-xl p-6">
+                    <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <ShieldAlert className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                            <div className="text-base font-medium text-[var(--fg)]">
+                                Audit Insights
+                            </div>
+                        </div>
+                        <div className="text-sm text-[var(--muted)]">Last 24 hours activity</div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="text-center p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                                <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                                    {data.auditInsights.deleteCount}
+                                </div>
+                                <div className="text-xs text-[var(--muted)]">Deletes</div>
+                            </div>
+                            <div className="text-center p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                                <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                                    {data.auditInsights.updateCount}
+                                </div>
+                                <div className="text-xs text-[var(--muted)]">Updates</div>
+                            </div>
+                            <div className="text-center p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                                    {data.auditInsights.createCount}
+                                </div>
+                                <div className="text-xs text-[var(--muted)]">Creates</div>
+                            </div>
+                        </div>
+
+                        {data.auditInsights.recentDeletes.length > 0 && (
+                            <div>
+                                <div className="text-xs font-medium text-[var(--muted)] mb-2">
+                                    Recent Delete Actions
+                                </div>
+                                <div className="space-y-2">
+                                    {data.auditInsights.recentDeletes.map((del) => (
+                                        <div
+                                            key={del.id}
+                                            className="flex items-center justify-between gap-2 text-xs p-2 rounded border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <div className="font-medium text-[var(--fg)] truncate">
+                                                    {del.tableName} #{del.recordId}
+                                                </div>
+                                                <div className="text-[var(--muted)] truncate">
+                                                    {del.actorName} ·{" "}
+                                                    {formatDateTime(del.timestamp)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

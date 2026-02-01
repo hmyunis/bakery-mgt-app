@@ -97,6 +97,55 @@ def owner_dashboard(request):
     sales_today_count = sales_qs.count()
     sales_today_avg = sales_qs.aggregate(avg=Avg("total_amount"))["avg"] or Decimal("0")
 
+    # Performance vs last 3 days (excluding today)
+    last_three_days = [today - timezone.timedelta(days=i) for i in range(1, 4)]
+    last_three_totals = []
+    last_three_production_costs = []
+    for d in last_three_days:
+        d_start = timezone.make_aware(datetime.combine(d, datetime.min.time()))
+        d_end = timezone.make_aware(datetime.combine(d, datetime.max.time()))
+        t = Sale.objects.filter(created_at__range=(d_start, d_end)).aggregate(
+            total=Sum("total_amount")
+        )["total"] or Decimal("0")
+        last_three_totals.append(_to_float(t))
+
+        # Production cost for the day: sum(
+        #   actual_amount * ingredient.average_cost_per_unit
+        # )
+        day_usages = (
+            IngredientUsage.objects.filter(production_run__date_produced__date=d)
+            .select_related("ingredient")
+            .only("actual_amount", "ingredient__average_cost_per_unit")
+        )
+        cost = Decimal("0")
+        for u in day_usages:
+            avg_cost = u.ingredient.average_cost_per_unit or Decimal("0")
+            cost += (u.actual_amount or Decimal("0")) * avg_cost
+        last_three_production_costs.append(_to_float(cost))
+
+    last_three_avg = (
+        sum(last_three_totals) / len(last_three_totals) if last_three_totals else 0.0
+    )
+    today_total_f = _to_float(sales_today_total)
+    change_pct = (
+        ((today_total_f - last_three_avg) / last_three_avg * 100)
+        if last_three_avg > 0
+        else None
+    )
+    sales_performance = {
+        "today_total": today_total_f,
+        "last_three_days": [
+            {
+                "date": d,
+                "sales_total": last_three_totals[i],
+                "production_cost": last_three_production_costs[i],
+            }
+            for i, d in enumerate(last_three_days)
+        ],
+        "last_three_days_average": last_three_avg,
+        "change_percent": change_pct,
+    }
+
     # Cash vs Digital split (based on payment method name)
     payments_qs = (
         SalePayment.objects.filter(sale__created_at__range=(start_of_day, end_of_day))
@@ -287,6 +336,7 @@ def owner_dashboard(request):
             "inventory_stats": inventory_stats,
             "recent_production_runs": recent_production_runs,
             "audit_insights": audit_insights,
+            "sales_performance": sales_performance,
         },
         status=status.HTTP_200_OK,
     )

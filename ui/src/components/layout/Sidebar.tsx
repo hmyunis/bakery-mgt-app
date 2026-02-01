@@ -5,6 +5,8 @@ import {
     ChefHat,
     ShoppingCart,
     Users,
+    UsersRound,
+    UserRound,
     Settings,
     ScrollText,
     X,
@@ -51,6 +53,18 @@ const navItems: NavItem[] = [
         label: "Users",
         icon: Users,
         path: "/app/users",
+        roles: ["admin"],
+    },
+    {
+        label: "Employees",
+        icon: UserRound,
+        path: "/app/employees",
+        roles: ["admin"],
+    },
+    {
+        label: "HR",
+        icon: UsersRound,
+        path: "/app/hr",
         roles: ["admin"],
     },
     {

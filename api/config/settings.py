@@ -5,7 +5,6 @@ from pathlib import Path
 import dj_database_url
 from decouple import config
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY")
@@ -30,7 +29,7 @@ INSTALLED_APPS = [
     # Local
     "core",
     "users",
-    "audit",
+    "audit.apps.AuditConfig",
     "inventory",
     "production",
     "sales",
@@ -39,17 +38,17 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # Top for CORS
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "audit.middleware.AuditMiddleware",  # Audit logging middleware
-    "core.middleware.NoCacheMiddleware",  # Prevent caching of API responses
+    "audit.middleware.AuditMiddleware",
+    "core.middleware.NoCacheMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "djangorestframework_camel_case.middleware.CamelCaseMiddleWare",  # CamelCase
+    "djangorestframework_camel_case.middleware.CamelCaseMiddleWare",
 ]
 
 ROOT_URLCONF = "config.urls"

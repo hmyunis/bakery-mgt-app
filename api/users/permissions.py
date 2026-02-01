@@ -23,3 +23,8 @@ class IsAdminOrOwner(permissions.BasePermission):
             return True
         # User can only view/edit themselves
         return obj == request.user
+
+
+class IsAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == "admin"
