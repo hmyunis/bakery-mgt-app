@@ -48,6 +48,7 @@ class SaleSerializer(serializers.ModelSerializer):
             "created_at",
             "cashier",
             "cashier_name",
+            "receipt_issued",
             "items",
             "payments",
             "items_input",
@@ -64,10 +65,14 @@ class SaleSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         items_data = validated_data.pop("items_input")
         payments_data = validated_data.pop("payments_input")
+        receipt_issued = validated_data.pop("receipt_issued", False)
 
         with transaction.atomic():
             # 1. Create Sale
-            sale = Sale.objects.create(cashier=self.context["request"].user)
+            sale = Sale.objects.create(
+                cashier=self.context["request"].user,
+                receipt_issued=receipt_issued,
+            )
 
             total_amount = 0
 

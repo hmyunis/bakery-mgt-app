@@ -7,6 +7,7 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
     isLoading?: boolean;
     onRowClick?: (row: TData) => void;
+    getRowClassName?: (row: TData) => string | undefined;
 }
 
 export function DataTable<TData, TValue>({
@@ -14,6 +15,7 @@ export function DataTable<TData, TValue>({
     data,
     isLoading = false,
     onRowClick,
+    getRowClassName,
 }: DataTableProps<TData, TValue>) {
     // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
@@ -64,7 +66,8 @@ export function DataTable<TData, TValue>({
                                 className={cn(
                                     "transition-colors",
                                     onRowClick &&
-                                        "cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                                        "cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800",
+                                    getRowClassName?.(row.original)
                                 )}
                             >
                                 {row.getVisibleCells().map((cell) => (

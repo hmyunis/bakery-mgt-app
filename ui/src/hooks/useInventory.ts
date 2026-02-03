@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { inventoryService } from "../services/inventoryService";
 import type { ApiError, ApiErrorResponse } from "../types/api";
@@ -26,6 +26,26 @@ export function useIngredients(params: IngredientListParams = {}) {
             return await inventoryService.getIngredients(params);
         },
         placeholderData: (previousData) => previousData,
+    });
+}
+
+/**
+ * Get list of ingredients with infinite pagination
+ */
+export function useInfiniteIngredients(params: Omit<IngredientListParams, "page"> = {}) {
+    return useInfiniteQuery({
+        queryKey: ["ingredients", "infinite", params],
+        initialPageParam: 1,
+        queryFn: async ({ pageParam }) => {
+            return await inventoryService.getIngredients({
+                ...params,
+                page: pageParam,
+            });
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            if (!lastPage.next) return undefined;
+            return allPages.length + 1;
+        },
     });
 }
 

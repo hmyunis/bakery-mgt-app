@@ -29,6 +29,7 @@ class Sale(models.Model):
     )
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    receipt_issued = models.BooleanField(default=False)
 
     # Optional: Customer name if 'Credit' feature is added later
     customer_name = models.CharField(max_length=100, blank=True, null=True)

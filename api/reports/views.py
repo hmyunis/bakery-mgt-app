@@ -1,7 +1,8 @@
 from datetime import datetime
+from decimal import Decimal
 
 import openpyxl
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncHour
 from django.http import HttpResponse
 from django.utils import timezone
@@ -16,6 +17,13 @@ from production.models import IngredientUsage, Product, ProductionRun
 
 # --- App Imports ---
 from sales.models import Sale, SaleItem, SalePayment
+from users.models import (
+    AttendanceRecord,
+    Employee,
+    LeaveRecord,
+    PayrollRecord,
+    ShiftAssignment,
+)
 
 # ==========================================
 # HELPER: Excel Styling & Formatting
@@ -58,7 +66,7 @@ class ExcelStyler:
         self.align_left = Alignment(horizontal="left", vertical="center")
         self.align_right = Alignment(horizontal="right", vertical="center")
 
-    def add_sheet_header(self, ws, title, subtitle):
+    def add_sheet_header(self, ws, title, subtitle, merge_cols=6):
         """Adds the big text at the top of the sheet"""
         ws["A1"] = title
         ws["A1"].font = self.font_title
@@ -67,8 +75,9 @@ class ExcelStyler:
         ws["A2"].font = self.font_subtitle
 
         # Merge cells slightly so text doesn't get cut off
-        ws.merge_cells("A1:F1")
-        ws.merge_cells("A2:F2")
+        end_col = get_column_letter(max(1, merge_cols))
+        ws.merge_cells(f"A1:{end_col}1")
+        ws.merge_cells(f"A2:{end_col}2")
 
     def create_table(self, ws, headers, data, sum_columns=None):
         """
@@ -116,11 +125,17 @@ class ExcelStyler:
                 if fill:
                     cell.fill = fill
 
-                if isinstance(cell.value, (int, float)):
+                if isinstance(cell.value, bool):
+                    pass
+                elif isinstance(cell.value, int):
+                    cell.number_format = "#,##0"
+                elif isinstance(cell.value, (float, Decimal)):
                     cell.number_format = "#,##0.00"
 
-                if col_idx in sum_columns and isinstance(cell.value, (int, float)):
-                    totals[col_idx] += cell.value
+                if col_idx in sum_columns and isinstance(
+                    cell.value, (int, float, Decimal)
+                ):
+                    totals[col_idx] += float(cell.value)
 
         # 3. Write Totals Row
         if sum_columns and data:
@@ -146,7 +161,11 @@ class ExcelStyler:
                     left=self.thin_border,
                     right=self.thin_border,
                 )
-                if isinstance(cell.value, (int, float)):
+                if isinstance(cell.value, bool):
+                    pass
+                elif isinstance(cell.value, int):
+                    cell.number_format = "#,##0"
+                elif isinstance(cell.value, (float, Decimal)):
                     cell.number_format = "#,##0.00"
 
         self.adjust_column_widths(ws)
@@ -380,6 +399,13 @@ class ExportReportView(APIView):
         except ImportError:
             total_money_out = 0
 
+        total_payroll_paid = (
+            PayrollRecord.objects.filter(
+                paid_at__date__range=[start_date, end_date]
+            ).aggregate(Sum("amount_paid"))["amount_paid__sum"]
+            or 0
+        )
+
         styler.add_sheet_header(
             ws_overview, "Business Snapshot", f"Report from {start_date} to {end_date}"
         )
@@ -413,17 +439,20 @@ class ExportReportView(APIView):
         )
 
         add_summary_line(11, "Cost of Ingredients Bought", float(total_money_out), True)
+        add_summary_line(12, "Payroll Paid (HR)", float(total_payroll_paid), True)
 
-        ws_overview["B13"] = "Estimated Profit"
-        ws_overview["B13"].font = Font(
+        ws_overview["B14"] = "Estimated Profit"
+        ws_overview["B14"].font = Font(
             name="Calibri", bold=True, size=12, color="203764"
         )
 
-        est_profit = float(total_money_in) - float(total_money_out)
-        ws_overview["B14"] = "Sales minus Purchases"
-        ws_overview["C14"] = est_profit
-        ws_overview["C14"].number_format = "#,##0.00"
-        ws_overview["C14"].font = Font(
+        est_profit = (
+            float(total_money_in) - float(total_money_out) - float(total_payroll_paid)
+        )
+        ws_overview["B15"] = "Sales minus Purchases minus Payroll"
+        ws_overview["C15"] = est_profit
+        ws_overview["C15"].number_format = "#,##0.00"
+        ws_overview["C15"].font = Font(
             bold=True, size=12, color="006100" if est_profit >= 0 else "9C0006"
         )
 
@@ -435,23 +464,29 @@ class ExportReportView(APIView):
         # SHEET 2: SALES LIST
         # ==========================================
         ws_sales = wb.create_sheet("Sales List")
-        styler.add_sheet_header(
-            ws_sales, "Detailed Sales List", "List of every receipt generated"
-        )
-
         headers = [
             "Date",
             "Time",
-            "Receipt #",
+            "Sale #",
+            "Receipt Issued",
             "Cashier Name",
             "Items Sold",
+            "Total Bill",
             "Amount Paid",
+            "Change",
+            "Payments",
         ]
+        styler.add_sheet_header(
+            ws_sales,
+            "Detailed Sales List",
+            "List of sales made in the selected period",
+            merge_cols=len(headers),
+        )
 
         sales_qs = (
             Sale.objects.filter(created_at__date__range=[start_date, end_date])
             .select_related("cashier")
-            .prefetch_related("items__product")
+            .prefetch_related("items__product", "payments__method")
             .order_by("-created_at")
         )
 
@@ -465,27 +500,36 @@ class ExportReportView(APIView):
                 if s.cashier and s.cashier.full_name
                 else (s.cashier.username if s.cashier else "Unknown")
             )
+            amount_paid = sum((p.amount for p in s.payments.all()), Decimal("0"))
+            change = max(Decimal("0"), amount_paid - s.total_amount)
+            payments_str = ", ".join(
+                [
+                    f"{p.method.name}: ETB {float(p.amount):.2f}"
+                    for p in s.payments.all()
+                ]
+            )
 
             data.append(
                 [
                     s.created_at.date(),
                     s.created_at.time().strftime("%H:%M"),
                     str(s.id),
+                    "Yes" if s.receipt_issued else "No",
                     cashier_name,
                     items,
                     float(s.total_amount),
+                    float(amount_paid),
+                    float(change),
+                    payments_str,
                 ]
             )
 
-        styler.create_table(ws_sales, headers, data, sum_columns=[5])
+        styler.create_table(ws_sales, headers, data, sum_columns=[6, 7, 8])
 
         # ==========================================
         # SHEET 3: BEST SELLERS
         # ==========================================
         ws_prod = wb.create_sheet("Best Sellers")
-        styler.add_sheet_header(
-            ws_prod, "Product Performance", "Which items are making the most money?"
-        )
 
         headers = [
             "Item Name",
@@ -494,6 +538,12 @@ class ExportReportView(APIView):
             "Count Made in Kitchen",
             "Current Stock",
         ]
+        styler.add_sheet_header(
+            ws_prod,
+            "Product Performance",
+            "Which items are making the most money?",
+            merge_cols=len(headers),
+        )
 
         products = Product.objects.filter(is_active=True)
         data = []
@@ -523,10 +573,6 @@ class ExportReportView(APIView):
         # SHEET 4: KITCHEN ACTIVITY (Merged & Styled)
         # ==========================================
         ws_run = wb.create_sheet("Kitchen Activity")
-        styler.add_sheet_header(
-            ws_run, "Production & Waste", "What the kitchen made and what was wasted"
-        )
-
         headers = [
             "Date & Time",
             "Chef Name",
@@ -536,6 +582,12 @@ class ExportReportView(APIView):
             "Amount Used",
             "Amount Wasted",
         ]
+        styler.add_sheet_header(
+            ws_run,
+            "Production & Waste",
+            "What the kitchen made and what was wasted",
+            merge_cols=len(headers),
+        )
 
         # 1. Write Headers
         ws_run.append([])
@@ -740,9 +792,6 @@ class ExportReportView(APIView):
         # SHEET 5: TEAM STATS
         # ==========================================
         ws_cashier = wb.create_sheet("Team Stats")
-        styler.add_sheet_header(
-            ws_cashier, "Staff Performance", "Who is selling the most?"
-        )
 
         headers = [
             "Staff Name",
@@ -750,6 +799,12 @@ class ExportReportView(APIView):
             "Customers Served",
             "Avg Sale Amount",
         ]
+        styler.add_sheet_header(
+            ws_cashier,
+            "Staff Performance",
+            "Who is selling the most?",
+            merge_cols=len(headers),
+        )
 
         c_stats = (
             Sale.objects.filter(created_at__date__range=[start_date, end_date])
@@ -767,6 +822,282 @@ class ExportReportView(APIView):
             data.append([name, tot, cnt, avg])
 
         styler.create_table(ws_cashier, headers, data, sum_columns=[1, 2])
+
+        # ==========================================
+        # SHEET 6: HR SNAPSHOT
+        # ==========================================
+        ws_hr = wb.create_sheet("HR Snapshot")
+        headers = ["Metric", "Value"]
+        styler.add_sheet_header(
+            ws_hr,
+            "HR Snapshot",
+            f"Staffing and payroll from {start_date} to {end_date}",
+            merge_cols=len(headers),
+        )
+
+        employees_count = Employee.objects.count()
+        total_monthly_salary = (
+            Employee.objects.aggregate(Sum("monthly_base_salary"))[
+                "monthly_base_salary__sum"
+            ]
+            or 0
+        )
+
+        scheduled_shifts = ShiftAssignment.objects.filter(
+            shift_date__range=[start_date, end_date]
+        ).count()
+
+        attendance_qs = AttendanceRecord.objects.filter(
+            assignment__shift_date__range=[start_date, end_date]
+        )
+        attendance_count = attendance_qs.count()
+        attendance_by_status = {
+            item["status"]: item["count"]
+            for item in attendance_qs.values("status").annotate(count=Count("id"))
+        }
+        total_late_minutes = (
+            attendance_qs.aggregate(Sum("late_minutes"))["late_minutes__sum"] or 0
+        )
+        total_overtime_minutes = (
+            attendance_qs.aggregate(Sum("overtime_minutes"))["overtime_minutes__sum"]
+            or 0
+        )
+
+        leaves_qs = LeaveRecord.objects.filter(
+            Q(start_date__lte=end_date) & Q(end_date__gte=start_date)
+        ).select_related("employee")
+        leave_count = leaves_qs.count()
+        leave_days_in_period = 0
+        for leave in leaves_qs:
+            overlap_start = max(leave.start_date, start_date)
+            overlap_end = min(leave.end_date, end_date)
+            leave_days_in_period += (overlap_end - overlap_start).days + 1
+
+        payroll_period_qs = PayrollRecord.objects.filter(
+            Q(period_start__lte=end_date) & Q(period_end__gte=start_date)
+        )
+        payroll_period_count = payroll_period_qs.count()
+        payroll_paid_count = payroll_period_qs.filter(
+            status=PayrollRecord.STATUS_PAID
+        ).count()
+        payroll_unpaid_count = payroll_period_qs.filter(
+            status=PayrollRecord.STATUS_UNPAID
+        ).count()
+
+        payroll_paid_in_period = (
+            PayrollRecord.objects.filter(
+                paid_at__date__range=[start_date, end_date]
+            ).aggregate(Sum("amount_paid"))["amount_paid__sum"]
+            or 0
+        )
+
+        hr_data = [
+            ["Employees", employees_count],
+            ["Total Monthly Base Salary", float(total_monthly_salary)],
+            ["Shifts Scheduled", scheduled_shifts],
+            ["Attendance Records", attendance_count],
+            ["Present", attendance_by_status.get(AttendanceRecord.STATUS_PRESENT, 0)],
+            ["Late", attendance_by_status.get(AttendanceRecord.STATUS_LATE, 0)],
+            ["Absent", attendance_by_status.get(AttendanceRecord.STATUS_ABSENT, 0)],
+            ["Overtime", attendance_by_status.get(AttendanceRecord.STATUS_OVERTIME, 0)],
+            ["Total Late Minutes", total_late_minutes],
+            ["Total Overtime Minutes", total_overtime_minutes],
+            ["Leave Records", leave_count],
+            ["Leave Days (in period)", leave_days_in_period],
+            ["Payroll Records (overlapping)", payroll_period_count],
+            ["Payroll Paid Records", payroll_paid_count],
+            ["Payroll Unpaid Records", payroll_unpaid_count],
+            ["Payroll Paid (in period)", float(payroll_paid_in_period)],
+        ]
+        styler.create_table(ws_hr, headers, hr_data)
+
+        # ==========================================
+        # SHEET 7: EMPLOYEES
+        # ==========================================
+        ws_emp = wb.create_sheet("Employees")
+        headers = [
+            "Employee ID",
+            "Full Name",
+            "Position",
+            "Phone",
+            "Hire Date",
+            "Monthly Base Salary",
+            "Payment Detail",
+            "System Username",
+            "System Role",
+        ]
+        styler.add_sheet_header(
+            ws_emp, "Employees", "Employee directory", merge_cols=len(headers)
+        )
+
+        employees = Employee.objects.select_related("user").order_by("full_name")
+        data = []
+        for e in employees:
+            data.append(
+                [
+                    e.id,
+                    e.full_name,
+                    e.position,
+                    e.phone_number or "",
+                    e.hire_date,
+                    float(e.monthly_base_salary),
+                    e.payment_detail or "",
+                    e.user.username if e.user else "",
+                    e.user.role if e.user else "",
+                ]
+            )
+        styler.create_table(ws_emp, headers, data, sum_columns=[5])
+
+        # ==========================================
+        # SHEET 8: ATTENDANCE (Shift Attendance)
+        # ==========================================
+        ws_att = wb.create_sheet("Attendance")
+        headers = [
+            "Shift Date",
+            "Employee",
+            "Shift",
+            "Start",
+            "End",
+            "Status",
+            "Late (min)",
+            "Overtime (min)",
+            "Recorded By",
+            "Notes",
+        ]
+        styler.add_sheet_header(
+            ws_att,
+            "Shift Attendance",
+            f"Attendance records from {start_date} to {end_date}",
+            merge_cols=len(headers),
+        )
+
+        assignments = (
+            ShiftAssignment.objects.filter(shift_date__range=[start_date, end_date])
+            .select_related("employee", "shift", "attendance__recorded_by")
+            .order_by("shift_date", "shift__start_time", "employee__full_name")
+        )
+
+        data = []
+        for a in assignments:
+            att = getattr(a, "attendance", None)
+            recorded_by = ""
+            if att and att.recorded_by:
+                recorded_by = att.recorded_by.full_name or att.recorded_by.username
+
+            data.append(
+                [
+                    a.shift_date,
+                    a.employee.full_name,
+                    a.shift.name,
+                    a.shift.start_time.strftime("%H:%M"),
+                    a.shift.end_time.strftime("%H:%M"),
+                    att.get_status_display() if att else "Not recorded",
+                    att.late_minutes if att else 0,
+                    att.overtime_minutes if att else 0,
+                    recorded_by,
+                    att.notes if att and att.notes else "",
+                ]
+            )
+
+        styler.create_table(ws_att, headers, data, sum_columns=[6, 7])
+
+        # ==========================================
+        # SHEET 9: LEAVES
+        # ==========================================
+        ws_leave = wb.create_sheet("Leaves")
+        headers = [
+            "Employee",
+            "Type",
+            "Start Date",
+            "End Date",
+            "Days (Total)",
+            "Days (in period)",
+            "Notes",
+        ]
+        styler.add_sheet_header(
+            ws_leave,
+            "Leave Records",
+            f"Leave records overlapping {start_date} to {end_date}",
+            merge_cols=len(headers),
+        )
+
+        leaves = (
+            LeaveRecord.objects.filter(
+                Q(start_date__lte=end_date) & Q(end_date__gte=start_date)
+            )
+            .select_related("employee")
+            .order_by("start_date", "employee__full_name")
+        )
+
+        data = []
+        for leave in leaves:
+            overlap_start = max(leave.start_date, start_date)
+            overlap_end = min(leave.end_date, end_date)
+            days_in_period = (overlap_end - overlap_start).days + 1
+            data.append(
+                [
+                    leave.employee.full_name,
+                    leave.get_leave_type_display(),
+                    leave.start_date,
+                    leave.end_date,
+                    leave.day_count,
+                    days_in_period,
+                    leave.notes or "",
+                ]
+            )
+
+        styler.create_table(ws_leave, headers, data, sum_columns=[4, 5])
+
+        # ==========================================
+        # SHEET 10: PAYROLL
+        # ==========================================
+        ws_pay = wb.create_sheet("Payroll")
+        headers = [
+            "Employee",
+            "Period Start",
+            "Period End",
+            "Base Salary",
+            "Amount Paid",
+            "Outstanding",
+            "Status",
+            "Paid At",
+            "Receipt Uploaded",
+            "Notes",
+        ]
+        styler.add_sheet_header(
+            ws_pay,
+            "Payroll Records",
+            f"Payroll records overlapping {start_date} to {end_date}",
+            merge_cols=len(headers),
+        )
+
+        payrolls = (
+            PayrollRecord.objects.filter(
+                Q(period_start__lte=end_date) & Q(period_end__gte=start_date)
+            )
+            .select_related("employee")
+            .order_by("period_start", "employee__full_name")
+        )
+
+        data = []
+        for p in payrolls:
+            outstanding = (p.base_salary or 0) - (p.amount_paid or 0)
+            data.append(
+                [
+                    p.employee.full_name,
+                    p.period_start,
+                    p.period_end,
+                    float(p.base_salary),
+                    float(p.amount_paid),
+                    float(outstanding),
+                    p.get_status_display(),
+                    p.paid_at.strftime("%Y-%m-%d %H:%M") if p.paid_at else "",
+                    "Yes" if p.receipt else "No",
+                    p.notes or "",
+                ]
+            )
+
+        styler.create_table(ws_pay, headers, data, sum_columns=[3, 4, 5])
 
         # ==========================================
         # RETURN FILE

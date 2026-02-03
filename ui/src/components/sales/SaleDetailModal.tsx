@@ -37,9 +37,20 @@ export function SaleDetailModal({
                             <Receipt className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-                                Sale #{sale.id}
-                            </h2>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+                                    Sale #{sale.id}
+                                </h2>
+                                {sale.receipt_issued && (
+                                    <Chip
+                                        size="sm"
+                                        variant="flat"
+                                        className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
+                                    >
+                                        Receipt issued
+                                    </Chip>
+                                )}
+                            </div>
                             <p className="text-sm text-zinc-500 dark:text-zinc-400">
                                 Receipt Details
                             </p>

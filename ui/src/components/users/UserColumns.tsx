@@ -118,7 +118,7 @@ export const getUserColumns = ({
                 <div className="relative flex justify-end items-center">
                     <Dropdown>
                         <DropdownTrigger as={Button} variant="light">
-                            <MoreVertical className="h-5 w-5" />
+                            <MoreVertical className="h-5 w-5 text-slate-700 dark:text-slate-300" />
                         </DropdownTrigger>
                         <DropdownMenu aria-label="User Actions">
                             <DropdownItem key="edit" onAction={() => onEdit(user)}>

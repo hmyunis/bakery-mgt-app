@@ -59,7 +59,7 @@ class SaleViewSet(viewsets.ModelViewSet):
     serializer_class = SaleSerializer
     permission_classes = [IsCashierOrAdmin]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["cashier"]
+    filterset_fields = ["cashier", "receipt_issued"]
 
     def get_queryset(self):
         queryset = super().get_queryset()

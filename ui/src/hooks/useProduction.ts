@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { productionService } from "../services/productionService";
 import type { ApiError } from "../types/api";
@@ -25,6 +25,26 @@ export function useProducts(params: ProductListParams = {}) {
             return await productionService.getProducts(params);
         },
         placeholderData: (previousData) => previousData,
+    });
+}
+
+/**
+ * Get list of products with infinite pagination (for POS browsing)
+ */
+export function useInfiniteProducts(params: Omit<ProductListParams, "page"> = {}) {
+    return useInfiniteQuery({
+        queryKey: ["products", "infinite", params],
+        initialPageParam: 1,
+        queryFn: async ({ pageParam }) => {
+            return await productionService.getProducts({
+                ...params,
+                page: pageParam,
+            });
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            if (!lastPage.next) return undefined;
+            return allPages.length + 1;
+        },
     });
 }
 

@@ -22,6 +22,7 @@ export interface Sale {
     created_at: string;
     cashier?: number;
     cashier_name?: string;
+    receipt_issued?: boolean;
     items: SaleItem[];
     payments: SalePayment[];
 }
@@ -35,6 +36,7 @@ export interface CreateSaleData {
         method_id: number;
         amount: number;
     }>;
+    receipt_issued?: boolean;
 }
 
 export interface SaleListParams {
@@ -43,4 +45,5 @@ export interface SaleListParams {
     cashier?: number;
     start_date?: string;
     end_date?: string;
+    receipt_issued?: boolean;
 }

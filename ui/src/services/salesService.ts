@@ -21,6 +21,12 @@ class SalesService {
             cashier_name: (sale.cashierName ||
                 sale.cashier_name ||
                 sale.cashier__username) as string,
+            receipt_issued:
+                typeof sale.receiptIssued === "boolean"
+                    ? sale.receiptIssued
+                    : typeof sale.receipt_issued === "boolean"
+                      ? sale.receipt_issued
+                      : false,
             items: ((sale.items as Record<string, unknown>[]) || []).map((item) => ({
                 product: item.product as number,
                 product_name: (item.productName || item.product_name || "") as string,
@@ -51,6 +57,8 @@ class SalesService {
         if (params.cashier) queryParams.append("cashier", params.cashier.toString());
         if (params.start_date) queryParams.append("start_date", params.start_date);
         if (params.end_date) queryParams.append("end_date", params.end_date);
+        if (typeof params.receipt_issued === "boolean")
+            queryParams.append("receipt_issued", params.receipt_issued ? "true" : "false");
 
         const response = await apiClient.get<
             | WrappedPaginatedResponse<Record<string, unknown>>

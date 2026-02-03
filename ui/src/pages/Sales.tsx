@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react";
-import { Tabs, Tab, Spinner, DatePicker } from "@heroui/react";
+import { Tabs, Tab, Spinner, DatePicker, Select, SelectItem } from "@heroui/react";
 import { ShoppingCart, History } from "lucide-react";
 import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { POSTerminal } from "../components/sales/POSTerminal";
-import { CheckoutModal } from "../components/sales/CheckoutModal";
 import { SaleDetailModal } from "../components/sales/SaleDetailModal";
 import { DeleteSaleModal } from "../components/sales/DeleteSaleModal";
 import { DataTable } from "../components/ui/DataTable";
@@ -12,20 +11,13 @@ import { DataTablePagination } from "../components/ui/DataTablePagination";
 import { getSalesHistoryColumns } from "../components/sales/SalesHistoryColumns";
 import { useDeleteSale, useSales } from "../hooks/useSales";
 import type { Sale } from "../types/sales";
-import type { Product } from "../types/production";
 import { useAppSelector } from "../store";
-
-interface CartItem {
-    product: Product;
-    quantity: number;
-}
 
 export function SalesPage() {
     const [activeTab, setActiveTab] = useState("pos");
-    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-    const [checkoutCart, setCheckoutCart] = useState<CartItem[]>([]);
     const [viewingSale, setViewingSale] = useState<Sale | null>(null);
     const [deletingSale, setDeletingSale] = useState<Sale | null>(null);
+    const [receiptFilter, setReceiptFilter] = useState<"all" | "issued" | "not_issued">("all");
 
     // Sales History state
     const [historyPage, setHistoryPage] = useState(1);
@@ -37,6 +29,8 @@ export function SalesPage() {
         page: historyPage,
         page_size: historyPageSize,
         start_date: historyStartDate.toString(),
+        receipt_issued:
+            receiptFilter === "all" ? undefined : receiptFilter === "issued" ? true : false,
     });
     const { mutateAsync: deleteSale, isPending: isDeletingSale } = useDeleteSale();
 
@@ -44,16 +38,6 @@ export function SalesPage() {
     const isAdmin = user?.role === "admin";
 
     const salesRows = useMemo(() => salesData?.results ?? [], [salesData]);
-
-    const handleCheckout = (items: CartItem[]) => {
-        setCheckoutCart(items);
-        setIsCheckoutOpen(true);
-    };
-
-    const handleCheckoutSuccess = () => {
-        setCheckoutCart([]);
-        // Optionally switch to history tab to see the new sale
-    };
 
     const handleViewSale = (sale: Sale) => {
         setViewingSale(sale);
@@ -105,7 +89,7 @@ export function SalesPage() {
                     }
                 >
                     <div className="space-y-4">
-                        <POSTerminal onCheckout={handleCheckout} />
+                        <POSTerminal />
                     </div>
                 </Tab>
 
@@ -119,7 +103,7 @@ export function SalesPage() {
                     }
                 >
                     <div className="space-y-4">
-                        <div className="flex justify-start">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:items-end sm:justify-between">
                             <DatePicker
                                 label="Filter from Date"
                                 variant="bordered"
@@ -128,6 +112,33 @@ export function SalesPage() {
                                 onChange={handleHistoryStartDateChange}
                                 className="w-full sm:w-48"
                             />
+                            <Select
+                                label="Receipt"
+                                variant="bordered"
+                                selectedKeys={new Set([receiptFilter])}
+                                onSelectionChange={(keys) => {
+                                    const key = Array.from(keys)[0] as
+                                        | "all"
+                                        | "issued"
+                                        | "not_issued"
+                                        | undefined;
+                                    if (!key) return;
+                                    setReceiptFilter(key);
+                                    setHistoryPage(1);
+                                }}
+                                selectionMode="single"
+                                classNames={{
+                                    base: "!w-36 !text-left",
+                                    trigger: "!w-36 !text-left",
+                                    label: "!w-36 !text-left",
+                                    value: "!text-slate-900 dark:!text-slate-100",
+                                }}
+                                aria-label="Filter by receipt issued"
+                            >
+                                <SelectItem key="all">All</SelectItem>
+                                <SelectItem key="issued">Issued</SelectItem>
+                                <SelectItem key="not_issued">Not issued</SelectItem>
+                            </Select>
                         </div>
                         {isLoadingSales ? (
                             <div className="flex justify-center py-12">
@@ -139,6 +150,11 @@ export function SalesPage() {
                                     columns={getSalesHistoryColumns()}
                                     data={salesRows}
                                     onRowClick={handleViewSale}
+                                    getRowClassName={(sale) =>
+                                        sale.receipt_issued
+                                            ? "border-l-4 border-yellow-400"
+                                            : undefined
+                                    }
                                 />
                                 {salesData && salesData.count > 0 && (
                                     <DataTablePagination
@@ -164,16 +180,6 @@ export function SalesPage() {
             </Tabs>
 
             {/* Modals */}
-            <CheckoutModal
-                isOpen={isCheckoutOpen}
-                onClose={() => {
-                    setIsCheckoutOpen(false);
-                    setCheckoutCart([]);
-                }}
-                cartItems={checkoutCart}
-                onSuccess={handleCheckoutSuccess}
-            />
-
             <SaleDetailModal
                 isOpen={!!viewingSale}
                 onClose={() => setViewingSale(null)}

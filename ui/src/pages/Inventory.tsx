@@ -1,11 +1,10 @@
-import { useState, useMemo } from "react";
-import { Button, Tabs, Tab, DatePicker } from "@heroui/react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { Button, Tabs, Tab, DatePicker, Spinner } from "@heroui/react";
 import { Plus, Package, ShoppingCart, ListChecks, RotateCcw } from "lucide-react";
 import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { IngredientFilterCard } from "../components/inventory/IngredientFilterCard";
 import { DataTable } from "../components/ui/DataTable";
-import { DataTablePagination } from "../components/ui/DataTablePagination";
 import { IngredientFormModal } from "../components/inventory/IngredientFormModal";
 import { DeleteIngredientModal } from "../components/inventory/DeleteIngredientModal";
 import { PurchaseFormModal } from "../components/inventory/PurchaseFormModal";
@@ -17,7 +16,7 @@ import { getIngredientColumns } from "../components/inventory/IngredientColumns"
 import { getPurchaseColumns } from "../components/inventory/PurchaseColumns";
 import { getStockAdjustmentColumns } from "../components/inventory/StockAdjustmentColumns";
 import {
-    useIngredients,
+    useInfiniteIngredients,
     useDeleteIngredient,
     usePurchases,
     useDeletePurchase,
@@ -32,8 +31,6 @@ export function InventoryPage() {
 
     // Ingredients state
     const [ingredientSearch, setIngredientSearch] = useState("");
-    const [ingredientPage, setIngredientPage] = useState(1);
-    const [ingredientPageSize, setIngredientPageSize] = useState(10);
     const [isIngredientFormOpen, setIsIngredientFormOpen] = useState(false);
     const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
     const [deletingIngredient, setDeletingIngredient] = useState<Ingredient | null>(null);
@@ -60,9 +57,14 @@ export function InventoryPage() {
     const debouncedIngredientSearch = useDebounce(ingredientSearch, 500);
 
     // Ingredients data
-    const { data: ingredientsData, isLoading: isLoadingIngredients } = useIngredients({
-        page: ingredientPage,
-        page_size: ingredientPageSize,
+    const {
+        data: ingredientsData,
+        isLoading: isLoadingIngredients,
+        isFetchingNextPage: isFetchingMoreIngredients,
+        fetchNextPage: fetchMoreIngredients,
+        hasNextPage: hasMoreIngredients,
+    } = useInfiniteIngredients({
+        page_size: 20,
         search: debouncedIngredientSearch || undefined,
     });
 
@@ -86,7 +88,10 @@ export function InventoryPage() {
     const { mutateAsync: deleteAdjustment, isPending: isDeletingAdjustment } =
         useDeleteStockAdjustment();
 
-    const ingredientRows = useMemo(() => ingredientsData?.results ?? [], [ingredientsData]);
+    const ingredientRows = useMemo(
+        () => ingredientsData?.pages.flatMap((p) => p.results) ?? [],
+        [ingredientsData?.pages]
+    );
     const purchaseRows = useMemo(() => purchasesData?.results ?? [], [purchasesData]);
     const adjustmentRows = useMemo(() => adjustmentsData?.results ?? [], [adjustmentsData]);
 
@@ -110,6 +115,30 @@ export function InventoryPage() {
         await deleteIngredient(deletingIngredient.id);
         setDeletingIngredient(null);
     };
+
+    const ingredientLoadMoreRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const target = ingredientLoadMoreRef.current;
+        if (!target) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const first = entries[0];
+                if (!first?.isIntersecting) return;
+                if (!hasMoreIngredients || isFetchingMoreIngredients) return;
+                fetchMoreIngredients();
+            },
+            { rootMargin: "200px" }
+        );
+
+        observer.observe(target);
+        return () => observer.disconnect();
+    }, [fetchMoreIngredients, hasMoreIngredients, isFetchingMoreIngredients]);
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "auto" });
+    }, [debouncedIngredientSearch]);
 
     // Purchase handlers
     const handleAddPurchase = (ingredient?: Ingredient) => {
@@ -221,22 +250,11 @@ export function InventoryPage() {
                             isLoading={isLoadingIngredients}
                         />
 
-                        {ingredientsData && ingredientsData.count > 0 && (
-                            <DataTablePagination
-                                pagination={{
-                                    count: ingredientsData.count,
-                                    page: ingredientPage,
-                                    pageSize: ingredientPageSize,
-                                    totalPages: Math.ceil(
-                                        ingredientsData.count / ingredientPageSize
-                                    ),
-                                }}
-                                onPageChange={(newPage) => setIngredientPage(newPage)}
-                                onPageSizeChange={(newSize) => {
-                                    setIngredientPageSize(newSize);
-                                    setIngredientPage(1);
-                                }}
-                            />
+                        {hasMoreIngredients && <div ref={ingredientLoadMoreRef} className="h-1" />}
+                        {isFetchingMoreIngredients && (
+                            <div className="flex justify-center py-6">
+                                <Spinner size="lg" />
+                            </div>
                         )}
                     </div>
                 </Tab>

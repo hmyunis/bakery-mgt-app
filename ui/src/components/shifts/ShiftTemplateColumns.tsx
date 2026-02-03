@@ -60,7 +60,7 @@ export function getShiftTemplateColumns({
                     <Dropdown placement="bottom-end">
                         <DropdownTrigger>
                             <Button isIconOnly variant="light" size="sm">
-                                <MoreVertical className="h-4 w-4" />
+                                <MoreVertical className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                             </Button>
                         </DropdownTrigger>
                         <DropdownMenu
