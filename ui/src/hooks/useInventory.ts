@@ -210,6 +210,8 @@ export function useCreatePurchase() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["purchases"] });
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update stock levels
+            queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
+            queryClient.invalidateQueries({ queryKey: ["expenses"] });
             toast.success("Purchase recorded successfully");
         },
         onError: (error: unknown) => {
@@ -242,6 +244,8 @@ export function useUpdatePurchase() {
         onSuccess: (updatedPurchase) => {
             queryClient.invalidateQueries({ queryKey: ["purchases"] });
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update stock levels
+            queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
+            queryClient.invalidateQueries({ queryKey: ["expenses"] });
             queryClient.setQueryData(["purchases", updatedPurchase.id], updatedPurchase);
             toast.success("Purchase updated successfully");
         },
@@ -275,6 +279,8 @@ export function useDeletePurchase() {
         onSuccess: (_, id) => {
             queryClient.invalidateQueries({ queryKey: ["purchases"] });
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update stock levels
+            queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
+            queryClient.invalidateQueries({ queryKey: ["expenses"] });
             queryClient.removeQueries({ queryKey: ["purchases", id] });
             toast.success("Purchase deleted successfully");
         },

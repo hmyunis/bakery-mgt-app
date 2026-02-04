@@ -31,6 +31,7 @@ class BakerySettingsSerializer(serializers.ModelSerializer):
             "x_enabled",
             "x_url",
             "theme_color",
+            "sync_sales_to_bank_accounts",
             "created_at",
             "updated_at",
         ]
@@ -87,6 +88,7 @@ class BakerySettingsUpdateSerializer(serializers.ModelSerializer):
             "x_enabled",
             "x_url",
             "theme_color",
+            "sync_sales_to_bank_accounts",
         ]
 
     def validate_logo(self, value):

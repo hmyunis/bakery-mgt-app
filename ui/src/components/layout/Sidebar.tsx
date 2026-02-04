@@ -9,6 +9,7 @@ import {
     UserRound,
     Settings,
     ScrollText,
+    Landmark,
     X,
 } from "lucide-react";
 import { Button, Tooltip } from "@heroui/react";
@@ -36,6 +37,12 @@ const navItems: NavItem[] = [
         icon: ShoppingCart,
         path: "/app/sales",
         roles: ["admin", "cashier"],
+    },
+    {
+        label: "Treasury",
+        icon: Landmark,
+        path: "/app/treasury",
+        roles: ["admin"],
     },
     {
         label: "Production",

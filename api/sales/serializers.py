@@ -5,6 +5,7 @@ from rest_framework import serializers
 from production.models import Product
 
 from .models import DailyClosing, PaymentMethod, Sale, SaleItem, SalePayment
+from .services import apply_sale_bank_sync
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):
@@ -34,10 +35,10 @@ class SaleSerializer(serializers.ModelSerializer):
 
     # Inputs
     items_input = serializers.ListField(
-        child=serializers.DictField(), write_only=True, required=True
+        child=serializers.DictField(), write_only=True, required=False
     )
     payments_input = SalePaymentInputSerializer(
-        many=True, write_only=True, required=True
+        many=True, write_only=True, required=False
     )
 
     class Meta:
@@ -63,9 +64,14 @@ class SaleSerializer(serializers.ModelSerializer):
         return list(obj.payments.values("method__name", "amount"))
 
     def create(self, validated_data):
-        items_data = validated_data.pop("items_input")
-        payments_data = validated_data.pop("payments_input")
+        items_data = validated_data.pop("items_input", None)
+        payments_data = validated_data.pop("payments_input", None)
         receipt_issued = validated_data.pop("receipt_issued", False)
+
+        if not items_data:
+            raise serializers.ValidationError("items_input is required.")
+        if not payments_data:
+            raise serializers.ValidationError("payments_input is required.")
 
         with transaction.atomic():
             # 1. Create Sale
@@ -120,6 +126,7 @@ class SaleSerializer(serializers.ModelSerializer):
 
             # 3. Process Payments
             payment_total = 0
+            payment_entries = []
             for pay in payments_data:
                 method_id = pay.get("method_id")
                 amount = pay.get("amount", 0)
@@ -138,6 +145,7 @@ class SaleSerializer(serializers.ModelSerializer):
                     )
 
                 SalePayment.objects.create(sale=sale, method=method, amount=amount)
+                payment_entries.append((method, amount))
                 payment_total += amount
 
             # Validate Totals
@@ -148,6 +156,10 @@ class SaleSerializer(serializers.ModelSerializer):
 
             sale.total_amount = total_amount
             sale.save()
+
+            apply_sale_bank_sync(
+                payment_entries, "add", note=f"Sale #{sale.id} created"
+            )
 
             # Send notification
             from notifications.models import NotificationEvent
@@ -161,6 +173,60 @@ class SaleSerializer(serializers.ModelSerializer):
                     "cashier_name": sale.cashier.username if sale.cashier else "System",
                 },
             )
+
+        return sale
+
+    def update(self, instance, validated_data):
+        payments_data = validated_data.pop("payments_input", None)
+        items_data = validated_data.pop("items_input", None)
+
+        if items_data:
+            raise serializers.ValidationError(
+                "Editing sale items is not supported. Create a new sale instead."
+            )
+
+        with transaction.atomic():
+            sale = super().update(instance, validated_data)
+
+            if payments_data is None:
+                return sale
+
+            old_payments = list(sale.payments.select_related("method").all())
+            old_entries = [(p.method, p.amount) for p in old_payments]
+            apply_sale_bank_sync(
+                old_entries, "subtract", note=f"Sale #{sale.id} updated"
+            )
+
+            sale.payments.all().delete()
+
+            payment_total = 0
+            new_entries = []
+            for pay in payments_data:
+                method_id = pay.get("method_id")
+                amount = pay.get("amount", 0)
+
+                if amount <= 0:
+                    raise serializers.ValidationError(
+                        "Payment amount must be greater than 0"
+                    )
+
+                try:
+                    method = PaymentMethod.objects.get(id=method_id, is_active=True)
+                except PaymentMethod.DoesNotExist:
+                    raise serializers.ValidationError(
+                        f"Payment method with id {method_id} not found or inactive"
+                    )
+
+                SalePayment.objects.create(sale=sale, method=method, amount=amount)
+                new_entries.append((method, amount))
+                payment_total += amount
+
+            if payment_total < sale.total_amount:
+                raise serializers.ValidationError(
+                    "Payment amount is less than Total Bill."
+                )
+
+            apply_sale_bank_sync(new_entries, "add", note=f"Sale #{sale.id} updated")
 
         return sale
 

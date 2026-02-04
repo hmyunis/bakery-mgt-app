@@ -41,6 +41,8 @@ export interface Purchase {
     vendor?: string;
     notes?: string;
     is_price_anomaly: boolean;
+    expense_id?: number | null;
+    bank_account_id?: number | null;
 }
 
 export interface CreatePurchaseData {
@@ -49,6 +51,7 @@ export interface CreatePurchaseData {
     total_cost: number;
     vendor?: string;
     notes?: string;
+    bank_account?: number | null;
 }
 
 export interface UpdatePurchaseData {
@@ -57,6 +60,7 @@ export interface UpdatePurchaseData {
     total_cost?: number;
     vendor?: string;
     notes?: string;
+    bank_account?: number | null;
 }
 
 export type StockAdjustmentReason = "waste" | "theft" | "audit" | "return" | "packaging_usage";

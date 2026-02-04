@@ -49,6 +49,13 @@ class Purchase(models.Model):
     purchase_date = models.DateTimeField(auto_now_add=True)
     vendor = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+    expense = models.OneToOneField(
+        "treasury.Expense",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase",
+    )
 
     # Fraud Flag
     is_price_anomaly = models.BooleanField(default=False)

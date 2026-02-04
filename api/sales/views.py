@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from .models import DailyClosing, PaymentMethod, Sale
 from .serializers import DailyClosingSerializer, PaymentMethodSerializer, SaleSerializer
+from .services import apply_sale_bank_sync
 
 
 class IsCashierOrAdmin(permissions.BasePermission):
@@ -80,6 +81,12 @@ class SaleViewSet(viewsets.ModelViewSet):
         - Delete the sale (cascades to SaleItem + SalePayment)
         """
         with transaction.atomic():
+            payments = list(instance.payments.select_related("method").all())
+            payment_entries = [(p.method, p.amount) for p in payments]
+            apply_sale_bank_sync(
+                payment_entries, "subtract", note=f"Sale #{instance.id} deleted"
+            )
+
             # Lock all involved products and restock
             for item in instance.items.select_related("product").all():
                 item.product.stock_quantity = F("stock_quantity") + item.quantity

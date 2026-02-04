@@ -223,6 +223,13 @@ class InventoryService {
                 purchase.isPriceAnomaly !== undefined
                     ? (purchase.isPriceAnomaly as boolean)
                     : (purchase.is_price_anomaly as boolean) || false,
+            expense_id: (purchase.expenseId || purchase.expense_id || purchase.expense) as
+                | number
+                | null
+                | undefined,
+            bank_account_id: (purchase.bankAccountId ||
+                purchase.bank_account_id ||
+                purchase.bank_account) as number | null | undefined,
         };
     }
 
@@ -317,6 +324,7 @@ class InventoryService {
             vendor: data.vendor || "",
             notes: data.notes || "",
         };
+        if (data.bank_account !== undefined) payload.bank_account = data.bank_account;
         const response = await apiClient.post<
             ApiResponse<Record<string, unknown>> | Record<string, unknown>
         >("/inventory/purchases/", payload);
@@ -336,6 +344,7 @@ class InventoryService {
         if (data.total_cost !== undefined) payload.total_cost = data.total_cost;
         if (data.vendor !== undefined) payload.vendor = data.vendor;
         if (data.notes !== undefined) payload.notes = data.notes;
+        if (data.bank_account !== undefined) payload.bank_account = data.bank_account;
 
         const response = await apiClient.patch<
             ApiResponse<Record<string, unknown>> | Record<string, unknown>

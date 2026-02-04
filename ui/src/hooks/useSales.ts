@@ -44,6 +44,9 @@ export function useCreateSale() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["sales"] });
             queryClient.invalidateQueries({ queryKey: ["products"] }); // Update product stock
+            queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
+            queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["expenses"] });
             toast.success("Sale completed successfully!");
         },
         onError: (error: unknown) => {
@@ -70,6 +73,9 @@ export function useDeleteSale() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["sales"] });
             queryClient.invalidateQueries({ queryKey: ["products"] }); // refresh product stock
+            queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
+            queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["expenses"] });
             toast.success("Sale deleted successfully. Stock changes were reversed.");
         },
         onError: (error: unknown) => {

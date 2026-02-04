@@ -19,6 +19,7 @@ export interface BakerySettings {
     xEnabled: boolean;
     xUrl: string;
     themeColor: string;
+    syncSalesToBankAccounts: boolean;
     createdAt: string;
     updatedAt: string;
 }

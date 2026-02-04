@@ -25,6 +25,7 @@ import {
 } from "../hooks/useInventory";
 import { useDebounce } from "../hooks/useDebounce";
 import type { Ingredient, Purchase, StockAdjustment } from "../types/inventory";
+import { DataTablePagination } from "../components/ui/DataTablePagination";
 
 export function InventoryPage() {
     const [activeTab, setActiveTab] = useState("ingredients");

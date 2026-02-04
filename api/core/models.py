@@ -33,6 +33,10 @@ class BakerySettings(models.Model):
         default="#f2751a",
         help_text="Hex color code for app accent/theme color (e.g., #f2751a)",
     )
+    sync_sales_to_bank_accounts = models.BooleanField(
+        default=False,
+        help_text="When enabled, sales linked to payment methods update bank balances.",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

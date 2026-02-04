@@ -46,6 +46,7 @@ urlpatterns = [
     path("api/v1/inventory/", include("inventory.urls")),
     path("api/v1/production/", include("production.urls")),
     path("api/v1/sales/", include("sales.urls")),
+    path("api/v1/treasury/", include("treasury.urls")),
     path("api/v1/notifications/", include("notifications.urls")),
     path("api/v1/reports/", include("reports.urls")),
     # Swagger Documentation

@@ -23,6 +23,7 @@ import type {
     UpdatePurchaseData,
 } from "../../types/inventory";
 import { useIngredients, useCreatePurchase, useUpdatePurchase } from "../../hooks/useInventory";
+import { useBankAccounts } from "../../hooks/useTreasury";
 
 interface PurchaseFormModalProps {
     isOpen: boolean;
@@ -85,6 +86,7 @@ function PurchaseFormContent({
         unit_cost: purchase?.unit_cost.toString() || "",
         vendor: purchase?.vendor || "",
         notes: purchase?.notes || "",
+        bank_account: purchase?.bank_account_id?.toString() || "",
     });
 
     const [costInputMode, setCostInputMode] = useState<CostInputMode>("total");
@@ -92,11 +94,15 @@ function PurchaseFormContent({
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const { data: ingredientsData } = useIngredients({ page_size: 100 });
+    const { data: bankAccountsData, isLoading: isLoadingBankAccounts } = useBankAccounts({
+        page_size: 200,
+    });
     const { mutateAsync: createPurchase, isPending: isCreating } = useCreatePurchase();
     const { mutateAsync: updatePurchase, isPending: isUpdating } = useUpdatePurchase();
 
     const isLoading = isCreating || isUpdating;
     const ingredients = useMemo(() => ingredientsData?.results || [], [ingredientsData]);
+    const bankAccounts = useMemo(() => bankAccountsData?.results || [], [bankAccountsData]);
 
     // Memoize selectedKeys Set for ingredient select
     const ingredientSelectedKeys = useMemo(() => {
@@ -110,6 +116,10 @@ function PurchaseFormContent({
             label: `${ing.name} (${ing.unit})`,
         }));
     }, [ingredients]);
+
+    const bankSelectedKeys = useMemo(() => {
+        return formData.bank_account ? new Set<string>([formData.bank_account]) : new Set();
+    }, [formData.bank_account]);
 
     const handleInputChange = (field: string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -190,6 +200,7 @@ function PurchaseFormContent({
                     unit_cost: unitCost,
                     vendor: formData.vendor.trim() || undefined,
                     notes: formData.notes.trim() || undefined,
+                    bank_account: formData.bank_account ? Number(formData.bank_account) : null,
                 };
 
                 await updatePurchase({ id: purchase.id, data: updateData });
@@ -201,6 +212,7 @@ function PurchaseFormContent({
                     unit_cost: unitCost,
                     vendor: formData.vendor.trim() || undefined,
                     notes: formData.notes.trim() || undefined,
+                    bank_account: formData.bank_account ? Number(formData.bank_account) : null,
                 };
 
                 await createPurchase(createData);
@@ -333,6 +345,29 @@ function PurchaseFormContent({
                         }}
                     />
                 </div>
+
+                <Select
+                    label="Deduct From Bank (Optional)"
+                    placeholder="Don't deduct from bank"
+                    selectedKeys={bankSelectedKeys}
+                    onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0] as string | undefined;
+                        handleInputChange("bank_account", selected || "");
+                    }}
+                    isLoading={isLoadingBankAccounts}
+                    classNames={{
+                        trigger: "!w-full !text-left",
+                        label: "!w-full !text-left",
+                        base: "!w-full !text-left",
+                        value: "!text-slate-900 dark:!text-slate-100",
+                    }}
+                >
+                    {bankAccounts.map((account) => (
+                        <SelectItem key={account.id.toString()} textValue={account.name}>
+                            {account.name}
+                        </SelectItem>
+                    ))}
+                </Select>
 
                 {selectedIngredient &&
                     selectedIngredient.reorder_point > selectedIngredient.current_stock && (

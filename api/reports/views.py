@@ -13,10 +13,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from inventory.models import Purchase
 from production.models import IngredientUsage, Product, ProductionRun
 
 # --- App Imports ---
 from sales.models import Sale, SaleItem, SalePayment
+from treasury.models import BankAccount, BankTransaction, Expense
 from users.models import (
     AttendanceRecord,
     Employee,
@@ -387,17 +389,21 @@ class ExportReportView(APIView):
         ).count()
         avg_spend = total_money_in / count_sales if count_sales > 0 else 0
 
-        try:
-            from inventory.models import Purchase
+        total_money_out = (
+            Purchase.objects.filter(
+                purchase_date__date__range=[start_date, end_date]
+            ).aggregate(Sum("total_cost"))["total_cost__sum"]
+            or 0
+        )
 
-            total_money_out = (
-                Purchase.objects.filter(
-                    purchase_date__date__range=[start_date, end_date]
-                ).aggregate(Sum("total_cost"))["total_cost__sum"]
-                or 0
-            )
-        except ImportError:
-            total_money_out = 0
+        total_other_expenses_paid = (
+            Expense.objects.filter(
+                created_at__date__range=[start_date, end_date],
+                status=Expense.STATUS_PAID,
+                purchase__isnull=True,
+            ).aggregate(Sum("amount"))["amount__sum"]
+            or 0
+        )
 
         total_payroll_paid = (
             PayrollRecord.objects.filter(
@@ -440,6 +446,12 @@ class ExportReportView(APIView):
 
         add_summary_line(11, "Cost of Ingredients Bought", float(total_money_out), True)
         add_summary_line(12, "Payroll Paid (HR)", float(total_payroll_paid), True)
+        add_summary_line(
+            13,
+            "Other Expenses Paid (Treasury)",
+            float(total_other_expenses_paid),
+            True,
+        )
 
         ws_overview["B14"] = "Estimated Profit"
         ws_overview["B14"].font = Font(
@@ -447,9 +459,12 @@ class ExportReportView(APIView):
         )
 
         est_profit = (
-            float(total_money_in) - float(total_money_out) - float(total_payroll_paid)
+            float(total_money_in)
+            - float(total_money_out)
+            - float(total_payroll_paid)
+            - float(total_other_expenses_paid)
         )
-        ws_overview["B15"] = "Sales minus Purchases minus Payroll"
+        ws_overview["B15"] = "Sales minus Purchases minus Payroll minus Other Expenses"
         ws_overview["C15"] = est_profit
         ws_overview["C15"].number_format = "#,##0.00"
         ws_overview["C15"].font = Font(
@@ -1098,6 +1113,236 @@ class ExportReportView(APIView):
             )
 
         styler.create_table(ws_pay, headers, data, sum_columns=[3, 4, 5])
+
+        # ==========================================
+        # SHEET 11: PURCHASES
+        # ==========================================
+        ws_purchases = wb.create_sheet("Purchases")
+        headers = [
+            "Date",
+            "Time",
+            "Purchase #",
+            "Ingredient",
+            "Quantity",
+            "Unit",
+            "Total Cost",
+            "Unit Cost",
+            "Vendor",
+            "Purchaser",
+            "Bank Account",
+            "Expense ID",
+            "Notes",
+        ]
+        styler.add_sheet_header(
+            ws_purchases,
+            "Inventory Purchases",
+            f"Purchase records from {start_date} to {end_date}",
+            merge_cols=len(headers),
+        )
+
+        purchases = (
+            Purchase.objects.filter(purchase_date__date__range=[start_date, end_date])
+            .select_related("ingredient", "purchaser", "expense", "expense__account")
+            .order_by("-purchase_date")
+        )
+
+        data = []
+        for p in purchases:
+            purchaser_name = (
+                (
+                    getattr(p.purchaser, "full_name", None)
+                    or getattr(p.purchaser, "username", None)
+                    or ""
+                )
+                if p.purchaser
+                else ""
+            )
+            bank_account_name = (
+                p.expense.account.name if p.expense and p.expense.account else ""
+            )
+            data.append(
+                [
+                    p.purchase_date.date(),
+                    p.purchase_date.time().strftime("%H:%M"),
+                    p.id,
+                    p.ingredient.name,
+                    float(p.quantity),
+                    p.ingredient.unit,
+                    float(p.total_cost),
+                    float(p.unit_cost),
+                    p.vendor or "",
+                    purchaser_name,
+                    bank_account_name,
+                    p.expense_id or "",
+                    p.notes or "",
+                ]
+            )
+
+        styler.create_table(ws_purchases, headers, data, sum_columns=[4, 6])
+
+        # ==========================================
+        # SHEET 12: BANK ACCOUNTS
+        # ==========================================
+        ws_bank_accounts = wb.create_sheet("Bank Accounts")
+        headers = [
+            "Nickname",
+            "Bank",
+            "Account Number",
+            "Account Holder",
+            "Balance",
+            "Active",
+            "Linked Payment Methods",
+            "Updated At",
+        ]
+        styler.add_sheet_header(
+            ws_bank_accounts,
+            "Bank Accounts",
+            "Current bank account setup and balances",
+            merge_cols=len(headers),
+        )
+
+        accounts_qs = (
+            BankAccount.objects.all()
+            .prefetch_related("linked_payment_methods")
+            .order_by("name")
+        )
+        data = []
+        for a in accounts_qs:
+            linked_methods = ", ".join(
+                list(a.linked_payment_methods.values_list("name", flat=True))
+            )
+            data.append(
+                [
+                    a.name,
+                    a.bank_name,
+                    a.account_number,
+                    a.account_holder,
+                    float(a.balance),
+                    "Yes" if a.is_active else "No",
+                    linked_methods,
+                    a.updated_at.date(),
+                ]
+            )
+
+        styler.create_table(ws_bank_accounts, headers, data, sum_columns=[4])
+
+        # ==========================================
+        # SHEET 13: BANK TRANSACTIONS
+        # ==========================================
+        ws_bank_txns = wb.create_sheet("Bank Transactions")
+        headers = [
+            "Date",
+            "Time",
+            "Transaction #",
+            "Account",
+            "Type",
+            "Amount",
+            "Recorded By",
+            "Notes",
+        ]
+        styler.add_sheet_header(
+            ws_bank_txns,
+            "Bank Transactions",
+            f"Deposits and withdrawals from {start_date} to {end_date}",
+            merge_cols=len(headers),
+        )
+
+        bank_txns = (
+            BankTransaction.objects.filter(
+                created_at__date__range=[start_date, end_date]
+            )
+            .select_related("account", "recorded_by")
+            .order_by("-created_at")
+        )
+
+        data = []
+        for t in bank_txns:
+            recorded_by_name = (
+                (
+                    getattr(t.recorded_by, "full_name", None)
+                    or getattr(t.recorded_by, "username", None)
+                    or ""
+                )
+                if t.recorded_by
+                else ""
+            )
+            data.append(
+                [
+                    t.created_at.date(),
+                    t.created_at.time().strftime("%H:%M"),
+                    t.id,
+                    t.account.name,
+                    t.get_transaction_type_display(),
+                    float(t.amount),
+                    recorded_by_name,
+                    t.notes or "",
+                ]
+            )
+
+        styler.create_table(ws_bank_txns, headers, data, sum_columns=[5])
+
+        # ==========================================
+        # SHEET 14: EXPENSES
+        # ==========================================
+        ws_expenses = wb.create_sheet("Expenses")
+        headers = [
+            "Date",
+            "Time",
+            "Expense #",
+            "Title",
+            "Status",
+            "Amount",
+            "Bank Account",
+            "Recorded By",
+            "Source",
+            "Notes",
+        ]
+        styler.add_sheet_header(
+            ws_expenses,
+            "Expenses",
+            f"Expenses recorded from {start_date} to {end_date}",
+            merge_cols=len(headers),
+        )
+
+        expenses = (
+            Expense.objects.filter(created_at__date__range=[start_date, end_date])
+            .select_related("account", "recorded_by")
+            .prefetch_related("purchase")
+            .order_by("-created_at")
+        )
+
+        data = []
+        for e in expenses:
+            recorded_by_name = (
+                (
+                    getattr(e.recorded_by, "full_name", None)
+                    or getattr(e.recorded_by, "username", None)
+                    or ""
+                )
+                if e.recorded_by
+                else ""
+            )
+            try:
+                purchase = e.purchase
+            except Exception:
+                purchase = None
+
+            data.append(
+                [
+                    e.created_at.date(),
+                    e.created_at.time().strftime("%H:%M"),
+                    e.id,
+                    e.title,
+                    e.get_status_display(),
+                    float(e.amount),
+                    e.account.name if e.account else "",
+                    recorded_by_name,
+                    "Inventory purchase" if purchase else "Manual",
+                    e.notes or "",
+                ]
+            )
+
+        styler.create_table(ws_expenses, headers, data, sum_columns=[5])
 
         # ==========================================
         # RETURN FILE

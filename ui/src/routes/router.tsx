@@ -10,6 +10,7 @@ import { ProductionPage } from "../pages/Production";
 import { SalesPage } from "../pages/Sales";
 import { UsersPage } from "../pages/Users";
 import { SettingsPage } from "../pages/Settings";
+import { TreasuryPage } from "../pages/Treasury";
 import { EmployeesPage } from "../pages/Employees";
 import { EmployeeDetailPage } from "../pages/EmployeeDetail";
 import { HrPage } from "../pages/Hr";
@@ -63,6 +64,14 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute allowedRoles={["admin", "cashier"]}>
                         <SalesPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "treasury",
+                element: (
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                        <TreasuryPage />
                     </ProtectedRoute>
                 ),
             },

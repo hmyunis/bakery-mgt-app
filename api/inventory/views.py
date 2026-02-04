@@ -1,8 +1,12 @@
+from django.db import transaction
 from django.db.models import F
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from treasury.models import Expense
+from treasury.serializers import ExpenseSerializer
 
 from .models import Ingredient, Purchase, StockAdjustment
 from .serializers import (
@@ -71,6 +75,22 @@ class PurchaseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(purchaser=self.request.user)
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        if instance.expense_id:
+            expense = instance.expense
+            serializer = ExpenseSerializer(
+                expense,
+                data={"status": Expense.STATUS_PENDING, "account": None},
+                partial=True,
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            instance.expense = None
+            instance.save(update_fields=["expense"])
+            expense.delete()
+        instance.delete()
 
 
 class StockAdjustmentViewSet(viewsets.ModelViewSet):

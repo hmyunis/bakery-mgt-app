@@ -19,6 +19,7 @@ interface BakerySettingsResponse extends Partial<BakerySettings> {
     x_enabled?: boolean;
     x_url?: string;
     theme_color?: string;
+    sync_sales_to_bank_accounts?: boolean;
     created_at?: string;
     updated_at?: string;
 }
@@ -53,6 +54,9 @@ class BakeryService {
             xEnabled: Boolean(data.xEnabled ?? data.x_enabled ?? false),
             xUrl: (data.xUrl ?? data.x_url ?? "") as string,
             themeColor: data.themeColor ?? data.theme_color ?? "#f2751a",
+            syncSalesToBankAccounts: Boolean(
+                data.syncSalesToBankAccounts ?? data.sync_sales_to_bank_accounts ?? false
+            ),
             createdAt: (data.createdAt ?? data.created_at) as string,
             updatedAt: (data.updatedAt ?? data.updated_at) as string,
         };
@@ -91,6 +95,9 @@ class BakeryService {
             xEnabled: Boolean(data.xEnabled ?? data.x_enabled ?? false),
             xUrl: (data.xUrl ?? data.x_url ?? "") as string,
             themeColor: data.themeColor ?? data.theme_color ?? "#f2751a",
+            syncSalesToBankAccounts: Boolean(
+                data.syncSalesToBankAccounts ?? data.sync_sales_to_bank_accounts ?? false
+            ),
             createdAt: (data.createdAt ?? data.created_at) as string,
             updatedAt: (data.updatedAt ?? data.updated_at) as string,
         };
