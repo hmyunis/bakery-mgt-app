@@ -1,10 +1,11 @@
+from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Count, F, Sum
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_date, parse_datetime
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -75,13 +76,27 @@ class SaleViewSet(viewsets.ModelViewSet):
         if getattr(user, "role", None) == "cashier":
             queryset = queryset.filter(cashier=user)
 
-        start_date = self.request.query_params.get("start_date")
-        if start_date:
-            queryset = queryset.filter(created_at__date__gte=start_date)
+        # Use aware datetime boundaries instead of `created_at__date` extraction.
+        # This avoids DB timezone/date-cast differences across environments.
+        current_tz = timezone.get_current_timezone()
 
-        end_date = self.request.query_params.get("end_date")
-        if end_date:
-            queryset = queryset.filter(created_at__date__lte=end_date)
+        start_date_raw = self.request.query_params.get("start_date")
+        if start_date_raw:
+            start_date = parse_date(start_date_raw)
+            if start_date:
+                start_dt = timezone.make_aware(
+                    datetime.combine(start_date, datetime.min.time()), current_tz
+                )
+                queryset = queryset.filter(created_at__gte=start_dt)
+
+        end_date_raw = self.request.query_params.get("end_date")
+        if end_date_raw:
+            end_date = parse_date(end_date_raw)
+            if end_date:
+                end_dt = timezone.make_aware(
+                    datetime.combine(end_date, datetime.max.time()), current_tz
+                )
+                queryset = queryset.filter(created_at__lte=end_dt)
 
         return queryset
 
