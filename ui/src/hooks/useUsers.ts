@@ -9,10 +9,11 @@ import { useAppSelector } from "../store";
 /**
  * Hook to fetch users with pagination and filters
  */
-export function useUsers(params: UsersListParams = {}) {
+export function useUsers(params: UsersListParams = {}, options?: { enabled?: boolean }) {
     return useQuery({
         queryKey: ["users", params],
         queryFn: () => userService.getUsers(params),
+        enabled: options?.enabled ?? true,
     });
 }
 

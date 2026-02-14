@@ -47,3 +47,43 @@ export interface SaleListParams {
     end_date?: string;
     receipt_issued?: boolean;
 }
+
+export interface CashierStatementParams {
+    cashier: number;
+    start_time?: string;
+    end_time?: string;
+}
+
+export interface CashierStatementSummary {
+    saleCount: number;
+    totalMoneyCollected: number;
+}
+
+export interface CashierStatementPaymentMethodTotal {
+    methodId: number;
+    methodName: string;
+    amount: number;
+    saleCount: number;
+}
+
+export interface CashierStatementProductTotal {
+    productId: number;
+    productName: string;
+    quantitySold: number;
+    amount: number;
+}
+
+export interface CashierStatementResponse {
+    cashier: {
+        id: number;
+        username: string;
+        fullName?: string | null;
+        phoneNumber?: string | null;
+    };
+    startTime?: string | null;
+    endTime?: string | null;
+    summary: CashierStatementSummary;
+    paymentMethodTotals: CashierStatementPaymentMethodTotal[];
+    productTotals: CashierStatementProductTotal[];
+    sales: Sale[];
+}

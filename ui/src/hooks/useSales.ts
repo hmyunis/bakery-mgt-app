@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { salesService } from "../services/salesService";
-import type { CreateSaleData, SaleListParams } from "../types/sales";
+import type { CreateSaleData, SaleListParams, CashierStatementParams } from "../types/sales";
 import type { ApiError } from "../types/api";
 import { toast } from "sonner";
 
@@ -28,6 +28,25 @@ export function useSale(id: number | null) {
             return await salesService.getSale(id);
         },
         enabled: !!id,
+    });
+}
+
+/**
+ * Admin-only cashier statement query.
+ */
+export function useCashierStatement(
+    params: CashierStatementParams | null,
+    options?: { enabled?: boolean }
+) {
+    return useQuery({
+        queryKey: ["cashier-statement", params],
+        queryFn: async () => {
+            if (!params) {
+                throw new Error("Cashier statement params are required");
+            }
+            return await salesService.getCashierStatement(params);
+        },
+        enabled: Boolean(params) && (options?.enabled ?? true),
     });
 }
 

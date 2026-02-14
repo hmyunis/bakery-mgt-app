@@ -1,11 +1,16 @@
+from decimal import Decimal
+
+from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import F, Sum
+from django.db.models import Count, F, Sum
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import DailyClosing, PaymentMethod, Sale
+from .models import DailyClosing, PaymentMethod, Sale, SaleItem, SalePayment
 from .serializers import DailyClosingSerializer, PaymentMethodSerializer, SaleSerializer
 from .services import apply_sale_bank_sync
 
@@ -64,10 +69,166 @@ class SaleViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        user = self.request.user
+
+        # Cashiers can only see their own sales (list + retrieve + filters).
+        if getattr(user, "role", None) == "cashier":
+            queryset = queryset.filter(cashier=user)
+
         start_date = self.request.query_params.get("start_date")
         if start_date:
-            queryset = queryset.filter(created_at__gte=start_date)
+            queryset = queryset.filter(created_at__date__gte=start_date)
+
+        end_date = self.request.query_params.get("end_date")
+        if end_date:
+            queryset = queryset.filter(created_at__date__lte=end_date)
+
         return queryset
+
+    @action(detail=False, methods=["get"], url_path="cashier-statement")
+    def cashier_statement(self, request):
+        """
+        Admin-only statement for a specific cashier.
+        Supports optional start_time/end_time ISO datetime range filtering.
+        """
+        if request.user.role != "admin":
+            return Response(
+                {"detail": "Only admins can access cashier statements."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        cashier_id = request.query_params.get("cashier")
+        if not cashier_id:
+            return Response(
+                {"detail": "cashier query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        User = get_user_model()
+        try:
+            cashier = User.objects.get(id=int(cashier_id), role="cashier")
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "cashier must be a valid user id."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "Cashier not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        start_time_raw = request.query_params.get("start_time")
+        end_time_raw = request.query_params.get("end_time")
+
+        start_time = None
+        end_time = None
+
+        if start_time_raw:
+            start_time = parse_datetime(start_time_raw)
+            if start_time is None:
+                return Response(
+                    {"detail": "start_time must be a valid ISO datetime."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if timezone.is_naive(start_time):
+                start_time = timezone.make_aware(
+                    start_time, timezone.get_current_timezone()
+                )
+
+        if end_time_raw:
+            end_time = parse_datetime(end_time_raw)
+            if end_time is None:
+                return Response(
+                    {"detail": "end_time must be a valid ISO datetime."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if timezone.is_naive(end_time):
+                end_time = timezone.make_aware(
+                    end_time, timezone.get_current_timezone()
+                )
+
+        if start_time and end_time and start_time > end_time:
+            return Response(
+                {"detail": "start_time must be before or equal to end_time."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        sales_queryset = (
+            Sale.objects.select_related("cashier")
+            .prefetch_related("items__product", "payments__method")
+            .filter(cashier=cashier)
+            .order_by("-created_at")
+        )
+        if start_time:
+            sales_queryset = sales_queryset.filter(created_at__gte=start_time)
+        if end_time:
+            sales_queryset = sales_queryset.filter(created_at__lte=end_time)
+
+        sale_count = sales_queryset.count()
+        total_money = sales_queryset.aggregate(total=Sum("total_amount"))[
+            "total"
+        ] or Decimal("0")
+
+        payment_breakdown = (
+            SalePayment.objects.filter(sale__in=sales_queryset)
+            .values("method_id", "method__name")
+            .annotate(
+                total_amount=Sum("amount"),
+                sale_count=Count("sale", distinct=True),
+            )
+            .order_by("method__name")
+        )
+
+        product_breakdown = (
+            SaleItem.objects.filter(sale__in=sales_queryset)
+            .values("product_id", "product__name")
+            .annotate(
+                quantity_sold=Sum("quantity"),
+                total_amount=Sum("subtotal"),
+            )
+            .order_by("-quantity_sold", "product__name")
+        )
+
+        sales_data = SaleSerializer(
+            sales_queryset, many=True, context={"request": request}
+        ).data
+
+        return Response(
+            {
+                "cashier": {
+                    "id": cashier.id,
+                    "username": cashier.username,
+                    "full_name": cashier.full_name,
+                    "phone_number": cashier.phone_number,
+                },
+                "start_time": start_time.isoformat() if start_time else None,
+                "end_time": end_time.isoformat() if end_time else None,
+                "summary": {
+                    "sale_count": sale_count,
+                    "total_money_collected": float(total_money),
+                },
+                "payment_method_totals": [
+                    {
+                        "method_id": row["method_id"],
+                        "method_name": row["method__name"],
+                        "amount": float(row["total_amount"] or 0),
+                        "sale_count": row["sale_count"],
+                    }
+                    for row in payment_breakdown
+                ],
+                "product_totals": [
+                    {
+                        "product_id": row["product_id"],
+                        "product_name": row["product__name"],
+                        "quantity_sold": int(row["quantity_sold"] or 0),
+                        "amount": float(row["total_amount"] or 0),
+                    }
+                    for row in product_breakdown
+                ],
+                "sales": sales_data,
+            }
+        )
 
     def perform_create(self, serializer):
         # Serializer handles the full transaction (items, payments,
