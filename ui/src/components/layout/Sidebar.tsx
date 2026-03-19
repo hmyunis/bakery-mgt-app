@@ -92,9 +92,15 @@ interface SidebarProps {
     isCollapsed: boolean;
     isMobileOpen: boolean;
     onCloseMobile: () => void;
+    onNavItemClick: () => void;
 }
 
-export function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }: SidebarProps) {
+export function Sidebar({
+    isCollapsed,
+    isMobileOpen,
+    onCloseMobile,
+    onNavItemClick,
+}: SidebarProps) {
     const location = useLocation();
     const { roles } = useAppSelector((state) => state.auth);
     const { data: bakerySettings } = useBakerySettings();
@@ -110,7 +116,7 @@ export function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }: SidebarPro
         const linkContent = (
             <Link
                 to={item.path}
-                onClick={onCloseMobile}
+                onClick={onNavItemClick}
                 className={cn(
                     "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                     isCollapsed ? "justify-center" : "",

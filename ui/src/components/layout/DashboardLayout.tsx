@@ -25,12 +25,18 @@ export function DashboardLayout() {
         setIsMobileOpen(false);
     };
 
+    const handleSidebarNavItemClick = () => {
+        setIsCollapsed(true);
+        setIsMobileOpen(false);
+    };
+
     return (
         <div className="min-h-screen flex bg-[var(--bg)]">
             <Sidebar
                 isCollapsed={isCollapsed}
                 isMobileOpen={isMobileOpen}
                 onCloseMobile={closeMobile}
+                onNavItemClick={handleSidebarNavItemClick}
             />
             <div className="flex-1 flex flex-col min-w-0">
                 <Header

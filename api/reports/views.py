@@ -253,7 +253,10 @@ class DashboardStatsView(APIView):
 
         # 3. Payment Method Distribution
         payment_methods = (
-            SalePayment.objects.filter(sale__created_at__date=target_date)
+            SalePayment.objects.filter(
+                sale__created_at__date=target_date,
+                sale__payment_status=Sale.PAYMENT_STATUS_PAID,
+            )
             .values("method__name")
             .annotate(total=Sum("amount"))
             .order_by("-total")
@@ -565,7 +568,9 @@ class ExportReportView(APIView):
 
         for p in products:
             sold_agg = SaleItem.objects.filter(
-                sale__created_at__date__range=[start_date, end_date], product=p
+                sale__created_at__date__range=[start_date, end_date],
+                sale__payment_status=Sale.PAYMENT_STATUS_PAID,
+                product=p,
             ).aggregate(q=Sum("quantity"), r=Sum("subtotal"))
 
             prod_agg = ProductionRun.objects.filter(

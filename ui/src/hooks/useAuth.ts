@@ -31,7 +31,7 @@ export const useAuth = () => {
                                 isAuthenticated: true,
                                 roles: userRole ? [userRole] : [],
                                 user: {
-                                    id: payload.user_id?.toString(),
+                                    id: Number(payload.user_id),
                                     name: payload.full_name || payload.username || "User",
                                     email: payload.email,
                                     avatar: payload.avatar,
@@ -152,7 +152,7 @@ export const useAuth = () => {
             dispatch(
                 setSession({
                     user: {
-                        id: currentUser.id.toString(),
+                        id: currentUser.id,
                         name: fullName || currentUser.username,
                         email: currentUser.email,
                         avatar: currentUser.avatar || undefined,

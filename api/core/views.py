@@ -148,7 +148,10 @@ def owner_dashboard(request):
 
     # Cash vs Digital split (based on payment method name)
     payments_qs = (
-        SalePayment.objects.filter(sale__created_at__range=(start_of_day, end_of_day))
+        SalePayment.objects.filter(
+            sale__created_at__range=(start_of_day, end_of_day),
+            sale__payment_status=Sale.PAYMENT_STATUS_PAID,
+        )
         .select_related("method", "sale")
         .only("amount", "method__name", "sale__created_at")
     )
@@ -163,7 +166,10 @@ def owner_dashboard(request):
 
     # Top Products Today
     top_products_qs = (
-        SaleItem.objects.filter(sale__created_at__range=(start_of_day, end_of_day))
+        SaleItem.objects.filter(
+            sale__created_at__range=(start_of_day, end_of_day),
+            sale__payment_status=Sale.PAYMENT_STATUS_PAID,
+        )
         .values("product__name")
         .annotate(quantity=Sum("quantity"), revenue=Sum("subtotal"))
         .order_by("-revenue")[:5]

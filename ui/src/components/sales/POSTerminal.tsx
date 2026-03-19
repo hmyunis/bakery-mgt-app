@@ -8,7 +8,11 @@ import { POSCartSidebar, type CartItem } from "./POSCartSidebar";
 import { useDebounce } from "../../hooks/useDebounce";
 import { Spinner } from "@heroui/react";
 
-export function POSTerminal() {
+interface POSTerminalProps {
+    salesLockedReason?: string | null;
+}
+
+export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -147,6 +151,11 @@ export function POSTerminal() {
             <div ref={scrollContainerRef} className="flex-1 pr-4 space-y-6 overflow-y-auto">
                 {/* Controls */}
                 <div className="w-full space-y-4">
+                    {salesLockedReason && (
+                        <div className="rounded-md border border-danger-200 bg-danger-50 p-3 text-sm text-danger-700">
+                            {salesLockedReason}
+                        </div>
+                    )}
                     <div className="flex items-center gap-3 max-w-2xl mx-auto w-full">
                         <Input
                             placeholder="Search products..."
@@ -272,6 +281,7 @@ export function POSTerminal() {
                     onSaleSuccess={handleClearCart}
                     isSidebarCollapsed={isSidebarCollapsed}
                     setIsSidebarCollapsed={setIsSidebarCollapsed}
+                    salesLockedReason={salesLockedReason}
                     className="h-[calc(100vh-8rem)]"
                 />
             </div>

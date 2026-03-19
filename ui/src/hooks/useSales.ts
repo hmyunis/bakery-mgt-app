@@ -1,6 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { salesService } from "../services/salesService";
-import type { CreateSaleData, SaleListParams, CashierStatementParams } from "../types/sales";
+import type {
+    AcceptShiftSessionData,
+    CashierStatementParams,
+    CloseShiftSessionData,
+    CreateSaleData,
+    OpenShiftSessionData,
+    SaleListParams,
+    UpdateSalePaymentStatusData,
+} from "../types/sales";
 import type { ApiError } from "../types/api";
 import { toast } from "sonner";
 
@@ -14,6 +22,119 @@ export function useSales(params: SaleListParams = {}) {
             return await salesService.getSales(params);
         },
         placeholderData: (previousData) => previousData,
+    });
+}
+
+export function useShiftSessions(
+    params: {
+        page?: number;
+        page_size?: number;
+        status?: "opened" | "pending_handover_acceptance" | "closed";
+        start_date?: string;
+        end_date?: string;
+    } = {}
+) {
+    return useQuery({
+        queryKey: ["shift-sessions", params],
+        queryFn: async () => {
+            return await salesService.getShiftSessions(params);
+        },
+        placeholderData: (previousData) => previousData,
+    });
+}
+
+export function useActiveShiftSession(options?: { enabled?: boolean }) {
+    return useQuery({
+        queryKey: ["shift-sessions", "active"],
+        queryFn: async () => {
+            return await salesService.getActiveShiftSession();
+        },
+        refetchInterval: 15000,
+        enabled: options?.enabled ?? true,
+    });
+}
+
+export function useOpenShiftSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: OpenShiftSessionData) => {
+            return await salesService.openShiftSession(data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
+            queryClient.invalidateQueries({ queryKey: ["sales"] });
+            toast.success("Shift opened successfully.");
+        },
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorMessage =
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
+                "Failed to open shift.";
+            toast.error(errorMessage);
+        },
+    });
+}
+
+export function useCloseShiftSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ id, data }: { id: number; data: CloseShiftSessionData }) => {
+            return await salesService.closeShiftSession(id, data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
+            queryClient.invalidateQueries({ queryKey: ["sales"] });
+            toast.success("Shift closed and pending acceptance.");
+        },
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorMessage =
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
+                "Failed to close shift.";
+            toast.error(errorMessage);
+        },
+    });
+}
+
+export function useAcceptShiftSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ id, data }: { id: number; data: AcceptShiftSessionData }) => {
+            return await salesService.acceptShiftSession(id, data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
+            queryClient.invalidateQueries({ queryKey: ["sales"] });
+            toast.success("Shift handover accepted.");
+        },
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorMessage =
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
+                "Failed to accept handover.";
+            toast.error(errorMessage);
+        },
+    });
+}
+
+export function useShiftSessionReconciliation(
+    id: number | null,
+    options?: { enabled?: boolean; refetchInterval?: number | false }
+) {
+    return useQuery({
+        queryKey: ["shift-session-reconciliation", id],
+        queryFn: async () => {
+            if (!id) throw new Error("Shift session id is required.");
+            return await salesService.getShiftSessionReconciliation(id);
+        },
+        enabled: !!id && (options?.enabled ?? true),
+        refetchInterval: options?.refetchInterval,
     });
 }
 
@@ -62,6 +183,8 @@ export function useCreateSale() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["sales"] });
+            queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
+            queryClient.invalidateQueries({ queryKey: ["shift-session-reconciliation"] });
             queryClient.invalidateQueries({ queryKey: ["products"] }); // Update product stock
             queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
             queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
@@ -91,6 +214,8 @@ export function useDeleteSale() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["sales"] });
+            queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
+            queryClient.invalidateQueries({ queryKey: ["shift-session-reconciliation"] });
             queryClient.invalidateQueries({ queryKey: ["products"] }); // refresh product stock
             queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
             queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
@@ -103,6 +228,30 @@ export function useDeleteSale() {
                 apiError.response?.data?.message ||
                 apiError.response?.data?.detail ||
                 "Failed to delete sale. Please try again.";
+            toast.error(errorMessage);
+        },
+    });
+}
+
+export function useUpdateSalePaymentStatus() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ id, data }: { id: number; data: UpdateSalePaymentStatusData }) => {
+            return await salesService.updateSalePaymentStatus(id, data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["sales"] });
+            queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
+            queryClient.invalidateQueries({ queryKey: ["shift-session-reconciliation"] });
+            toast.success("Payment status updated.");
+        },
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorMessage =
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
+                "Failed to update payment status.";
             toast.error(errorMessage);
         },
     });

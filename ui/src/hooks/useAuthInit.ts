@@ -33,7 +33,7 @@ export function useAuthInit() {
                             isAuthenticated: true,
                             roles: userRole ? [userRole] : [],
                             user: {
-                                id: payload.user_id?.toString(),
+                                id: Number(payload.user_id),
                                 name: payload.full_name || payload.username,
                                 email: payload.email,
                                 avatar: payload.avatar,

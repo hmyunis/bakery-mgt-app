@@ -1,6 +1,6 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Sale } from "../../types/sales";
-import { Chip } from "@heroui/react";
+import { Button, Chip } from "@heroui/react";
 
 // Helper function to format date
 const formatDateTime = (dateString?: string) => {
@@ -9,7 +9,9 @@ const formatDateTime = (dateString?: string) => {
     return date.toLocaleString();
 };
 
-export const getSalesHistoryColumns = (): ColumnDef<Sale>[] => [
+export const getSalesHistoryColumns = (options?: {
+    onPaymentStatusClick?: (sale: Sale) => void;
+}): ColumnDef<Sale>[] => [
     {
         id: "rowNumber",
         header: "#",
@@ -67,6 +69,24 @@ export const getSalesHistoryColumns = (): ColumnDef<Sale>[] => [
         ),
     },
     {
+        accessorKey: "payment_status",
+        header: "Status",
+        cell: ({ row }) => {
+            const sale = row.original;
+            const isUnpaid = sale.payment_status === "unpaid_approved";
+            return (
+                <Chip
+                    size="sm"
+                    variant="flat"
+                    color={isUnpaid ? "warning" : "success"}
+                    className={isUnpaid ? "capitalize" : "capitalize"}
+                >
+                    {isUnpaid ? "Unpaid" : "Paid"}
+                </Chip>
+            );
+        },
+    },
+    {
         id: "payments",
         header: "Payment Methods",
         cell: ({ row }) => {
@@ -85,5 +105,21 @@ export const getSalesHistoryColumns = (): ColumnDef<Sale>[] => [
                 </div>
             );
         },
+    },
+    {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+            <Button
+                size="sm"
+                variant="flat"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    options?.onPaymentStatusClick?.(row.original);
+                }}
+            >
+                Payment Status
+            </Button>
+        ),
     },
 ];

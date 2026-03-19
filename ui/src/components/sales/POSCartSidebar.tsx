@@ -3,7 +3,7 @@ import { ChevronRight, ShoppingCart, Plus, Minus, X, Trash2 } from "lucide-react
 import { cn } from "../../lib/utils";
 import type { Product } from "../../types/production";
 import { getImageBaseUrl } from "../../lib/apiClient";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePaymentMethods } from "../../hooks/usePayment";
 import { useCreateSale } from "../../hooks/useSales";
 import type { ApiError } from "../../types/api";
@@ -24,6 +24,7 @@ interface POSCartSidebarProps {
     onSaleSuccess: () => void;
     isSidebarCollapsed: boolean;
     setIsSidebarCollapsed: (collapsed: boolean) => void;
+    salesLockedReason?: string | null;
     className?: string;
 }
 
@@ -35,13 +36,15 @@ interface SidebarContentProps {
     onRemove: (productId: number) => void;
     onSaleSuccess: () => void;
     receiptIssued: boolean;
-    setReceiptIssued: (value: boolean) => void;
+    salesLockedReason?: string | null;
 }
 
 interface PaymentEntryDraft {
     methodId: number;
     amount: string;
 }
+
+const RECEIPT_ISSUED_STORAGE_KEY = "sales.pos.receiptIssued";
 
 const SidebarContent = ({
     items,
@@ -51,7 +54,7 @@ const SidebarContent = ({
     onRemove,
     onSaleSuccess,
     receiptIssued,
-    setReceiptIssued,
+    salesLockedReason,
 }: SidebarContentProps) => {
     const getImageUrl = (image?: string): string | undefined => {
         if (!image) return undefined;
@@ -147,6 +150,11 @@ const SidebarContent = ({
     };
 
     const handleSubmit = async () => {
+        if (salesLockedReason) {
+            toast.error(salesLockedReason);
+            return;
+        }
+
         if (items.length === 0) {
             toast.error("Cart is empty");
             return;
@@ -170,8 +178,13 @@ const SidebarContent = ({
         }
 
         const hasZeroOrNegative = payments.some((p) => !((parseFloat(p.amount) || 0) > 0));
+        const hasNegative = payments.some((p) => (parseFloat(p.amount) || 0) < 0);
         if (hasZeroOrNegative) {
             toast.error("All payment amounts must be greater than zero");
+            return;
+        }
+        if (hasNegative) {
+            toast.error("Payment amounts cannot be negative");
             return;
         }
 
@@ -180,10 +193,12 @@ const SidebarContent = ({
                 product_id: item.product.id,
                 quantity: item.quantity,
             })),
-            payments_input: payments.map((payment) => ({
-                method_id: payment.methodId,
-                amount: parseFloat((parseFloat(payment.amount) || 0).toFixed(2)),
-            })),
+            payments_input: payments
+                .filter((payment) => (parseFloat(payment.amount) || 0) > 0)
+                .map((payment) => ({
+                    method_id: payment.methodId,
+                    amount: parseFloat((parseFloat(payment.amount) || 0).toFixed(2)),
+                })),
             receipt_issued: receiptIssued,
         };
 
@@ -192,7 +207,6 @@ const SidebarContent = ({
             onSaleSuccess();
             setPayments([]);
             setLastAutoFilledAmount(null);
-            setReceiptIssued(false);
         } catch (error) {
             console.error("Sale creation error:", error);
             const apiError = error as ApiError;
@@ -318,6 +332,12 @@ const SidebarContent = ({
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 space-y-3">
                         <div className="space-y-4">
                             <Divider />
+
+                            {salesLockedReason && (
+                                <Alert color="danger" variant="flat">
+                                    {salesLockedReason}
+                                </Alert>
+                            )}
 
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -499,7 +519,11 @@ const SidebarContent = ({
                                     color="primary"
                                     onPress={handleSubmit}
                                     isLoading={isCreating}
-                                    isDisabled={items.length === 0 || payments.length === 0}
+                                    isDisabled={
+                                        items.length === 0 ||
+                                        !!salesLockedReason ||
+                                        payments.length === 0
+                                    }
                                     className="px-4"
                                 >
                                     Complete Sale
@@ -522,9 +546,25 @@ export function POSCartSidebar({
     onSaleSuccess,
     isSidebarCollapsed,
     setIsSidebarCollapsed,
+    salesLockedReason,
     className,
 }: POSCartSidebarProps) {
-    const [receiptIssued, setReceiptIssued] = useState(false);
+    const [receiptIssued, setReceiptIssued] = useState<boolean>(() => {
+        if (typeof window === "undefined") return false;
+        try {
+            return window.localStorage.getItem(RECEIPT_ISSUED_STORAGE_KEY) === "true";
+        } catch {
+            return false;
+        }
+    });
+
+    useEffect(() => {
+        try {
+            window.localStorage.setItem(RECEIPT_ISSUED_STORAGE_KEY, String(receiptIssued));
+        } catch {
+            // Ignore localStorage errors (e.g. disabled storage).
+        }
+    }, [receiptIssued]);
 
     return (
         <>
@@ -576,7 +616,7 @@ export function POSCartSidebar({
                         onRemove={onRemove}
                         onSaleSuccess={onSaleSuccess}
                         receiptIssued={receiptIssued}
-                        setReceiptIssued={setReceiptIssued}
+                        salesLockedReason={salesLockedReason}
                     />
                 )}
             </div>
@@ -625,7 +665,7 @@ export function POSCartSidebar({
                             onRemove={onRemove}
                             onSaleSuccess={onSaleSuccess}
                             receiptIssued={receiptIssued}
-                            setReceiptIssued={setReceiptIssued}
+                            salesLockedReason={salesLockedReason}
                         />
                     </div>
                 </div>

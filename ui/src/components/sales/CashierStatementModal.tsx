@@ -217,7 +217,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                 </div>
                             ) : (
                                 <>
-                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                                             <p className="mb-1 flex items-center gap-2 text-xs text-slate-500">
                                                 <Wallet className="h-4 w-4" />
@@ -234,6 +234,15 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                             </p>
                                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
                                                 {data.summary.saleCount}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+                                            <p className="mb-1 flex items-center gap-2 text-xs text-slate-500">
+                                                <Wallet className="h-4 w-4" />
+                                                Unpaid Value
+                                            </p>
+                                            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                                                {formatMoney(data.summary.unpaidTotal ?? 0)}
                                             </p>
                                         </div>
                                     </div>

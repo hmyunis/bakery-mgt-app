@@ -1,16 +1,24 @@
 import { useState, useMemo } from "react";
 import { Tabs, Tab, Spinner, DatePicker, Select, SelectItem, Button } from "@heroui/react";
-import { ShoppingCart, History, FileText } from "lucide-react";
+import { ShoppingCart, History, FileText, Handshake } from "lucide-react";
 import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { POSTerminal } from "../components/sales/POSTerminal";
 import { SaleDetailModal } from "../components/sales/SaleDetailModal";
 import { DeleteSaleModal } from "../components/sales/DeleteSaleModal";
 import { CashierStatementModal } from "../components/sales/CashierStatementModal";
+import { PaymentStatusModal } from "../components/sales/PaymentStatusModal";
+import { ShiftHandoverTab } from "../components/sales/ShiftHandoverTab";
 import { DataTable } from "../components/ui/DataTable";
 import { DataTablePagination } from "../components/ui/DataTablePagination";
 import { getSalesHistoryColumns } from "../components/sales/SalesHistoryColumns";
-import { useDeleteSale, useSales } from "../hooks/useSales";
+import {
+    useActiveShiftSession,
+    useDeleteSale,
+    useSales,
+    useShiftSessionReconciliation,
+    useUpdateSalePaymentStatus,
+} from "../hooks/useSales";
 import { useUsers } from "../hooks/useUsers";
 import type { Sale } from "../types/sales";
 import { useAppSelector } from "../store";
@@ -23,6 +31,7 @@ export function SalesPage() {
     const [cashierFilter, setCashierFilter] = useState<number | null>(null);
     const [statementCashierId, setStatementCashierId] = useState<number | null>(null);
     const [isStatementModalOpen, setIsStatementModalOpen] = useState(false);
+    const [paymentStatusSale, setPaymentStatusSale] = useState<Sale | null>(null);
 
     // Sales History state
     const [historyPage, setHistoryPage] = useState(1);
@@ -30,6 +39,48 @@ export function SalesPage() {
     const [historyStartDate, setHistoryStartDate] = useState<DateValue>(today(getLocalTimeZone()));
     const { user } = useAppSelector((state) => state.auth);
     const isAdmin = user?.role === "admin";
+    const isCashier = user?.role === "cashier";
+    const currentUserId = user?.id !== undefined ? Number(user.id) : null;
+    const { data: activeShiftData, isLoading: isLoadingActiveShift } = useActiveShiftSession({
+        enabled: isCashier || activeTab === "pos",
+    });
+
+    const salesLockedReason = useMemo(() => {
+        const openedSession = activeShiftData?.openedSession || null;
+        if (isCashier && isLoadingActiveShift) return null;
+        if (!openedSession) return "No active shift session. Open and verify shift handover first.";
+        if (
+            user?.role === "cashier" &&
+            currentUserId !== null &&
+            openedSession.openedBy !== currentUserId
+        ) {
+            return "Active shift belongs to another cashier. Accept handover before selling.";
+        }
+        return null;
+    }, [
+        activeShiftData?.openedSession,
+        currentUserId,
+        isCashier,
+        isLoadingActiveShift,
+        user?.role,
+    ]);
+
+    const myOpenedSessionId = useMemo(() => {
+        const openedSession = activeShiftData?.openedSession || null;
+        if (
+            !isCashier ||
+            !openedSession ||
+            currentUserId === null ||
+            openedSession.openedBy !== currentUserId
+        )
+            return null;
+        return openedSession.id;
+    }, [activeShiftData?.openedSession, currentUserId, isCashier]);
+
+    const { data: liveShiftReconciliation } = useShiftSessionReconciliation(myOpenedSessionId, {
+        enabled: !!myOpenedSessionId,
+        refetchInterval: 20000,
+    });
 
     const { data: cashiersData } = useUsers(
         {
@@ -53,6 +104,8 @@ export function SalesPage() {
             receiptFilter === "all" ? undefined : receiptFilter === "issued" ? true : false,
     });
     const { mutateAsync: deleteSale, isPending: isDeletingSale } = useDeleteSale();
+    const { mutateAsync: updateSalePaymentStatus, isPending: isUpdatingPaymentStatus } =
+        useUpdateSalePaymentStatus();
 
     const salesRows = useMemo(() => salesData?.results ?? [], [salesData]);
 
@@ -84,12 +137,62 @@ export function SalesPage() {
         setIsStatementModalOpen(true);
     };
 
+    const handlePaymentStatusSave = async (data: {
+        payment_status: "paid" | "unpaid_approved";
+        unpaid_reason?: string;
+    }) => {
+        if (!paymentStatusSale) return;
+        await updateSalePaymentStatus({
+            id: paymentStatusSale.id,
+            data,
+        });
+        setPaymentStatusSale(null);
+    };
+
     return (
         <div className="space-y-6 lg:space-y-8">
             <PageTitle
                 title="Sales"
                 subtitle="Process transactions, manage orders, and track daily revenue."
             />
+
+            {isCashier && (
+                <div className="space-y-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+                            <p className="text-xs text-slate-500">Cash In Hand Now</p>
+                            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                                ETB {(liveShiftReconciliation?.money.cashCollected ?? 0).toFixed(2)}
+                            </p>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+                            <p className="text-xs text-slate-500">Total Collected</p>
+                            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                                ETB{" "}
+                                {(liveShiftReconciliation?.money.collectedTotal ?? 0).toFixed(2)}
+                            </p>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+                            <p className="text-xs text-slate-500">Digital Collected</p>
+                            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                                ETB{" "}
+                                {(liveShiftReconciliation?.money.digitalCollected ?? 0).toFixed(2)}
+                            </p>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+                            <p className="text-xs text-slate-500">Sales Count</p>
+                            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                                {liveShiftReconciliation?.money.saleCount ?? 0}
+                            </p>
+                        </div>
+                    </div>
+                    {!myOpenedSessionId && (
+                        <p className="text-xs text-warning-600 dark:text-warning-300">
+                            No active shift session assigned to your account.
+                        </p>
+                    )}
+                </div>
+            )}
 
             <Tabs
                 aria-label="Sales"
@@ -112,8 +215,20 @@ export function SalesPage() {
                     }
                 >
                     <div className="space-y-4">
-                        <POSTerminal />
+                        <POSTerminal salesLockedReason={salesLockedReason} />
                     </div>
+                </Tab>
+
+                <Tab
+                    key="handover"
+                    title={
+                        <div className="flex items-center gap-2">
+                            <Handshake className="h-4 w-4" />
+                            <span>Shift Handover</span>
+                        </div>
+                    }
+                >
+                    <ShiftHandoverTab />
                 </Tab>
 
                 <Tab
@@ -217,7 +332,9 @@ export function SalesPage() {
                         ) : (
                             <>
                                 <DataTable
-                                    columns={getSalesHistoryColumns()}
+                                    columns={getSalesHistoryColumns({
+                                        onPaymentStatusClick: setPaymentStatusSale,
+                                    })}
                                     data={salesRows}
                                     onRowClick={handleViewSale}
                                     getRowClassName={(sale) =>
@@ -254,7 +371,7 @@ export function SalesPage() {
                 isOpen={!!viewingSale}
                 onClose={() => setViewingSale(null)}
                 sale={viewingSale}
-                canDelete={isAdmin}
+                canDelete={isAdmin || isCashier}
                 onDelete={handleDeleteSaleRequest}
             />
 
@@ -270,6 +387,14 @@ export function SalesPage() {
                 isOpen={isStatementModalOpen}
                 onClose={() => setIsStatementModalOpen(false)}
                 cashierId={statementCashierId}
+            />
+
+            <PaymentStatusModal
+                isOpen={!!paymentStatusSale}
+                sale={paymentStatusSale}
+                isSubmitting={isUpdatingPaymentStatus}
+                onClose={() => setPaymentStatusSale(null)}
+                onSubmit={handlePaymentStatusSave}
             />
         </div>
     );
