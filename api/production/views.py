@@ -46,7 +46,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     serializer_class = RecipeSerializer
     permission_classes = [IsChefOrAdmin]
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ["product", "composite_ingredient"]
     search_fields = ["product__name", "instructions"]
 
     @action(detail=False, methods=["get"], url_path="products-with-recipes")

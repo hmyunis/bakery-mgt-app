@@ -19,7 +19,7 @@ createRoot(document.getElementById("root")!).render(
                     <HeroUIProvider>
                         <ThemeProvider attribute="class" defaultTheme="dark">
                             <App />
-                            <Toaster position="top-right" richColors />
+                            <Toaster position="top-right" richColors closeButton />
                         </ThemeProvider>
                     </HeroUIProvider>
                 </QueryClientProvider>

@@ -194,6 +194,7 @@ export function useCreateRecipe() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
+            queryClient.invalidateQueries({ queryKey: ["productsWithRecipes"] });
             toast.success("Recipe created successfully!");
         },
         onError: (error: unknown) => {
