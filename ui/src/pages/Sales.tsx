@@ -8,7 +8,7 @@ import { SaleDetailModal } from "../components/sales/SaleDetailModal";
 import { DeleteSaleModal } from "../components/sales/DeleteSaleModal";
 import { CashierStatementModal } from "../components/sales/CashierStatementModal";
 import { PaymentStatusModal } from "../components/sales/PaymentStatusModal";
-import { ShiftHandoverTab } from "../components/sales/ShiftHandoverTab";
+import { ShiftHandoverTab } from "../components/sales_admin/ShiftHandoverTab";
 import { DataTable } from "../components/ui/DataTable";
 import { DataTablePagination } from "../components/ui/DataTablePagination";
 import { getSalesHistoryColumns } from "../components/sales/SalesHistoryColumns";

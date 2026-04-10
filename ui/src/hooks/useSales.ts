@@ -123,6 +123,30 @@ export function useAcceptShiftSession() {
     });
 }
 
+export function useReopenShiftSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ id }: { id: number }) => {
+            return await salesService.reopenShiftSession(id);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
+            queryClient.invalidateQueries({ queryKey: ["sales"] });
+            queryClient.invalidateQueries({ queryKey: ["shift-session-reconciliation"] });
+            toast.success("Shift reopened successfully.");
+        },
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorMessage =
+                apiError.response?.data?.message ||
+                apiError.response?.data?.detail ||
+                "Failed to reopen shift.";
+            toast.error(errorMessage);
+        },
+    });
+}
+
 export function useShiftSessionReconciliation(
     id: number | null,
     options?: { enabled?: boolean; refetchInterval?: number | false }

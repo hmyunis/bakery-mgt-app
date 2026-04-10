@@ -90,6 +90,9 @@ class SalesService {
             status: (row.status as ShiftSession["status"]) || "opened",
             openedBy: this.normalizeNumber(row.openedBy ?? row.opened_by),
             openedByName: (row.openedByName || row.opened_by_name || "") as string,
+            openedByFullName: (row.openedByFullName || row.opened_by_full_name || null) as
+                | string
+                | null,
             openedAt: (row.openedAt || row.opened_at || "") as string,
             openNotes: (row.openNotes || row.open_notes || "") as string,
             closedBy: (row.closedBy ?? row.closed_by ?? null) as number | null,
@@ -362,6 +365,16 @@ class SalesService {
         const response = await apiClient.post<
             ApiResponse<Record<string, unknown>> | Record<string, unknown>
         >(`/sales/shift-sessions/${id}/accept/`, data);
+        const raw =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
+        return this.normalizeShiftSession(raw);
+    }
+
+    async reopenShiftSession(id: number): Promise<ShiftSession> {
+        const response = await apiClient.post<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/sales/shift-sessions/${id}/reopen/`, {});
         const raw =
             (response.data as ApiResponse<Record<string, unknown>>).data ||
             (response.data as Record<string, unknown>);

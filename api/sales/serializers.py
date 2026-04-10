@@ -63,6 +63,9 @@ class ShiftSessionProductCountSerializer(serializers.ModelSerializer):
 
 class ShiftSessionSerializer(serializers.ModelSerializer):
     opened_by_name = serializers.CharField(source="opened_by.username", read_only=True)
+    opened_by_full_name = serializers.CharField(
+        source="opened_by.full_name", read_only=True, allow_null=True
+    )
     closed_by_name = serializers.CharField(source="closed_by.username", read_only=True)
     accepted_by_name = serializers.CharField(
         source="accepted_by.username", read_only=True
@@ -76,6 +79,7 @@ class ShiftSessionSerializer(serializers.ModelSerializer):
             "status",
             "opened_by",
             "opened_by_name",
+            "opened_by_full_name",
             "opened_at",
             "open_notes",
             "closed_by",
@@ -105,6 +109,10 @@ class ShiftSessionSerializer(serializers.ModelSerializer):
 
 class ShiftSessionOpenSerializer(serializers.Serializer):
     open_notes = serializers.CharField(required=False, allow_blank=True)
+    cashier = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(role="cashier", is_active=True),
+        required=False,
+    )
     counts = ShiftSessionCountInputSerializer(many=True)
 
     def validate_counts(self, counts):
@@ -132,9 +140,44 @@ class ShiftSessionOpenSerializer(serializers.Serializer):
 
         return counts
 
+    def validate(self, attrs):
+        request = self.context["request"]
+        request_user = request.user
+        selected_cashier = attrs.get("cashier")
+
+        if request_user.role == "admin":
+            if not selected_cashier:
+                raise serializers.ValidationError(
+                    {"cashier": "cashier is required when admin opens a shift."}
+                )
+            return attrs
+
+        if request_user.role == "cashier":
+            if selected_cashier and selected_cashier.id != request_user.id:
+                raise serializers.ValidationError(
+                    {"cashier": "Cashier can only open shift for self."}
+                )
+            attrs["cashier"] = request_user
+            return attrs
+
+        raise serializers.ValidationError(
+            {"detail": "Only admin or cashier can open shift sessions."}
+        )
+
     def create(self, validated_data):
         counts = validated_data.get("counts", [])
         request = self.context["request"]
+        target_cashier = validated_data.get("cashier") or request.user
+
+        if ShiftSession.objects.filter(
+            status=ShiftSession.STATUS_PENDING_HANDOVER_ACCEPTANCE
+        ).exists():
+            raise serializers.ValidationError(
+                (
+                    "Cannot open new shift while another shift is "
+                    "pending handover acceptance."
+                )
+            )
 
         latest_session = ShiftSession.objects.order_by("-opened_at").first()
         previous_closed_session = (
@@ -149,7 +192,7 @@ class ShiftSessionOpenSerializer(serializers.Serializer):
             )
 
         session = ShiftSession.objects.create(
-            opened_by=request.user,
+            opened_by=target_cashier,
             open_notes=validated_data.get("open_notes", ""),
             previous_session=previous_closed_session,
             status=ShiftSession.STATUS_OPENED,

@@ -159,9 +159,9 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="open")
     def open_shift(self, request):
-        if request.user.role != "cashier":
+        if request.user.role not in ["cashier", "admin"]:
             return Response(
-                {"detail": "Only cashiers can open shift sessions."},
+                {"detail": "Only admin or cashier can open shift sessions."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         serializer = ShiftSessionOpenSerializer(
@@ -321,6 +321,73 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
             ShiftSessionSerializer(session, context={"request": request}).data
         )
 
+    @action(detail=True, methods=["post"], url_path="reopen")
+    def reopen_shift(self, request, pk=None):
+        if request.user.role != "admin":
+            return Response(
+                {"detail": "Only admins can reopen shift sessions."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        session = self.get_object()
+        if session.status != ShiftSession.STATUS_PENDING_HANDOVER_ACCEPTANCE:
+            return Response(
+                {
+                    "detail": (
+                        "Only sessions pending handover acceptance can be reopened."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not session.closed_by or (
+            getattr(session.closed_by, "role", None) != "cashier"
+        ):
+            return Response(
+                {"detail": "Only shifts closed by a cashier can be reopened."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            session = ShiftSession.objects.select_for_update().get(id=session.id)
+
+            if session.status != ShiftSession.STATUS_PENDING_HANDOVER_ACCEPTANCE:
+                return Response(
+                    {
+                        "detail": (
+                            "Only sessions pending handover acceptance can be reopened."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            session.product_counts.update(
+                expected_closing_count=None,
+                closing_count=None,
+                variance=None,
+            )
+
+            session.status = ShiftSession.STATUS_OPENED
+            session.closed_by = None
+            session.closed_at = None
+            session.close_notes = ""
+            session.total_cash_declared = None
+            session.total_digital_declared = None
+            session.save(
+                update_fields=[
+                    "status",
+                    "closed_by",
+                    "closed_at",
+                    "close_notes",
+                    "total_cash_declared",
+                    "total_digital_declared",
+                ]
+            )
+
+        return Response(
+            ShiftSessionSerializer(session, context={"request": request}).data
+        )
+
     @action(detail=True, methods=["get"], url_path="reconciliation")
     def reconciliation(self, request, pk=None):
         session = self.get_object()
@@ -434,9 +501,10 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
             sale__shift_session=session,
             sale__payment_status=Sale.PAYMENT_STATUS_PAID,
         ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
-        unpaid_value = session_sales.filter(
-            payment_status=Sale.PAYMENT_STATUS_UNPAID_APPROVED
-        ).aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
+        unpaid_value = SaleItem.objects.filter(
+            sale__shift_session=session,
+            sale__payment_status=Sale.PAYMENT_STATUS_UNPAID_APPROVED,
+        ).aggregate(total=Sum("subtotal"))["total"] or Decimal("0")
         cash_collected = SalePayment.objects.filter(
             sale__shift_session=session,
             sale__payment_status=Sale.PAYMENT_STATUS_PAID,
@@ -597,9 +665,10 @@ class SaleViewSet(viewsets.ModelViewSet):
         total_money = sales_queryset.aggregate(total=Sum("total_amount"))[
             "total"
         ] or Decimal("0")
-        unpaid_total = sales_queryset.filter(
-            payment_status=Sale.PAYMENT_STATUS_UNPAID_APPROVED
-        ).aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
+        unpaid_total = SaleItem.objects.filter(
+            sale__in=sales_queryset,
+            sale__payment_status=Sale.PAYMENT_STATUS_UNPAID_APPROVED,
+        ).aggregate(total=Sum("subtotal"))["total"] or Decimal("0")
 
         payment_breakdown = (
             SalePayment.objects.filter(

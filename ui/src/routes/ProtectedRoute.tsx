@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAppSelector } from "../store";
-import { getAuthToken } from "../lib/apiClient";
+import { getAuthToken, getRefreshToken } from "../lib/apiClient";
 import type { UserRole } from "../constants/roles";
 
 type Props = {
@@ -13,8 +13,9 @@ export function ProtectedRoute({ allowedRoles = [], children }: Props) {
     const { isAuthenticated, roles } = useAppSelector((s) => s.auth);
 
     // Also check token directly as fallback (in case Redux hasn't rehydrated yet)
-    const token = getAuthToken();
-    const isAuth = isAuthenticated || !!token;
+    const accessToken = getAuthToken();
+    const refreshToken = getRefreshToken();
+    const isAuth = isAuthenticated || !!accessToken || !!refreshToken;
 
     if (!isAuth) {
         return <Navigate to="/login" replace state={{ from: location }} />;

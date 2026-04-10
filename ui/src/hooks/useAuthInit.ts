@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { getAuthToken } from "../lib/apiClient";
+import { clearAuthTokens, getAuthToken, getRefreshToken } from "../lib/apiClient";
 import { setSession, clearSession } from "../store/authSlice";
 import { isValidRole } from "../constants/roles";
 
@@ -11,7 +11,19 @@ export function useAuthInit() {
     const dispatch = useDispatch();
 
     useEffect(() => {
+        const handleUnauthorized = () => {
+            dispatch(clearSession());
+        };
+
+        window.addEventListener("auth:unauthorized", handleUnauthorized);
+        return () => {
+            window.removeEventListener("auth:unauthorized", handleUnauthorized);
+        };
+    }, [dispatch]);
+
+    useEffect(() => {
         const token = getAuthToken();
+        const refreshToken = getRefreshToken();
         if (token) {
             try {
                 // Decode JWT to get user info
@@ -22,9 +34,12 @@ export function useAuthInit() {
 
                     // Check if token is expired
                     if (Date.now() >= exp) {
-                        // Token expired, clear it
-                        dispatch(clearSession());
-                        return;
+                        // If refresh token exists, keep session; interceptor will refresh on first 401.
+                        if (!refreshToken) {
+                            clearAuthTokens();
+                            dispatch(clearSession());
+                            return;
+                        }
                     }
 
                     const userRole = isValidRole(payload.role) ? payload.role : undefined;
@@ -46,8 +61,15 @@ export function useAuthInit() {
                 }
             } catch (error) {
                 console.error("Failed to decode token", error);
-                dispatch(clearSession());
+                if (refreshToken) {
+                    dispatch(setSession({ isAuthenticated: true }));
+                } else {
+                    clearAuthTokens();
+                    dispatch(clearSession());
+                }
             }
+        } else if (refreshToken) {
+            dispatch(setSession({ isAuthenticated: true }));
         }
     }, [dispatch]);
 }

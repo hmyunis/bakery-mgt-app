@@ -1,0 +1,618 @@
+import { useMemo, useState } from "react";
+import { Button, Input, Select, SelectItem, Spinner } from "@heroui/react";
+import { Banknote, CircleAlert, HandCoins, Smartphone, UserRound, Wallet } from "lucide-react";
+import {
+    useAcceptShiftSession,
+    useActiveShiftSession,
+    useCloseShiftSession,
+    useOpenShiftSession,
+    useReopenShiftSession,
+    useShiftSessionReconciliation,
+    useShiftSessions,
+} from "../../hooks/useSales";
+import { useUsers } from "../../hooks/useUsers";
+import { useProducts } from "../../hooks/useProduction";
+import { useAppSelector } from "../../store";
+
+const toWholeNumber = (value: string | undefined, fallback = 0) => {
+    const parsed = Number.parseInt(value || "", 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
+
+export function ShiftHandoverTab() {
+    const { user } = useAppSelector((state) => state.auth);
+    const isAdmin = user?.role === "admin";
+    const currentUserId = user?.id !== undefined ? Number(user.id) : null;
+
+    const [openNotes, setOpenNotes] = useState("");
+    const [closeNotes, setCloseNotes] = useState("");
+    const [acceptanceNotes, setAcceptanceNotes] = useState("");
+    const [cashDeclared, setCashDeclared] = useState("");
+    const [digitalDeclared, setDigitalDeclared] = useState("");
+    const [openingCounts, setOpeningCounts] = useState<Record<number, string>>({});
+    const [selectedCashierId, setSelectedCashierId] = useState<number | null>(null);
+    const [closingCountOverrides, setClosingCountOverrides] = useState<
+        Record<number, Record<number, string>>
+    >({});
+    const [selectedSessionIdOverride, setSelectedSessionIdOverride] = useState<number | null>(null);
+
+    const { data: productsData, isLoading: isLoadingProducts } = useProducts({
+        page: 1,
+        page_size: 500,
+        is_active: true,
+    });
+    const products = useMemo(() => productsData?.results || [], [productsData]);
+
+    const { data: activeData, isLoading: isLoadingActive } = useActiveShiftSession();
+    const openedSession = activeData?.openedSession || null;
+    const pendingSession = activeData?.pendingSession || null;
+
+    const { data: sessionsData } = useShiftSessions({
+        page: 1,
+        page_size: 100,
+    });
+    const { data: cashiersData, isLoading: isLoadingCashiers } = useUsers(
+        {
+            page: 1,
+            pageSize: 200,
+            role: "cashier",
+            ordering: "full_name",
+        },
+        { enabled: isAdmin }
+    );
+    const sessions = useMemo(() => sessionsData?.results || [], [sessionsData]);
+    const cashiers = useMemo(() => cashiersData?.results || [], [cashiersData]);
+    const lastClosed = useMemo(
+        () => sessions.find((s) => s.status === "closed") || null,
+        [sessions]
+    );
+    const resolvedCashierId = useMemo(() => {
+        if (!isAdmin) return currentUserId;
+        if (selectedCashierId && cashiers.some((cashier) => cashier.id === selectedCashierId)) {
+            return selectedCashierId;
+        }
+        return cashiers[0]?.id ?? null;
+    }, [cashiers, currentUserId, isAdmin, selectedCashierId]);
+
+    const openShiftMutation = useOpenShiftSession();
+    const closeShiftMutation = useCloseShiftSession();
+    const acceptShiftMutation = useAcceptShiftSession();
+    const reopenShiftMutation = useReopenShiftSession();
+
+    const defaultOpeningCounts = useMemo(() => {
+        const previousCounts = new Map<number, number>();
+        (lastClosed?.productCounts || []).forEach((countRow) => {
+            previousCounts.set(
+                countRow.product,
+                countRow.closingCount ?? countRow.expectedClosingCount ?? countRow.openingCount
+            );
+        });
+
+        const initial: Record<number, string> = {};
+        products.forEach((product) => {
+            const count = previousCounts.get(product.id) ?? product.stock_quantity ?? 0;
+            initial[product.id] = String(Math.max(0, count));
+        });
+        return initial;
+    }, [lastClosed, products]);
+
+    const resolvedOpeningCounts = useMemo(() => {
+        const initial: Record<number, string> = {};
+        products.forEach((product) => {
+            initial[product.id] =
+                openingCounts[product.id] ?? defaultOpeningCounts[product.id] ?? "0";
+        });
+        return initial;
+    }, [products, openingCounts, defaultOpeningCounts]);
+
+    const resolvedClosingCounts = useMemo(() => {
+        if (!openedSession) {
+            return {} as Record<number, string>;
+        }
+        const overrides = closingCountOverrides[openedSession.id] || {};
+        const initial: Record<number, string> = {};
+        products.forEach((product) => {
+            const row = openedSession.productCounts.find((count) => count.product === product.id);
+            const value = row?.expectedClosingCount ?? row?.openingCount ?? 0;
+            initial[product.id] = overrides[product.id] ?? String(Math.max(0, value));
+        });
+        return initial;
+    }, [openedSession, products, closingCountOverrides]);
+
+    const selectedSessionId =
+        selectedSessionIdOverride ??
+        pendingSession?.id ??
+        openedSession?.id ??
+        lastClosed?.id ??
+        null;
+
+    const { data: reconciliationData, isLoading: isLoadingReconciliation } =
+        useShiftSessionReconciliation(selectedSessionId, {
+            enabled: !!selectedSessionId,
+        });
+
+    const canCloseOpenedSession =
+        !!openedSession &&
+        (isAdmin || (currentUserId !== null && openedSession.openedBy === currentUserId));
+
+    const reconciliationCashierLabel = useMemo(() => {
+        const fullName = (reconciliationData?.session.openedByFullName || "").trim();
+        const username = (reconciliationData?.session.openedByName || "").trim();
+        if (fullName && username) return `${fullName} . ${username}`;
+        return fullName || username || "Unknown";
+    }, [reconciliationData?.session.openedByFullName, reconciliationData?.session.openedByName]);
+
+    const visibleInputClassNames = {
+        input: "!text-slate-900 dark:!text-slate-100",
+        label: "!text-slate-700 dark:!text-slate-300",
+    };
+    const parseDeclaredAmount = (value: string): number | null => {
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+        const parsed = Number.parseFloat(trimmed);
+        if (!Number.isFinite(parsed) || parsed < 0) return null;
+        return parsed;
+    };
+    const parsedCashDeclared = parseDeclaredAmount(cashDeclared);
+    const parsedDigitalDeclared = parseDeclaredAmount(digitalDeclared);
+    const cashDeclaredInvalid = cashDeclared.trim().length > 0 && parsedCashDeclared === null;
+    const digitalDeclaredInvalid =
+        digitalDeclared.trim().length > 0 && parsedDigitalDeclared === null;
+    const canSubmitCloseShift =
+        parsedCashDeclared !== null &&
+        parsedDigitalDeclared !== null &&
+        !closeShiftMutation.isPending;
+
+    const handleOpenShift = async () => {
+        if (isAdmin && !resolvedCashierId) return;
+
+        const payload: {
+            open_notes: string;
+            counts: Array<{ product_id: number; opening_count: number }>;
+            cashier?: number;
+        } = {
+            open_notes: openNotes,
+            counts: products.map((product) => ({
+                product_id: product.id,
+                opening_count: toWholeNumber(resolvedOpeningCounts[product.id], 0),
+            })),
+        };
+        if (isAdmin && resolvedCashierId) {
+            payload.cashier = resolvedCashierId;
+        }
+        await openShiftMutation.mutateAsync(payload);
+        setOpenNotes("");
+    };
+
+    const handleCloseShift = async () => {
+        if (!openedSession) return;
+        if (parsedCashDeclared === null || parsedDigitalDeclared === null) return;
+        const payload = {
+            close_notes: closeNotes,
+            total_cash_declared: parsedCashDeclared,
+            total_digital_declared: parsedDigitalDeclared,
+            counts: products.map((product) => ({
+                product_id: product.id,
+                closing_count: toWholeNumber(resolvedClosingCounts[product.id], 0),
+            })),
+        };
+        await closeShiftMutation.mutateAsync({
+            id: openedSession.id,
+            data: payload,
+        });
+        setCloseNotes("");
+    };
+
+    const handleAcceptShift = async () => {
+        if (!pendingSession) return;
+        await acceptShiftMutation.mutateAsync({
+            id: pendingSession.id,
+            data: { acceptance_notes: acceptanceNotes },
+        });
+        setAcceptanceNotes("");
+    };
+
+    const handleReopenShift = async () => {
+        if (!pendingSession) return;
+        await reopenShiftMutation.mutateAsync({ id: pendingSession.id });
+    };
+
+    if (isLoadingProducts || isLoadingActive || (isAdmin && isLoadingCashiers)) {
+        return (
+            <div className="flex justify-center py-12">
+                <Spinner size="lg" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Shift State
+                </h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    Opened: {openedSession ? `#${openedSession.id}` : "None"} | Pending Acceptance:{" "}
+                    {pendingSession ? `#${pendingSession.id}` : "None"}
+                </p>
+            </div>
+
+            {!openedSession && !pendingSession && (user?.role === "cashier" || isAdmin) && (
+                <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Open Shift
+                    </h3>
+                    {isAdmin && (
+                        <Select
+                            label="Assign Cashier"
+                            selectedKeys={
+                                resolvedCashierId ? new Set([String(resolvedCashierId)]) : new Set()
+                            }
+                            onSelectionChange={(keys) => {
+                                const key = Array.from(keys)[0] as string | undefined;
+                                if (!key) return;
+                                setSelectedCashierId(Number(key));
+                            }}
+                            classNames={{
+                                base: "!w-full md:!w-full lg:!w-80 !text-left",
+                                trigger: "!w-full md:!w-full lg:!w-80 !text-left",
+                                label: "!w-full md:!w-full lg:!w-80 !text-left",
+                                value: "!text-slate-900 dark:!text-slate-100",
+                            }}
+                            isDisabled={!cashiers.length}
+                        >
+                            {cashiers.map((cashier) => (
+                                <SelectItem key={String(cashier.id)}>
+                                    {cashier.fullName || cashier.username}
+                                </SelectItem>
+                            ))}
+                        </Select>
+                    )}
+                    <Input
+                        label="Open Notes"
+                        value={openNotes}
+                        onValueChange={setOpenNotes}
+                        placeholder="Optional notes"
+                        classNames={visibleInputClassNames}
+                    />
+                    <div className="max-h-64 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-800">
+                        <table className="w-full min-w-[420px] text-sm">
+                            <thead className="bg-slate-50 dark:bg-slate-900/50">
+                                <tr>
+                                    <th className="px-3 py-2 text-left">Product</th>
+                                    <th className="px-3 py-2 text-right">Opening Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.map((product) => (
+                                    <tr
+                                        key={product.id}
+                                        className="border-t border-slate-200 dark:border-slate-800"
+                                    >
+                                        <td className="px-3 py-2">{product.name}</td>
+                                        <td className="px-3 py-2">
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                value={resolvedOpeningCounts[product.id] ?? "0"}
+                                                onValueChange={(value) =>
+                                                    setOpeningCounts((prev) => ({
+                                                        ...prev,
+                                                        [product.id]: value,
+                                                    }))
+                                                }
+                                                classNames={{
+                                                    input: "text-right !text-slate-900 dark:!text-slate-100",
+                                                    label: "!text-slate-700 dark:!text-slate-300",
+                                                }}
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <Button
+                        color="primary"
+                        onPress={handleOpenShift}
+                        isLoading={openShiftMutation.isPending}
+                        isDisabled={!products.length || (isAdmin && !resolvedCashierId)}
+                    >
+                        Open Shift Session
+                    </Button>
+                </div>
+            )}
+
+            {openedSession && canCloseOpenedSession && (
+                <div className="space-y-3 rounded-lg border border-warning-300/60 p-4">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Close Shift #{openedSession.id}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            label="Cash Declared"
+                            value={cashDeclared}
+                            onValueChange={setCashDeclared}
+                            isRequired
+                            placeholder="0.00"
+                            isInvalid={cashDeclaredInvalid}
+                            errorMessage={cashDeclaredInvalid ? "Enter a valid amount." : undefined}
+                            classNames={visibleInputClassNames}
+                        />
+                        <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            label="Digital Declared"
+                            value={digitalDeclared}
+                            onValueChange={setDigitalDeclared}
+                            isRequired
+                            placeholder="0.00"
+                            isInvalid={digitalDeclaredInvalid}
+                            errorMessage={
+                                digitalDeclaredInvalid ? "Enter a valid amount." : undefined
+                            }
+                            classNames={visibleInputClassNames}
+                        />
+                    </div>
+                    <Input
+                        label="Close Notes"
+                        value={closeNotes}
+                        onValueChange={setCloseNotes}
+                        placeholder="Optional notes"
+                        classNames={visibleInputClassNames}
+                    />
+                    <div className="max-h-64 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-800">
+                        <table className="w-full min-w-[420px] text-sm">
+                            <thead className="bg-slate-50 dark:bg-slate-900/50">
+                                <tr>
+                                    <th className="px-3 py-2 text-left">Product</th>
+                                    <th className="px-3 py-2 text-right">Closing Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.map((product) => (
+                                    <tr
+                                        key={product.id}
+                                        className="border-t border-slate-200 dark:border-slate-800"
+                                    >
+                                        <td className="px-3 py-2">{product.name}</td>
+                                        <td className="px-3 py-2">
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                value={resolvedClosingCounts[product.id] ?? "0"}
+                                                onValueChange={(value) =>
+                                                    setClosingCountOverrides((prev) => {
+                                                        if (!openedSession) return prev;
+                                                        return {
+                                                            ...prev,
+                                                            [openedSession.id]: {
+                                                                ...(prev[openedSession.id] || {}),
+                                                                [product.id]: value,
+                                                            },
+                                                        };
+                                                    })
+                                                }
+                                                classNames={{
+                                                    input: "text-right !text-slate-900 dark:!text-slate-100",
+                                                    label: "!text-slate-700 dark:!text-slate-300",
+                                                }}
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <Button
+                        color="warning"
+                        onPress={handleCloseShift}
+                        isLoading={closeShiftMutation.isPending}
+                        isDisabled={!canSubmitCloseShift}
+                    >
+                        Close & Send for Acceptance
+                    </Button>
+                </div>
+            )}
+
+            {pendingSession && isAdmin && (
+                <div className="space-y-3 rounded-lg border border-primary-300/60 p-4">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Pending Handover Acceptance #{pendingSession.id}
+                    </h3>
+                    <Input
+                        label="Acceptance Notes"
+                        value={acceptanceNotes}
+                        onValueChange={setAcceptanceNotes}
+                        placeholder="Optional notes"
+                        classNames={visibleInputClassNames}
+                    />
+                    <Button
+                        color="primary"
+                        onPress={handleAcceptShift}
+                        isLoading={acceptShiftMutation.isPending}
+                        isDisabled={reopenShiftMutation.isPending}
+                    >
+                        Accept Handover
+                    </Button>
+                    <Button
+                        variant="flat"
+                        color="warning"
+                        onPress={handleReopenShift}
+                        isLoading={reopenShiftMutation.isPending}
+                        isDisabled={acceptShiftMutation.isPending}
+                    >
+                        Re-open Shift
+                    </Button>
+                </div>
+            )}
+
+            <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Reconciliation Report
+                </h3>
+                <Select
+                    label="Session"
+                    selectedKeys={
+                        selectedSessionId ? new Set([String(selectedSessionId)]) : new Set()
+                    }
+                    onSelectionChange={(keys) => {
+                        const key = Array.from(keys)[0] as string | undefined;
+                        if (!key) return;
+                        setSelectedSessionIdOverride(Number(key));
+                    }}
+                    classNames={{
+                        base: "!w-full md:!w-full lg:!w-80 !text-left",
+                        trigger: "!w-full md:!w-full lg:!w-80 !text-left",
+                        label: "!w-full md:!w-full lg:!w-80 !text-left",
+                        value: "!text-slate-900 dark:!text-slate-100",
+                    }}
+                >
+                    {sessions.map((session) => (
+                        <SelectItem
+                            key={String(session.id)}
+                            textValue={`#${session.id} • ${session.status} • ${new Date(session.openedAt).toLocaleString()}`}
+                        >
+                            #{session.id} • {session.status} •{" "}
+                            {new Date(session.openedAt).toLocaleString()}
+                        </SelectItem>
+                    ))}
+                </Select>
+
+                {isLoadingReconciliation ? (
+                    <div className="flex justify-center py-6">
+                        <Spinner size="md" />
+                    </div>
+                ) : !reconciliationData ? (
+                    <p className="text-sm text-slate-500">
+                        Select a session to view reconciliation.
+                    </p>
+                ) : (
+                    <div className="space-y-3 [&_th]:!text-slate-700 dark:[&_th]:!text-slate-300 [&_td]:!text-slate-900 dark:[&_td]:!text-slate-100">
+                        <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                            <p className="flex items-center gap-1 text-xs text-slate-500">
+                                <UserRound className="h-3.5 w-3.5" />
+                                Cashier
+                            </p>
+                            <p className="text-sm font-semibold !text-slate-900 dark:!text-slate-100">
+                                {reconciliationCashierLabel}
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                            <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                                <p className="flex items-center gap-1 text-xs text-slate-500">
+                                    <Wallet className="h-3.5 w-3.5" />
+                                    Collected Total
+                                </p>
+                                <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
+                                    ETB {reconciliationData.money.collectedTotal.toFixed(2)}
+                                </p>
+                            </div>
+                            <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                                <p className="flex items-center gap-1 text-xs text-slate-500">
+                                    <HandCoins className="h-3.5 w-3.5" />
+                                    Unpaid Value
+                                </p>
+                                <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
+                                    ETB {reconciliationData.money.unpaidValue.toFixed(2)}
+                                </p>
+                            </div>
+                            <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                                <p className="flex items-center gap-1 text-xs text-slate-500">
+                                    <CircleAlert className="h-3.5 w-3.5" />
+                                    Variance Value
+                                </p>
+                                <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
+                                    ETB {reconciliationData.totals.varianceTotalValue.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                            <div className="rounded-md border border-slate-200 px-3 py-2 dark:border-slate-800">
+                                <p className="flex items-center gap-1 text-xs text-slate-500">
+                                    <Banknote className="h-3.5 w-3.5" />
+                                    Cash Declared
+                                </p>
+                                <p className="text-sm font-semibold !text-slate-900 dark:!text-slate-100">
+                                    ETB {reconciliationData.money.cashDeclared.toFixed(2)}
+                                </p>
+                            </div>
+                            <div className="rounded-md border border-slate-200 px-3 py-2 dark:border-slate-800">
+                                <p className="flex items-center gap-1 text-xs text-slate-500">
+                                    <Smartphone className="h-3.5 w-3.5" />
+                                    Digital Declared
+                                </p>
+                                <p className="text-sm font-semibold !text-slate-900 dark:!text-slate-100">
+                                    ETB {reconciliationData.money.digitalDeclared.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="max-h-72 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-800">
+                            <table className="w-full min-w-[900px] text-sm text-slate-900 dark:text-slate-100">
+                                <thead className="bg-slate-50 dark:bg-slate-900/50">
+                                    <tr>
+                                        <th className="px-3 py-2 text-left">Product</th>
+                                        <th className="px-3 py-2 text-right">Open</th>
+                                        <th className="px-3 py-2 text-right">Produced</th>
+                                        <th className="px-3 py-2 text-right">Paid Sold</th>
+                                        <th className="px-3 py-2 text-right">Unpaid</th>
+                                        <th className="px-3 py-2 text-right">Expected</th>
+                                        <th className="px-3 py-2 text-right">Counted</th>
+                                        <th className="px-3 py-2 text-right">Variance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reconciliationData.products.map((row) => {
+                                        const hasAnyNonZeroValue = [
+                                            row.producedInShift,
+                                            row.paidSoldQty,
+                                            row.unpaidQty,
+                                        ].some((value) => value !== 0);
+
+                                        return (
+                                            <tr
+                                                key={row.productId}
+                                                className={`border-t border-slate-200 dark:border-slate-800 ${
+                                                    hasAnyNonZeroValue
+                                                        ? "bg-sky-100 dark:bg-sky-600/10"
+                                                        : "bg-slate-50/30 dark:bg-slate-900/20"
+                                                }`}
+                                            >
+                                                <td className="px-3 py-2">{row.productName}</td>
+                                                <td className="px-3 py-2 text-right">
+                                                    {row.openingCount}
+                                                </td>
+                                                <td className="px-3 py-2 text-right">
+                                                    {row.producedInShift}
+                                                </td>
+                                                <td className="px-3 py-2 text-right">
+                                                    {row.paidSoldQty}
+                                                </td>
+                                                <td className="px-3 py-2 text-right">
+                                                    {row.unpaidQty}
+                                                </td>
+                                                <td className="px-3 py-2 text-right">
+                                                    {row.expectedClosingCount}
+                                                </td>
+                                                <td className="px-3 py-2 text-right">
+                                                    {row.countedClosingCount ?? "-"}
+                                                </td>
+                                                <td className="px-3 py-2 text-right">
+                                                    {row.varianceQty ?? "-"}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

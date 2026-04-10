@@ -1,5 +1,4 @@
-import { apiClient } from "../lib/apiClient";
-import { setAuthToken } from "../lib/apiClient";
+import { apiClient, clearAuthTokens, setAuthToken, setRefreshToken } from "../lib/apiClient";
 import type { ApiResponse, ApiError } from "../types/api";
 
 export interface LoginCredentials {
@@ -97,6 +96,7 @@ class AuthService {
             }
 
             const accessToken = loginData?.access;
+            const refreshToken = loginData?.refresh;
 
             if (!accessToken || typeof accessToken !== "string") {
                 console.error("No valid access token in response:", {
@@ -109,6 +109,7 @@ class AuthService {
 
             // Save token to localStorage
             setAuthToken(accessToken);
+            setRefreshToken(typeof refreshToken === "string" ? refreshToken : null);
 
             // Verify it was saved
             const savedToken = localStorage.getItem("bakery_auth_token");
@@ -142,7 +143,7 @@ class AuthService {
     }
 
     async logout(): Promise<void> {
-        setAuthToken(null);
+        clearAuthTokens();
     }
 
     async getCurrentUser(): Promise<UserProfile> {
@@ -173,15 +174,28 @@ class AuthService {
     }
 
     async refreshToken(refreshToken: string): Promise<{ access: string }> {
-        const response = await apiClient.post<{ access: string }>("/users/auth/refresh/", {
+        const response = await apiClient.post<{
+            access?: string;
+            refresh?: string;
+            data?: { access?: string; refresh?: string };
+        }>("/users/auth/refresh/", {
             refresh: refreshToken,
         });
 
-        if (response.data.access) {
-            setAuthToken(response.data.access);
+        const responseData = response.data;
+        const tokenData =
+            responseData?.data && typeof responseData.data === "object"
+                ? responseData.data
+                : responseData;
+
+        if (tokenData?.access) {
+            setAuthToken(tokenData.access);
+            if (tokenData.refresh) {
+                setRefreshToken(tokenData.refresh);
+            }
         }
 
-        return response.data;
+        return { access: tokenData?.access || "" };
     }
 
     async updateProfile(data: {

@@ -120,6 +120,7 @@ export interface ShiftSession {
     status: ShiftSessionStatus;
     openedBy: number;
     openedByName?: string;
+    openedByFullName?: string | null;
     openedAt: string;
     openNotes?: string;
     closedBy?: number | null;
@@ -144,6 +145,7 @@ export interface ShiftSessionCountInput {
 
 export interface OpenShiftSessionData {
     open_notes?: string;
+    cashier?: number;
     counts: ShiftSessionCountInput[];
 }
 

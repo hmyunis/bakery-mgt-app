@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { authService, type LoginCredentials } from "../services/authService";
 import { clearSession, setSession } from "../store/authSlice";
-import { setAuthToken } from "../lib/apiClient";
+import { clearAuthTokens, getAuthToken, getRefreshToken } from "../lib/apiClient";
 import { isValidRole } from "../constants/roles";
 import type { ApiError } from "../types/api";
 
@@ -140,7 +140,7 @@ export const useAuth = () => {
     } = useQuery({
         queryKey: ["currentUser"],
         queryFn: () => authService.getCurrentUser(),
-        enabled: !!localStorage.getItem("bakery_auth_token"),
+        enabled: !!getAuthToken() || !!getRefreshToken(),
         retry: false,
     });
 
@@ -167,7 +167,7 @@ export const useAuth = () => {
     // Handle query errors (onError is deprecated in TanStack Query v5)
     useEffect(() => {
         if (currentUserError) {
-            setAuthToken(null);
+            clearAuthTokens();
             dispatch(clearSession());
         }
     }, [currentUserError, dispatch]);
