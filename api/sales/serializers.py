@@ -168,33 +168,34 @@ class ShiftSessionOpenSerializer(serializers.Serializer):
         counts = validated_data.get("counts", [])
         request = self.context["request"]
         target_cashier = validated_data.get("cashier") or request.user
-
-        if ShiftSession.objects.filter(
-            status=ShiftSession.STATUS_PENDING_HANDOVER_ACCEPTANCE
-        ).exists():
-            raise serializers.ValidationError(
-                (
-                    "Cannot open new shift while another shift is "
-                    "pending handover acceptance."
-                )
-            )
-
-        latest_session = ShiftSession.objects.order_by("-opened_at").first()
-        previous_closed_session = (
-            ShiftSession.objects.filter(status=ShiftSession.STATUS_CLOSED)
-            .order_by("-opened_at")
-            .first()
+        open_exists = (
+            ShiftSession.objects.select_for_update()
+            .filter(status=ShiftSession.STATUS_OPENED)
+            .exists()
         )
-
-        if latest_session and latest_session.status != ShiftSession.STATUS_CLOSED:
+        if open_exists:
             raise serializers.ValidationError(
-                "Cannot open new shift while previous shift is not fully closed."
+                "Cannot open new shift while another shift is currently open."
             )
+
+        pending_count = (
+            ShiftSession.objects.select_for_update()
+            .filter(status=ShiftSession.STATUS_PENDING_HANDOVER_ACCEPTANCE)
+            .count()
+        )
+        if pending_count >= 3:
+            raise serializers.ValidationError(
+                "Cannot open new shift while 3 shifts are pending handover acceptance."
+            )
+
+        previous_session = (
+            ShiftSession.objects.select_for_update().order_by("-opened_at").first()
+        )
 
         session = ShiftSession.objects.create(
             opened_by=target_cashier,
             open_notes=validated_data.get("open_notes", ""),
-            previous_session=previous_closed_session,
+            previous_session=previous_session,
             status=ShiftSession.STATUS_OPENED,
         )
 

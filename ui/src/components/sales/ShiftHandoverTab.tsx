@@ -22,10 +22,12 @@ export function ShiftHandoverTab() {
     const currentUserId = user?.id !== undefined ? Number(user.id) : null;
 
     const [openNotes, setOpenNotes] = useState("");
-    const [closeNotes, setCloseNotes] = useState("");
+    const [closeNotesBySession, setCloseNotesBySession] = useState<Record<number, string>>({});
     const [acceptanceNotes, setAcceptanceNotes] = useState("");
-    const [cashDeclared, setCashDeclared] = useState("0");
-    const [digitalDeclared, setDigitalDeclared] = useState("0");
+    const [cashDeclaredBySession, setCashDeclaredBySession] = useState<Record<number, string>>({});
+    const [digitalDeclaredBySession, setDigitalDeclaredBySession] = useState<
+        Record<number, string>
+    >({});
     const [openingCounts, setOpeningCounts] = useState<Record<number, string>>({});
     const [closingCountOverrides, setClosingCountOverrides] = useState<
         Record<number, Record<number, string>>
@@ -48,6 +50,10 @@ export function ShiftHandoverTab() {
         page_size: 100,
     });
     const sessions = useMemo(() => sessionsData?.results || [], [sessionsData]);
+    const pendingSessionCount = useMemo(
+        () => sessions.filter((session) => session.status === "pending_handover_acceptance").length,
+        [sessions]
+    );
     const lastClosed = useMemo(
         () => sessions.find((s) => s.status === "closed") || null,
         [sessions]
@@ -91,11 +97,27 @@ export function ShiftHandoverTab() {
         const initial: Record<number, string> = {};
         products.forEach((product) => {
             const row = openedSession.productCounts.find((count) => count.product === product.id);
-            const value = row?.expectedClosingCount ?? row?.openingCount ?? 0;
+            const value = row?.closingCount ?? row?.expectedClosingCount ?? row?.openingCount ?? 0;
             initial[product.id] = overrides[product.id] ?? String(Math.max(0, value));
         });
         return initial;
     }, [openedSession, products, closingCountOverrides]);
+    const resolvedCloseNotes = openedSession
+        ? (closeNotesBySession[openedSession.id] ?? openedSession.closeNotes ?? "")
+        : "";
+    const resolvedCashDeclared = openedSession
+        ? (cashDeclaredBySession[openedSession.id] ??
+          (openedSession.totalCashDeclared !== null && openedSession.totalCashDeclared !== undefined
+              ? openedSession.totalCashDeclared.toFixed(2)
+              : "0"))
+        : "0";
+    const resolvedDigitalDeclared = openedSession
+        ? (digitalDeclaredBySession[openedSession.id] ??
+          (openedSession.totalDigitalDeclared !== null &&
+          openedSession.totalDigitalDeclared !== undefined
+              ? openedSession.totalDigitalDeclared.toFixed(2)
+              : "0"))
+        : "0";
 
     const selectedSessionId =
         selectedSessionIdOverride ??
@@ -119,6 +141,12 @@ export function ShiftHandoverTab() {
             (currentUserId !== null &&
                 pendingSession.openedBy !== currentUserId &&
                 user.role === "cashier"));
+    const hasDeclaredTotalMismatch = useMemo(() => {
+        if (!reconciliationData) return false;
+        const declaredTotal =
+            reconciliationData.money.cashDeclared + reconciliationData.money.digitalDeclared;
+        return Math.abs(declaredTotal - reconciliationData.money.collectedTotal) > 0.009;
+    }, [reconciliationData]);
 
     const visibleInputClassNames = {
         input: "!text-slate-900 dark:!text-slate-100",
@@ -140,9 +168,9 @@ export function ShiftHandoverTab() {
     const handleCloseShift = async () => {
         if (!openedSession) return;
         const payload = {
-            close_notes: closeNotes,
-            total_cash_declared: Number.parseFloat(cashDeclared || "0") || 0,
-            total_digital_declared: Number.parseFloat(digitalDeclared || "0") || 0,
+            close_notes: resolvedCloseNotes,
+            total_cash_declared: Number.parseFloat(resolvedCashDeclared || "0") || 0,
+            total_digital_declared: Number.parseFloat(resolvedDigitalDeclared || "0") || 0,
             counts: products.map((product) => ({
                 product_id: product.id,
                 closing_count: toWholeNumber(resolvedClosingCounts[product.id], 0),
@@ -152,7 +180,6 @@ export function ShiftHandoverTab() {
             id: openedSession.id,
             data: payload,
         });
-        setCloseNotes("");
     };
 
     const handleAcceptShift = async () => {
@@ -184,11 +211,17 @@ export function ShiftHandoverTab() {
                 </p>
             </div>
 
-            {!openedSession && !pendingSession && user?.role === "cashier" && (
+            {!openedSession && user?.role === "cashier" && (
                 <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         Open Shift
                     </h3>
+                    {pendingSessionCount >= 3 && (
+                        <p className="text-sm text-danger-600 dark:text-danger-400">
+                            You cannot open a new shift while 3 sessions are pending handover
+                            acceptance.
+                        </p>
+                    )}
                     <Input
                         label="Open Notes"
                         value={openNotes}
@@ -237,7 +270,7 @@ export function ShiftHandoverTab() {
                         color="primary"
                         onPress={handleOpenShift}
                         isLoading={openShiftMutation.isPending}
-                        isDisabled={!products.length}
+                        isDisabled={!products.length || pendingSessionCount >= 3}
                     >
                         Open Shift Session
                     </Button>
@@ -254,23 +287,41 @@ export function ShiftHandoverTab() {
                             type="number"
                             min={0}
                             label="Cash Declared"
-                            value={cashDeclared}
-                            onValueChange={setCashDeclared}
+                            value={resolvedCashDeclared}
+                            onValueChange={(value) => {
+                                if (!openedSession) return;
+                                setCashDeclaredBySession((prev) => ({
+                                    ...prev,
+                                    [openedSession.id]: value,
+                                }));
+                            }}
                             classNames={visibleInputClassNames}
                         />
                         <Input
                             type="number"
                             min={0}
                             label="Digital Declared"
-                            value={digitalDeclared}
-                            onValueChange={setDigitalDeclared}
+                            value={resolvedDigitalDeclared}
+                            onValueChange={(value) => {
+                                if (!openedSession) return;
+                                setDigitalDeclaredBySession((prev) => ({
+                                    ...prev,
+                                    [openedSession.id]: value,
+                                }));
+                            }}
                             classNames={visibleInputClassNames}
                         />
                     </div>
                     <Input
                         label="Close Notes"
-                        value={closeNotes}
-                        onValueChange={setCloseNotes}
+                        value={resolvedCloseNotes}
+                        onValueChange={(value) => {
+                            if (!openedSession) return;
+                            setCloseNotesBySession((prev) => ({
+                                ...prev,
+                                [openedSession.id]: value,
+                            }));
+                        }}
                         placeholder="Optional notes"
                         classNames={visibleInputClassNames}
                     />
@@ -395,7 +446,13 @@ export function ShiftHandoverTab() {
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
                                 <p className="text-xs text-slate-500">Collected Total</p>
-                                <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
+                                <p
+                                    className={`text-lg font-semibold ${
+                                        hasDeclaredTotalMismatch
+                                            ? "!text-red-600 dark:!text-red-400"
+                                            : "!text-slate-900 dark:!text-slate-100"
+                                    }`}
+                                >
                                     ETB {reconciliationData.money.collectedTotal.toFixed(2)}
                                 </p>
                             </div>

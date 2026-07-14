@@ -14,13 +14,7 @@ sw.addEventListener("activate", (event) => {
     event.waitUntil(sw.clients.claim());
 });
 
-// 3. Handle Fetch: NO CACHING - All requests pass through to network
-sw.addEventListener("fetch", (event) => {
-    // Always fetch from network, never use cache
-    event.respondWith(fetch(event.request));
-});
-
-// 4. Handle Incoming Push Notifications
+// 3. Handle Incoming Push Notifications
 sw.addEventListener("push", (event) => {
     if (!event.data) return;
 
@@ -48,7 +42,7 @@ sw.addEventListener("push", (event) => {
     }
 });
 
-// 5. Handle Notification Click (The Deep Linking Logic)
+// 4. Handle Notification Click (The Deep Linking Logic)
 sw.addEventListener("notificationclick", (event) => {
     event.notification.close();
 

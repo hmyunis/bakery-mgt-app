@@ -20,7 +20,16 @@ from notifications.models import (
     PushSubscription,
 )
 from production import models as production_models
-from sales.models import DailyClosing, PaymentMethod, Sale, SaleItem, SalePayment
+from sales.models import (
+    DailyClosing,
+    PaymentMethod,
+    Sale,
+    SaleItem,
+    SalePayment,
+    ShiftSession,
+    ShiftSessionProductCount,
+)
+from treasury import models as treasury_models
 from users.models import (
     AttendanceRecord,
     Employee,
@@ -35,7 +44,7 @@ random.seed(42)
 
 
 class Command(BaseCommand):
-    help = "Erase all data and seed 10 dummy rows for every table."
+    help = "Erase all data and seed mock rows for the current app schema."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -98,7 +107,12 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("Seeding sales + payments..."))
         payment_methods = self._seed_payment_methods(count)
-        sales = self._seed_sales(users, count)
+        bank_accounts = self._seed_bank_accounts(payment_methods, count)
+        self._seed_bank_transactions(bank_accounts, users, count)
+        self._seed_expenses(bank_accounts, users, count)
+        shift_sessions = self._seed_shift_sessions(users, count)
+        self._seed_shift_session_product_counts(shift_sessions, products, count)
+        sales = self._seed_sales(users, shift_sessions, count)
         self._seed_sale_items(sales, products, count)
         self._seed_sale_payments(sales, payment_methods, count)
 
@@ -338,13 +352,142 @@ class Command(BaseCommand):
             methods.append(method)
         return methods
 
-    def _seed_sales(self, users, count):
+    def _seed_bank_accounts(self, payment_methods, count):
+        bank_names = [
+            "Commercial Bank of Ethiopia",
+            "Awash Bank",
+            "Dashen Bank",
+            "Bank of Abyssinia",
+            "Cooperative Bank of Oromia",
+        ]
+        accounts = []
+        for i in range(count):
+            account = treasury_models.BankAccount.objects.create(
+                name=f"Operating Account {i + 1}",
+                bank_name=bank_names[i % len(bank_names)],
+                account_holder="Sunrise Bakery PLC",
+                account_number=f"1000{i + 1:06d}",
+                balance=Decimal("50000.00") + Decimal(i * 2500),
+                notes="Seeded bank account",
+                is_active=i % 7 != 6,
+            )
+            account.linked_payment_methods.add(
+                payment_methods[i % len(payment_methods)]
+            )
+            accounts.append(account)
+        return accounts
+
+    def _seed_bank_transactions(self, bank_accounts, users, count):
+        for i in range(count):
+            treasury_models.BankTransaction.objects.create(
+                account=bank_accounts[i % len(bank_accounts)],
+                transaction_type=(
+                    treasury_models.BankTransaction.TYPE_DEPOSIT
+                    if i % 2 == 0
+                    else treasury_models.BankTransaction.TYPE_WITHDRAWAL
+                ),
+                amount=Decimal("1000.00") + Decimal(i * 125),
+                notes="Seeded transaction",
+                recorded_by=users[i % len(users)],
+            )
+
+    def _seed_expenses(self, bank_accounts, users, count):
+        expense_titles = [
+            "Utility Bill",
+            "Packaging",
+            "Equipment Repair",
+            "Transport",
+            "Cleaning Supplies",
+        ]
+        for i in range(count):
+            is_paid = i % 2 == 0
+            treasury_models.Expense.objects.create(
+                title=f"{expense_titles[i % len(expense_titles)]} #{i + 1}",
+                amount=Decimal("750.00") + Decimal(i * 50),
+                status=(
+                    treasury_models.Expense.STATUS_PAID
+                    if is_paid
+                    else treasury_models.Expense.STATUS_PENDING
+                ),
+                account=bank_accounts[i % len(bank_accounts)] if is_paid else None,
+                notes="Seeded expense",
+                recorded_by=users[i % len(users)],
+            )
+
+    def _seed_shift_sessions(self, users, count):
+        sessions = []
+        previous_session = None
+        now = timezone.now()
+        for i in range(count):
+            mod = i % 3
+            status = (
+                ShiftSession.STATUS_OPENED
+                if mod == 0
+                else ShiftSession.STATUS_PENDING_HANDOVER_ACCEPTANCE
+                if mod == 1
+                else ShiftSession.STATUS_CLOSED
+            )
+            session = ShiftSession.objects.create(
+                opened_by=users[i % len(users)],
+                open_notes="Seeded shift session",
+                closed_by=users[(i + 1) % len(users)] if mod in (1, 2) else None,
+                closed_at=now - timedelta(hours=1) if mod in (1, 2) else None,
+                close_notes="Seeded close notes" if mod in (1, 2) else "",
+                total_cash_declared=Decimal("1200.00") + Decimal(i * 20)
+                if mod in (1, 2)
+                else None,
+                total_digital_declared=Decimal("300.00") + Decimal(i * 10)
+                if mod in (1, 2)
+                else None,
+                accepted_by=users[(i + 2) % len(users)] if mod == 2 else None,
+                accepted_at=now if mod == 2 else None,
+                acceptance_notes="Seeded acceptance notes" if mod == 2 else "",
+                previous_session=previous_session,
+                status=status,
+            )
+            sessions.append(session)
+            previous_session = session
+        return sessions
+
+    def _seed_shift_session_product_counts(self, shift_sessions, products, count):
+        for i in range(count):
+            opening_count = 20 + i
+            closing_count = opening_count - (i % 4) if i % 3 != 0 else None
+            expected_closing_count = opening_count - (i % 3)
+            ShiftSessionProductCount.objects.create(
+                session=shift_sessions[i % len(shift_sessions)],
+                product=products[(i * 2) % len(products)],
+                opening_count=opening_count,
+                expected_closing_count=expected_closing_count,
+                closing_count=closing_count,
+                variance=(
+                    closing_count - expected_closing_count
+                    if closing_count is not None
+                    else None
+                ),
+            )
+
+    def _seed_sales(self, users, shift_sessions, count):
         sales = []
         for i in range(count):
+            payment_status = (
+                Sale.PAYMENT_STATUS_PAID
+                if i % 4 != 3
+                else Sale.PAYMENT_STATUS_UNPAID_APPROVED
+            )
             sale = Sale.objects.create(
                 cashier=users[i % len(users)],
+                shift_session=shift_sessions[i % len(shift_sessions)],
+                payment_status=payment_status,
+                unpaid_reason="Approved staff credit"
+                if payment_status != Sale.PAYMENT_STATUS_PAID
+                else "",
+                approved_by=users[(i + 1) % len(users)]
+                if payment_status != Sale.PAYMENT_STATUS_PAID
+                else None,
                 total_amount=Decimal("0.00"),
                 customer_name=f"Customer {i + 1}",
+                receipt_issued=i % 2 == 0,
             )
             sales.append(sale)
         return sales
@@ -368,6 +511,8 @@ class Command(BaseCommand):
     def _seed_sale_payments(self, sales, payment_methods, count):
         for i in range(count):
             sale = sales[i % len(sales)]
+            if sale.payment_status != Sale.PAYMENT_STATUS_PAID:
+                continue
             amount = sale.total_amount if sale.total_amount > 0 else Decimal("50.00")
             SalePayment.objects.create(
                 sale=sale,
@@ -495,20 +640,17 @@ class Command(BaseCommand):
         ]
         templates = []
         for i in range(count):
-            # Create realistic shift times
-            start_hour = (6 + i * 2) % 24  # Start at 6, 8, 10, ..., 20
-            end_hour = (start_hour + 8) % 24  # 8-hour shifts
-            if end_hour <= start_hour:
-                end_hour += 24  # Handle overnight shifts
+            start_total_minutes = (i * 37) % (24 * 60)
+            end_total_minutes = (start_total_minutes + (8 * 60)) % (24 * 60)
+            start_hour, start_minute = divmod(start_total_minutes, 60)
+            end_hour, end_minute = divmod(end_total_minutes, 60)
 
             template = ShiftTemplate.objects.create(
                 name=shift_names[i % len(shift_names)]
                 + ("" if i < len(shift_names) else f" {i + 1}"),
-                start_time=time(start_hour, 0),
-                end_time=time(
-                    end_hour % 24, 0
-                ),  # Store time-of-day; overnight is implied by schedule.
-                is_active=i % 10 != 9,  # Make 1 in 10 inactive
+                start_time=time(start_hour, start_minute),
+                end_time=time(end_hour, end_minute),
+                is_active=i % 10 != 9,
             )
             templates.append(template)
         return templates

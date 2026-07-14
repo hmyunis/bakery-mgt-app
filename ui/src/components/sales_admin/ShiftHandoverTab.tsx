@@ -25,10 +25,12 @@ export function ShiftHandoverTab() {
     const currentUserId = user?.id !== undefined ? Number(user.id) : null;
 
     const [openNotes, setOpenNotes] = useState("");
-    const [closeNotes, setCloseNotes] = useState("");
+    const [closeNotesBySession, setCloseNotesBySession] = useState<Record<number, string>>({});
     const [acceptanceNotes, setAcceptanceNotes] = useState("");
-    const [cashDeclared, setCashDeclared] = useState("");
-    const [digitalDeclared, setDigitalDeclared] = useState("");
+    const [cashDeclaredBySession, setCashDeclaredBySession] = useState<Record<number, string>>({});
+    const [digitalDeclaredBySession, setDigitalDeclaredBySession] = useState<
+        Record<number, string>
+    >({});
     const [openingCounts, setOpeningCounts] = useState<Record<number, string>>({});
     const [selectedCashierId, setSelectedCashierId] = useState<number | null>(null);
     const [closingCountOverrides, setClosingCountOverrides] = useState<
@@ -61,9 +63,22 @@ export function ShiftHandoverTab() {
         { enabled: isAdmin }
     );
     const sessions = useMemo(() => sessionsData?.results || [], [sessionsData]);
+    const pendingSessionCount = useMemo(
+        () => sessions.filter((session) => session.status === "pending_handover_acceptance").length,
+        [sessions]
+    );
     const cashiers = useMemo(() => cashiersData?.results || [], [cashiersData]);
     const lastClosed = useMemo(
         () => sessions.find((s) => s.status === "closed") || null,
+        [sessions]
+    );
+    const openingComparisonSource = useMemo(
+        () =>
+            sessions.find(
+                (session) =>
+                    session.status !== "opened" &&
+                    session.productCounts.some((countRow) => countRow.closingCount !== null)
+            ) || null,
         [sessions]
     );
     const resolvedCashierId = useMemo(() => {
@@ -113,11 +128,27 @@ export function ShiftHandoverTab() {
         const initial: Record<number, string> = {};
         products.forEach((product) => {
             const row = openedSession.productCounts.find((count) => count.product === product.id);
-            const value = row?.expectedClosingCount ?? row?.openingCount ?? 0;
+            const value = row?.closingCount ?? row?.expectedClosingCount ?? row?.openingCount ?? 0;
             initial[product.id] = overrides[product.id] ?? String(Math.max(0, value));
         });
         return initial;
     }, [openedSession, products, closingCountOverrides]);
+    const resolvedCloseNotes = openedSession
+        ? (closeNotesBySession[openedSession.id] ?? openedSession.closeNotes ?? "")
+        : "";
+    const resolvedCashDeclared = openedSession
+        ? (cashDeclaredBySession[openedSession.id] ??
+          (openedSession.totalCashDeclared !== null && openedSession.totalCashDeclared !== undefined
+              ? openedSession.totalCashDeclared.toFixed(2)
+              : ""))
+        : "";
+    const resolvedDigitalDeclared = openedSession
+        ? (digitalDeclaredBySession[openedSession.id] ??
+          (openedSession.totalDigitalDeclared !== null &&
+          openedSession.totalDigitalDeclared !== undefined
+              ? openedSession.totalDigitalDeclared.toFixed(2)
+              : ""))
+        : "";
 
     const selectedSessionId =
         selectedSessionIdOverride ??
@@ -125,6 +156,43 @@ export function ShiftHandoverTab() {
         openedSession?.id ??
         lastClosed?.id ??
         null;
+    const openingComparisonRows = useMemo(() => {
+        if (!openingComparisonSource) return [];
+
+        return products.map((product) => {
+            const previousCountRow = openingComparisonSource.productCounts.find(
+                (countRow) => countRow.product === product.id
+            );
+            const previousClosingCount =
+                previousCountRow?.closingCount ??
+                previousCountRow?.expectedClosingCount ??
+                previousCountRow?.openingCount ??
+                0;
+            const enteredOpeningCount = toWholeNumber(resolvedOpeningCounts[product.id], 0);
+            const variance = enteredOpeningCount - previousClosingCount;
+
+            return {
+                productId: product.id,
+                productName: product.name,
+                previousClosingCount,
+                enteredOpeningCount,
+                variance,
+                hasMismatch: variance !== 0,
+            };
+        });
+    }, [openingComparisonSource, products, resolvedOpeningCounts]);
+    const openingMismatchSummary = useMemo(() => {
+        const mismatches = openingComparisonRows.filter((row) => row.hasMismatch);
+        return {
+            mismatchCount: mismatches.length,
+            shortageUnits: mismatches
+                .filter((row) => row.variance < 0)
+                .reduce((sum, row) => sum + Math.abs(row.variance), 0),
+            excessUnits: mismatches
+                .filter((row) => row.variance > 0)
+                .reduce((sum, row) => sum + row.variance, 0),
+        };
+    }, [openingComparisonRows]);
 
     const { data: reconciliationData, isLoading: isLoadingReconciliation } =
         useShiftSessionReconciliation(selectedSessionId, {
@@ -141,6 +209,12 @@ export function ShiftHandoverTab() {
         if (fullName && username) return `${fullName} . ${username}`;
         return fullName || username || "Unknown";
     }, [reconciliationData?.session.openedByFullName, reconciliationData?.session.openedByName]);
+    const hasDeclaredTotalMismatch = useMemo(() => {
+        if (!reconciliationData) return false;
+        const declaredTotal =
+            reconciliationData.money.cashDeclared + reconciliationData.money.digitalDeclared;
+        return Math.abs(declaredTotal - reconciliationData.money.collectedTotal) > 0.009;
+    }, [reconciliationData]);
 
     const visibleInputClassNames = {
         input: "!text-slate-900 dark:!text-slate-100",
@@ -153,11 +227,12 @@ export function ShiftHandoverTab() {
         if (!Number.isFinite(parsed) || parsed < 0) return null;
         return parsed;
     };
-    const parsedCashDeclared = parseDeclaredAmount(cashDeclared);
-    const parsedDigitalDeclared = parseDeclaredAmount(digitalDeclared);
-    const cashDeclaredInvalid = cashDeclared.trim().length > 0 && parsedCashDeclared === null;
+    const parsedCashDeclared = parseDeclaredAmount(resolvedCashDeclared);
+    const parsedDigitalDeclared = parseDeclaredAmount(resolvedDigitalDeclared);
+    const cashDeclaredInvalid =
+        resolvedCashDeclared.trim().length > 0 && parsedCashDeclared === null;
     const digitalDeclaredInvalid =
-        digitalDeclared.trim().length > 0 && parsedDigitalDeclared === null;
+        resolvedDigitalDeclared.trim().length > 0 && parsedDigitalDeclared === null;
     const canSubmitCloseShift =
         parsedCashDeclared !== null &&
         parsedDigitalDeclared !== null &&
@@ -188,7 +263,7 @@ export function ShiftHandoverTab() {
         if (!openedSession) return;
         if (parsedCashDeclared === null || parsedDigitalDeclared === null) return;
         const payload = {
-            close_notes: closeNotes,
+            close_notes: resolvedCloseNotes,
             total_cash_declared: parsedCashDeclared,
             total_digital_declared: parsedDigitalDeclared,
             counts: products.map((product) => ({
@@ -200,7 +275,6 @@ export function ShiftHandoverTab() {
             id: openedSession.id,
             data: payload,
         });
-        setCloseNotes("");
     };
 
     const handleAcceptShift = async () => {
@@ -237,11 +311,49 @@ export function ShiftHandoverTab() {
                 </p>
             </div>
 
-            {!openedSession && !pendingSession && (user?.role === "cashier" || isAdmin) && (
+            {!openedSession && (user?.role === "cashier" || isAdmin) && (
                 <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         Open Shift
                     </h3>
+                    {pendingSessionCount >= 3 && (
+                        <p className="text-sm text-danger-600 dark:text-danger-400">
+                            You cannot open a new shift while 3 sessions are pending handover
+                            acceptance.
+                        </p>
+                    )}
+                    {isAdmin && openingComparisonSource && (
+                        <div
+                            className={`rounded-md border px-3 py-2 text-sm ${
+                                openingMismatchSummary.mismatchCount > 0
+                                    ? "border-danger-300 bg-danger-50 text-danger-700 dark:border-danger-800 dark:bg-danger-950/30 dark:text-danger-300"
+                                    : "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+                            }`}
+                        >
+                            <p className="font-semibold">
+                                Opening handover check against session #{openingComparisonSource.id}{" "}
+                                (
+                                {openingComparisonSource.status === "pending_handover_acceptance"
+                                    ? "pending acceptance"
+                                    : "closed"}
+                                )
+                            </p>
+                            {openingMismatchSummary.mismatchCount > 0 ? (
+                                <p className="mt-1">
+                                    {openingMismatchSummary.mismatchCount} product
+                                    {openingMismatchSummary.mismatchCount === 1 ? "" : "s"} do not
+                                    match the previous closing count. Missing units:{" "}
+                                    {openingMismatchSummary.shortageUnits}. Extra units:{" "}
+                                    {openingMismatchSummary.excessUnits}.
+                                </p>
+                            ) : (
+                                <p className="mt-1">
+                                    Every opening count matches the previous cashier&apos;s closing
+                                    count.
+                                </p>
+                            )}
+                        </div>
+                    )}
                     {isAdmin && (
                         <Select
                             label="Assign Cashier"
@@ -280,35 +392,74 @@ export function ShiftHandoverTab() {
                             <thead className="bg-slate-50 dark:bg-slate-900/50">
                                 <tr>
                                     <th className="px-3 py-2 text-left">Product</th>
+                                    {isAdmin && openingComparisonSource && (
+                                        <th className="px-3 py-2 text-right">Last Close</th>
+                                    )}
                                     <th className="px-3 py-2 text-right">Opening Count</th>
+                                    {isAdmin && openingComparisonSource && (
+                                        <th className="px-3 py-2 text-right">Mismatch</th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody>
-                                {products.map((product) => (
-                                    <tr
-                                        key={product.id}
-                                        className="border-t border-slate-200 dark:border-slate-800"
-                                    >
-                                        <td className="px-3 py-2">{product.name}</td>
-                                        <td className="px-3 py-2">
-                                            <Input
-                                                type="number"
-                                                min={0}
-                                                value={resolvedOpeningCounts[product.id] ?? "0"}
-                                                onValueChange={(value) =>
-                                                    setOpeningCounts((prev) => ({
-                                                        ...prev,
-                                                        [product.id]: value,
-                                                    }))
-                                                }
-                                                classNames={{
-                                                    input: "text-right !text-slate-900 dark:!text-slate-100",
-                                                    label: "!text-slate-700 dark:!text-slate-300",
-                                                }}
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
+                                {products.map((product) => {
+                                    const comparisonRow = openingComparisonRows.find(
+                                        (row) => row.productId === product.id
+                                    );
+                                    return (
+                                        <tr
+                                            key={product.id}
+                                            className={`border-t border-slate-200 dark:border-slate-800 ${
+                                                comparisonRow?.hasMismatch
+                                                    ? "bg-danger-50/70 dark:bg-danger-950/20"
+                                                    : ""
+                                            }`}
+                                        >
+                                            <td className="px-3 py-2">{product.name}</td>
+                                            {isAdmin && openingComparisonSource && (
+                                                <td className="px-3 py-2 text-right">
+                                                    {comparisonRow?.previousClosingCount ?? "-"}
+                                                </td>
+                                            )}
+                                            <td className="px-3 py-2">
+                                                <Input
+                                                    type="number"
+                                                    min={0}
+                                                    value={resolvedOpeningCounts[product.id] ?? "0"}
+                                                    onValueChange={(value) =>
+                                                        setOpeningCounts((prev) => ({
+                                                            ...prev,
+                                                            [product.id]: value,
+                                                        }))
+                                                    }
+                                                    classNames={{
+                                                        input: `text-right ${
+                                                            comparisonRow?.hasMismatch
+                                                                ? "!text-danger-700 dark:!text-danger-300"
+                                                                : "!text-slate-900 dark:!text-slate-100"
+                                                        }`,
+                                                        label: "!text-slate-700 dark:!text-slate-300",
+                                                    }}
+                                                />
+                                            </td>
+                                            {isAdmin && openingComparisonSource && (
+                                                <td
+                                                    className={`px-3 py-2 text-right font-semibold ${
+                                                        comparisonRow?.hasMismatch
+                                                            ? "!text-danger-700 dark:!text-danger-300"
+                                                            : "!text-emerald-700 dark:!text-emerald-300"
+                                                    }`}
+                                                >
+                                                    {comparisonRow
+                                                        ? comparisonRow.variance > 0
+                                                            ? `+${comparisonRow.variance}`
+                                                            : comparisonRow.variance
+                                                        : "-"}
+                                                </td>
+                                            )}
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -316,7 +467,11 @@ export function ShiftHandoverTab() {
                         color="primary"
                         onPress={handleOpenShift}
                         isLoading={openShiftMutation.isPending}
-                        isDisabled={!products.length || (isAdmin && !resolvedCashierId)}
+                        isDisabled={
+                            !products.length ||
+                            (isAdmin && !resolvedCashierId) ||
+                            pendingSessionCount >= 3
+                        }
                     >
                         Open Shift Session
                     </Button>
@@ -334,8 +489,14 @@ export function ShiftHandoverTab() {
                             min={0}
                             step="0.01"
                             label="Cash Declared"
-                            value={cashDeclared}
-                            onValueChange={setCashDeclared}
+                            value={resolvedCashDeclared}
+                            onValueChange={(value) => {
+                                if (!openedSession) return;
+                                setCashDeclaredBySession((prev) => ({
+                                    ...prev,
+                                    [openedSession.id]: value,
+                                }));
+                            }}
                             isRequired
                             placeholder="0.00"
                             isInvalid={cashDeclaredInvalid}
@@ -347,8 +508,14 @@ export function ShiftHandoverTab() {
                             min={0}
                             step="0.01"
                             label="Digital Declared"
-                            value={digitalDeclared}
-                            onValueChange={setDigitalDeclared}
+                            value={resolvedDigitalDeclared}
+                            onValueChange={(value) => {
+                                if (!openedSession) return;
+                                setDigitalDeclaredBySession((prev) => ({
+                                    ...prev,
+                                    [openedSession.id]: value,
+                                }));
+                            }}
                             isRequired
                             placeholder="0.00"
                             isInvalid={digitalDeclaredInvalid}
@@ -360,8 +527,14 @@ export function ShiftHandoverTab() {
                     </div>
                     <Input
                         label="Close Notes"
-                        value={closeNotes}
-                        onValueChange={setCloseNotes}
+                        value={resolvedCloseNotes}
+                        onValueChange={(value) => {
+                            if (!openedSession) return;
+                            setCloseNotesBySession((prev) => ({
+                                ...prev,
+                                [openedSession.id]: value,
+                            }));
+                        }}
                         placeholder="Optional notes"
                         classNames={visibleInputClassNames}
                     />
@@ -508,7 +681,13 @@ export function ShiftHandoverTab() {
                                     <Wallet className="h-3.5 w-3.5" />
                                     Collected Total
                                 </p>
-                                <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
+                                <p
+                                    className={`text-lg font-semibold ${
+                                        hasDeclaredTotalMismatch
+                                            ? "!text-red-600 dark:!text-red-400"
+                                            : "!text-slate-900 dark:!text-slate-100"
+                                    }`}
+                                >
                                     ETB {reconciliationData.money.collectedTotal.toFixed(2)}
                                 </p>
                             </div>
@@ -537,7 +716,13 @@ export function ShiftHandoverTab() {
                                     <Banknote className="h-3.5 w-3.5" />
                                     Cash Declared
                                 </p>
-                                <p className="text-sm font-semibold !text-slate-900 dark:!text-slate-100">
+                                <p
+                                    className={`text-sm font-semibold ${
+                                        hasDeclaredTotalMismatch
+                                            ? "!text-red-600 dark:!text-red-400"
+                                            : "!text-slate-900 dark:!text-slate-100"
+                                    }`}
+                                >
                                     ETB {reconciliationData.money.cashDeclared.toFixed(2)}
                                 </p>
                             </div>
@@ -546,7 +731,13 @@ export function ShiftHandoverTab() {
                                     <Smartphone className="h-3.5 w-3.5" />
                                     Digital Declared
                                 </p>
-                                <p className="text-sm font-semibold !text-slate-900 dark:!text-slate-100">
+                                <p
+                                    className={`text-sm font-semibold ${
+                                        hasDeclaredTotalMismatch
+                                            ? "!text-red-600 dark:!text-red-400"
+                                            : "!text-slate-900 dark:!text-slate-100"
+                                    }`}
+                                >
                                     ETB {reconciliationData.money.digitalDeclared.toFixed(2)}
                                 </p>
                             </div>

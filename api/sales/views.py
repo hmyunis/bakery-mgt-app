@@ -361,28 +361,9 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            session.product_counts.update(
-                expected_closing_count=None,
-                closing_count=None,
-                variance=None,
-            )
-
             session.status = ShiftSession.STATUS_OPENED
-            session.closed_by = None
             session.closed_at = None
-            session.close_notes = ""
-            session.total_cash_declared = None
-            session.total_digital_declared = None
-            session.save(
-                update_fields=[
-                    "status",
-                    "closed_by",
-                    "closed_at",
-                    "close_notes",
-                    "total_cash_declared",
-                    "total_digital_declared",
-                ]
-            )
+            session.save(update_fields=["status", "closed_at"])
 
         return Response(
             ShiftSessionSerializer(session, context={"request": request}).data

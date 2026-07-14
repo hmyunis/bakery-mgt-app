@@ -34,6 +34,7 @@ if ("serviceWorker" in navigator) {
         navigator.serviceWorker
             .register("/sw.js")
             .then((registration) => {
+                registration.update();
                 console.log("SW registered: ", registration);
             })
             .catch((registrationError) => {
