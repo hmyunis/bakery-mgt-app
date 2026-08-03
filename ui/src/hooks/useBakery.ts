@@ -10,7 +10,6 @@ export function useBakerySettings() {
         queryFn: async () => {
             return await bakeryService.getBakerySettings();
         },
-        staleTime: Infinity,
         retry: 1,
     });
 }

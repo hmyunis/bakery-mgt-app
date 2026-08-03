@@ -8,6 +8,7 @@ import { SaleDetailModal } from "../components/sales/SaleDetailModal";
 import { DeleteSaleModal } from "../components/sales/DeleteSaleModal";
 import { CashierStatementModal } from "../components/sales/CashierStatementModal";
 import { PaymentStatusModal } from "../components/sales/PaymentStatusModal";
+import { SaleEditModal } from "../components/sales/SaleEditModal";
 import { ShiftHandoverTab } from "../components/sales_admin/ShiftHandoverTab";
 import { DataTable } from "../components/ui/DataTable";
 import { DataTablePagination } from "../components/ui/DataTablePagination";
@@ -17,16 +18,18 @@ import {
     useDeleteSale,
     useSales,
     useShiftSessionReconciliation,
+    useUpdateSale,
     useUpdateSalePaymentStatus,
 } from "../hooks/useSales";
 import { useUsers } from "../hooks/useUsers";
-import type { Sale } from "../types/sales";
+import type { Sale, UpdateSaleData } from "../types/sales";
 import { useAppSelector } from "../store";
 
 export function SalesPage() {
     const [activeTab, setActiveTab] = useState("pos");
     const [viewingSale, setViewingSale] = useState<Sale | null>(null);
     const [deletingSale, setDeletingSale] = useState<Sale | null>(null);
+    const [editingSale, setEditingSale] = useState<Sale | null>(null);
     const [receiptFilter, setReceiptFilter] = useState<"all" | "issued" | "not_issued">("all");
     const [cashierFilter, setCashierFilter] = useState<number | null>(null);
     const [statementCashierId, setStatementCashierId] = useState<number | null>(null);
@@ -39,18 +42,18 @@ export function SalesPage() {
     const [historyStartDate, setHistoryStartDate] = useState<DateValue>(today(getLocalTimeZone()));
     const { user } = useAppSelector((state) => state.auth);
     const isAdmin = user?.role === "admin";
-    const isCashier = user?.role === "cashier";
+    const isSalesStaff = user?.role === "staff";
     const currentUserId = user?.id !== undefined ? Number(user.id) : null;
     const { data: activeShiftData, isLoading: isLoadingActiveShift } = useActiveShiftSession({
-        enabled: isCashier || activeTab === "pos",
+        enabled: isSalesStaff || activeTab === "pos",
     });
 
     const salesLockedReason = useMemo(() => {
         const openedSession = activeShiftData?.openedSession || null;
-        if (isCashier && isLoadingActiveShift) return null;
+        if (isSalesStaff && isLoadingActiveShift) return null;
         if (!openedSession) return "No active shift session. Open and verify shift handover first.";
         if (
-            user?.role === "cashier" &&
+            user?.role === "staff" &&
             currentUserId !== null &&
             openedSession.openedBy !== currentUserId
         ) {
@@ -60,7 +63,7 @@ export function SalesPage() {
     }, [
         activeShiftData?.openedSession,
         currentUserId,
-        isCashier,
+        isSalesStaff,
         isLoadingActiveShift,
         user?.role,
     ]);
@@ -68,14 +71,14 @@ export function SalesPage() {
     const myOpenedSessionId = useMemo(() => {
         const openedSession = activeShiftData?.openedSession || null;
         if (
-            !isCashier ||
+            !isSalesStaff ||
             !openedSession ||
             currentUserId === null ||
             openedSession.openedBy !== currentUserId
         )
             return null;
         return openedSession.id;
-    }, [activeShiftData?.openedSession, currentUserId, isCashier]);
+    }, [activeShiftData?.openedSession, currentUserId, isSalesStaff]);
 
     const { data: liveShiftReconciliation } = useShiftSessionReconciliation(myOpenedSessionId, {
         enabled: !!myOpenedSessionId,
@@ -86,7 +89,7 @@ export function SalesPage() {
         {
             page: 1,
             pageSize: 200,
-            role: "cashier",
+            role: "staff",
             ordering: "full_name",
         },
         { enabled: isAdmin }
@@ -104,6 +107,7 @@ export function SalesPage() {
             receiptFilter === "all" ? undefined : receiptFilter === "issued" ? true : false,
     });
     const { mutateAsync: deleteSale, isPending: isDeletingSale } = useDeleteSale();
+    const { mutateAsync: updateSale, isPending: isUpdatingSale } = useUpdateSale();
     const { mutateAsync: updateSalePaymentStatus, isPending: isUpdatingPaymentStatus } =
         useUpdateSalePaymentStatus();
 
@@ -128,6 +132,13 @@ export function SalesPage() {
         if (!deletingSale) return;
         await deleteSale(deletingSale.id);
         setDeletingSale(null);
+        setViewingSale(null);
+    };
+
+    const handleEditSaleSave = async (data: UpdateSaleData) => {
+        if (!editingSale) return;
+        await updateSale({ id: editingSale.id, data });
+        setEditingSale(null);
         setViewingSale(null);
     };
 
@@ -156,7 +167,7 @@ export function SalesPage() {
                 subtitle="Process transactions, manage orders, and track daily revenue."
             />
 
-            {isCashier && (
+            {isSalesStaff && (
                 <div className="space-y-2">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
@@ -371,8 +382,17 @@ export function SalesPage() {
                 isOpen={!!viewingSale}
                 onClose={() => setViewingSale(null)}
                 sale={viewingSale}
-                canDelete={isAdmin || isCashier}
+                canDelete
                 onDelete={handleDeleteSaleRequest}
+                onEdit={setEditingSale}
+            />
+
+            <SaleEditModal
+                isOpen={!!editingSale}
+                sale={editingSale}
+                isSaving={isUpdatingSale}
+                onClose={() => setEditingSale(null)}
+                onSave={handleEditSaleSave}
             />
 
             <DeleteSaleModal

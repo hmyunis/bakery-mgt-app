@@ -8,6 +8,8 @@ import type {
     OpenShiftSessionData,
     SaleListParams,
     UpdateSalePaymentStatusData,
+    UpdateSaleData,
+    UpdateShiftSessionReconciliationData,
 } from "../types/sales";
 import type { ApiError } from "../types/api";
 import { toast } from "sonner";
@@ -64,6 +66,7 @@ export function useOpenShiftSession() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
             queryClient.invalidateQueries({ queryKey: ["sales"] });
+            queryClient.invalidateQueries({ queryKey: ["products"] });
             toast.success("Shift opened successfully.");
         },
         onError: (error: unknown) => {
@@ -87,6 +90,7 @@ export function useCloseShiftSession() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
             queryClient.invalidateQueries({ queryKey: ["sales"] });
+            queryClient.invalidateQueries({ queryKey: ["products"] });
             toast.success("Shift closed and pending acceptance.");
         },
         onError: (error: unknown) => {
@@ -159,6 +163,29 @@ export function useShiftSessionReconciliation(
         },
         enabled: !!id && (options?.enabled ?? true),
         refetchInterval: options?.refetchInterval,
+    });
+}
+
+export function useUpdateShiftSessionReconciliation() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: number; data: UpdateShiftSessionReconciliationData }) =>
+            salesService.updateShiftSessionReconciliation(id, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: ["shift-session-reconciliation", variables.id],
+            });
+            queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
+            toast.success("Reconciliation report updated.");
+        },
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(
+                apiError.response?.data?.message ||
+                    apiError.response?.data?.detail ||
+                    "Failed to update reconciliation report."
+            );
+        },
     });
 }
 
@@ -253,6 +280,30 @@ export function useDeleteSale() {
                 apiError.response?.data?.detail ||
                 "Failed to delete sale. Please try again.";
             toast.error(errorMessage);
+        },
+    });
+}
+
+export function useUpdateSale() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: number; data: UpdateSaleData }) =>
+            salesService.updateSale(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["sales"] });
+            queryClient.invalidateQueries({ queryKey: ["products"] });
+            queryClient.invalidateQueries({ queryKey: ["shift-session-reconciliation"] });
+            queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
+            queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
+            toast.success("Sale updated successfully.");
+        },
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(
+                apiError.response?.data?.message ||
+                    apiError.response?.data?.detail ||
+                    "Failed to update sale."
+            );
         },
     });
 }

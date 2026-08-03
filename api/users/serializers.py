@@ -105,6 +105,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token["email"] = user.email
         token["phone_number"] = user.phone_number
         token["role"] = user.role
+        token["permissions"] = user.permissions
         token["push_notifications_enabled"] = user.push_notifications_enabled
 
         # Handle Avatar URL
@@ -130,6 +131,7 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "phone_number",
             "role",
+            "permissions",
             "address",
             "avatar",
             "avatar_clear",
@@ -171,12 +173,28 @@ class UserSerializer(serializers.ModelSerializer):
                     {"password": "Password must be at least 8 characters long."}
                 )
 
-        # Role protection logic
+        valid_permissions = set(User.PAGE_PERMISSIONS)
+        if "permissions" in data:
+            unknown = set(data["permissions"]) - valid_permissions
+            if unknown:
+                raise serializers.ValidationError(
+                    {
+                        "permissions": (
+                            f"Unknown permissions: {', '.join(sorted(unknown))}."
+                        )
+                    }
+                )
+
+        # Role and permission assignment is admin-only.
         request = self.context.get("request")
         if request and request.user.role != "admin":
             if "role" in data and data["role"] != request.user.role:
                 raise serializers.ValidationError(
-                    {"role": "You cannot change your own role."}
+                    {"role": "Only admins can change roles."}
+                )
+            if "permissions" in data:
+                raise serializers.ValidationError(
+                    {"permissions": "Only admins can grant permissions."}
                 )
 
         # Validate phone number format if provided
@@ -309,7 +327,15 @@ class FactoryResetSerializer(serializers.Serializer):
 class UserSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "username", "full_name", "phone_number", "email", "role")
+        fields = (
+            "id",
+            "username",
+            "full_name",
+            "phone_number",
+            "email",
+            "role",
+            "permissions",
+        )
 
 
 class EmployeeSerializer(serializers.ModelSerializer):

@@ -195,7 +195,7 @@ export function useCreateRecipe() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
             queryClient.invalidateQueries({ queryKey: ["productsWithRecipes"] });
-            toast.success("Recipe created successfully!");
+            toast.success("Batch estimate created successfully!");
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -225,7 +225,7 @@ export function useUpdateRecipe() {
             queryClient.invalidateQueries({
                 queryKey: ["recipes", updatedRecipe.id],
             });
-            toast.success("Recipe updated successfully!");
+            toast.success("Batch estimate updated successfully!");
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -251,7 +251,7 @@ export function useDeleteRecipe() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
             queryClient.invalidateQueries({ queryKey: ["productsWithRecipes"] });
-            toast.success("Recipe deleted successfully!");
+            toast.success("Batch estimate deleted successfully!");
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;

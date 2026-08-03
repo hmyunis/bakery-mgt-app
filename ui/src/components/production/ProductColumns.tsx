@@ -1,7 +1,7 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Product } from "../../types/production";
 import { Button, Chip, Avatar, Tooltip } from "@heroui/react";
-import { Edit, Trash2, Utensils, ChefHat } from "lucide-react";
+import { Edit, Trash2, Gauge, ChefHat } from "lucide-react";
 
 // Get base URL without /api/v1 for image URLs
 const getBaseUrl = () => {
@@ -116,7 +116,11 @@ export const getProductColumns = ({
                         </Tooltip>
                     )}
                     {onBuildRecipe && (
-                        <Tooltip content="Build Recipe">
+                        <Tooltip
+                            content={
+                                product.hasRecipe ? "Edit batch estimate" : "Create batch estimate"
+                            }
+                        >
                             <Button
                                 isIconOnly
                                 variant="light"
@@ -125,7 +129,7 @@ export const getProductColumns = ({
                                 className="min-w-8 w-8 h-8 p-2"
                                 onPress={() => onBuildRecipe(product)}
                             >
-                                <Utensils className="h-4 w-4" />
+                                <Gauge className="h-4 w-4" />
                             </Button>
                         </Tooltip>
                     )}

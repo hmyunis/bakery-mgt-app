@@ -1,6 +1,15 @@
 import { useMemo, useState } from "react";
 import { Button, Input, Select, SelectItem, Spinner } from "@heroui/react";
-import { Banknote, CircleAlert, HandCoins, Smartphone, UserRound, Wallet } from "lucide-react";
+import {
+    Banknote,
+    CircleAlert,
+    HandCoins,
+    Pencil,
+    Smartphone,
+    UserRound,
+    Wallet,
+    X,
+} from "lucide-react";
 import {
     useAcceptShiftSession,
     useActiveShiftSession,
@@ -9,6 +18,7 @@ import {
     useReopenShiftSession,
     useShiftSessionReconciliation,
     useShiftSessions,
+    useUpdateShiftSessionReconciliation,
 } from "../../hooks/useSales";
 import { useUsers } from "../../hooks/useUsers";
 import { useProducts } from "../../hooks/useProduction";
@@ -37,6 +47,14 @@ export function ShiftHandoverTab() {
         Record<number, Record<number, string>>
     >({});
     const [selectedSessionIdOverride, setSelectedSessionIdOverride] = useState<number | null>(null);
+    const [isEditingReconciliation, setIsEditingReconciliation] = useState(false);
+    const [reconciliationDraft, setReconciliationDraft] = useState<{
+        openNotes: string;
+        closeNotes: string;
+        cashDeclared: string;
+        digitalDeclared: string;
+        counts: Record<number, { opening: string; closing: string }>;
+    } | null>(null);
 
     const { data: productsData, isLoading: isLoadingProducts } = useProducts({
         page: 1,
@@ -57,7 +75,7 @@ export function ShiftHandoverTab() {
         {
             page: 1,
             pageSize: 200,
-            role: "cashier",
+            role: "staff",
             ordering: "full_name",
         },
         { enabled: isAdmin }
@@ -67,7 +85,10 @@ export function ShiftHandoverTab() {
         () => sessions.filter((session) => session.status === "pending_handover_acceptance").length,
         [sessions]
     );
-    const cashiers = useMemo(() => cashiersData?.results || [], [cashiersData]);
+    const cashiers = useMemo(
+        () => (cashiersData?.results || []).filter((staff) => staff.permissions.includes("sales")),
+        [cashiersData]
+    );
     const lastClosed = useMemo(
         () => sessions.find((s) => s.status === "closed") || null,
         [sessions]
@@ -93,6 +114,7 @@ export function ShiftHandoverTab() {
     const closeShiftMutation = useCloseShiftSession();
     const acceptShiftMutation = useAcceptShiftSession();
     const reopenShiftMutation = useReopenShiftSession();
+    const updateReconciliationMutation = useUpdateShiftSessionReconciliation();
 
     const defaultOpeningCounts = useMemo(() => {
         const previousCounts = new Map<number, number>();
@@ -127,9 +149,8 @@ export function ShiftHandoverTab() {
         const overrides = closingCountOverrides[openedSession.id] || {};
         const initial: Record<number, string> = {};
         products.forEach((product) => {
-            const row = openedSession.productCounts.find((count) => count.product === product.id);
-            const value = row?.closingCount ?? row?.expectedClosingCount ?? row?.openingCount ?? 0;
-            initial[product.id] = overrides[product.id] ?? String(Math.max(0, value));
+            initial[product.id] =
+                overrides[product.id] ?? String(Math.max(0, product.stock_quantity ?? 0));
         });
         return initial;
     }, [openedSession, products, closingCountOverrides]);
@@ -291,6 +312,46 @@ export function ShiftHandoverTab() {
         await reopenShiftMutation.mutateAsync({ id: pendingSession.id });
     };
 
+    const startEditingReconciliation = () => {
+        if (!reconciliationData) return;
+        setReconciliationDraft({
+            openNotes: reconciliationData.session.openNotes || "",
+            closeNotes: reconciliationData.session.closeNotes || "",
+            cashDeclared: String(reconciliationData.money.cashDeclared),
+            digitalDeclared: String(reconciliationData.money.digitalDeclared),
+            counts: Object.fromEntries(
+                reconciliationData.products.map((row) => [
+                    row.productId,
+                    {
+                        opening: String(row.openingCount),
+                        closing: String(row.countedClosingCount ?? row.expectedClosingCount),
+                    },
+                ])
+            ),
+        });
+        setIsEditingReconciliation(true);
+    };
+
+    const saveReconciliation = async () => {
+        if (!selectedSessionId || !reconciliationDraft) return;
+        await updateReconciliationMutation.mutateAsync({
+            id: selectedSessionId,
+            data: {
+                open_notes: reconciliationDraft.openNotes,
+                close_notes: reconciliationDraft.closeNotes,
+                total_cash_declared: Number(reconciliationDraft.cashDeclared) || 0,
+                total_digital_declared: Number(reconciliationDraft.digitalDeclared) || 0,
+                counts: Object.entries(reconciliationDraft.counts).map(([productId, counts]) => ({
+                    product_id: Number(productId),
+                    opening_count: toWholeNumber(counts.opening),
+                    closing_count: toWholeNumber(counts.closing),
+                })),
+            },
+        });
+        setIsEditingReconciliation(false);
+        setReconciliationDraft(null);
+    };
+
     if (isLoadingProducts || isLoadingActive || (isAdmin && isLoadingCashiers)) {
         return (
             <div className="flex justify-center py-12">
@@ -311,7 +372,7 @@ export function ShiftHandoverTab() {
                 </p>
             </div>
 
-            {!openedSession && (user?.role === "cashier" || isAdmin) && (
+            {!openedSession && (user?.role === "staff" || isAdmin) && (
                 <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         Open Shift
@@ -625,9 +686,34 @@ export function ShiftHandoverTab() {
             )}
 
             <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Reconciliation Report
-                </h3>
+                <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Reconciliation Report
+                    </h3>
+                    {isAdmin && reconciliationData && (
+                        <Button
+                            size="sm"
+                            variant="flat"
+                            startContent={
+                                isEditingReconciliation ? (
+                                    <X className="h-4 w-4" />
+                                ) : (
+                                    <Pencil className="h-4 w-4" />
+                                )
+                            }
+                            onPress={() => {
+                                if (isEditingReconciliation) {
+                                    setIsEditingReconciliation(false);
+                                    setReconciliationDraft(null);
+                                } else {
+                                    startEditingReconciliation();
+                                }
+                            }}
+                        >
+                            {isEditingReconciliation ? "Cancel Edit" : "Edit Report"}
+                        </Button>
+                    )}
+                </div>
                 <Select
                     label="Session"
                     selectedKeys={
@@ -666,6 +752,112 @@ export function ShiftHandoverTab() {
                     </p>
                 ) : (
                     <div className="space-y-3 [&_th]:!text-slate-700 dark:[&_th]:!text-slate-300 [&_td]:!text-slate-900 dark:[&_td]:!text-slate-100">
+                        {isEditingReconciliation && reconciliationDraft && (
+                            <div className="space-y-3 rounded-md border border-primary-300 p-3 dark:border-primary-800">
+                                <div className="grid gap-3 md:grid-cols-2">
+                                    <Input
+                                        label="Cash Declared"
+                                        type="number"
+                                        min={0}
+                                        value={reconciliationDraft.cashDeclared}
+                                        onValueChange={(cashDeclared) =>
+                                            setReconciliationDraft({
+                                                ...reconciliationDraft,
+                                                cashDeclared,
+                                            })
+                                        }
+                                    />
+                                    <Input
+                                        label="Digital Declared"
+                                        type="number"
+                                        min={0}
+                                        value={reconciliationDraft.digitalDeclared}
+                                        onValueChange={(digitalDeclared) =>
+                                            setReconciliationDraft({
+                                                ...reconciliationDraft,
+                                                digitalDeclared,
+                                            })
+                                        }
+                                    />
+                                    <Input
+                                        label="Opening Notes"
+                                        value={reconciliationDraft.openNotes}
+                                        onValueChange={(openNotes) =>
+                                            setReconciliationDraft({
+                                                ...reconciliationDraft,
+                                                openNotes,
+                                            })
+                                        }
+                                    />
+                                    <Input
+                                        label="Closing Notes"
+                                        value={reconciliationDraft.closeNotes}
+                                        onValueChange={(closeNotes) =>
+                                            setReconciliationDraft({
+                                                ...reconciliationDraft,
+                                                closeNotes,
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full min-w-[520px] text-sm">
+                                        <thead>
+                                            <tr>
+                                                <th className="px-2 py-1 text-left">Product</th>
+                                                <th className="px-2 py-1 text-right">Opening</th>
+                                                <th className="px-2 py-1 text-right">Closing</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {reconciliationData.products.map((row) => (
+                                                <tr key={row.productId}>
+                                                    <td className="px-2 py-1">{row.productName}</td>
+                                                    {(["opening", "closing"] as const).map(
+                                                        (field) => (
+                                                            <td key={field} className="px-2 py-1">
+                                                                <Input
+                                                                    type="number"
+                                                                    min={0}
+                                                                    value={
+                                                                        reconciliationDraft.counts[
+                                                                            row.productId
+                                                                        ]?.[field] || "0"
+                                                                    }
+                                                                    onValueChange={(value) =>
+                                                                        setReconciliationDraft({
+                                                                            ...reconciliationDraft,
+                                                                            counts: {
+                                                                                ...reconciliationDraft.counts,
+                                                                                [row.productId]: {
+                                                                                    ...reconciliationDraft
+                                                                                        .counts[
+                                                                                        row
+                                                                                            .productId
+                                                                                    ],
+                                                                                    [field]: value,
+                                                                                },
+                                                                            },
+                                                                        })
+                                                                    }
+                                                                />
+                                                            </td>
+                                                        )
+                                                    )}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <Button
+                                    color="primary"
+                                    onPress={saveReconciliation}
+                                    isLoading={updateReconciliationMutation.isPending}
+                                >
+                                    Save Report
+                                </Button>
+                            </div>
+                        )}
                         <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
                             <p className="flex items-center gap-1 text-xs text-slate-500">
                                 <UserRound className="h-3.5 w-3.5" />
@@ -743,16 +935,18 @@ export function ShiftHandoverTab() {
                             </div>
                         </div>
                         <div className="max-h-72 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-800">
-                            <table className="w-full min-w-[900px] text-sm text-slate-900 dark:text-slate-100">
+                            <table className="w-full min-w-[1100px] text-sm text-slate-900 dark:text-slate-100">
                                 <thead className="bg-slate-50 dark:bg-slate-900/50">
                                     <tr>
                                         <th className="px-3 py-2 text-left">Product</th>
                                         <th className="px-3 py-2 text-right">Open</th>
+                                        <th className="px-3 py-2 text-right">Open Audit</th>
                                         <th className="px-3 py-2 text-right">Produced</th>
                                         <th className="px-3 py-2 text-right">Paid Sold</th>
                                         <th className="px-3 py-2 text-right">Unpaid</th>
                                         <th className="px-3 py-2 text-right">Expected</th>
                                         <th className="px-3 py-2 text-right">Counted</th>
+                                        <th className="px-3 py-2 text-right">Close Audit</th>
                                         <th className="px-3 py-2 text-right">Variance</th>
                                     </tr>
                                 </thead>
@@ -777,6 +971,15 @@ export function ShiftHandoverTab() {
                                                 <td className="px-3 py-2 text-right">
                                                     {row.openingCount}
                                                 </td>
+                                                <td
+                                                    className={`px-3 py-2 text-right ${
+                                                        row.openingStockMismatch
+                                                            ? "!text-red-600 dark:!text-red-400"
+                                                            : ""
+                                                    }`}
+                                                >
+                                                    {row.openingStockBeforeOverride ?? "-"}
+                                                </td>
                                                 <td className="px-3 py-2 text-right">
                                                     {row.producedInShift}
                                                 </td>
@@ -791,6 +994,15 @@ export function ShiftHandoverTab() {
                                                 </td>
                                                 <td className="px-3 py-2 text-right">
                                                     {row.countedClosingCount ?? "-"}
+                                                </td>
+                                                <td
+                                                    className={`px-3 py-2 text-right ${
+                                                        row.closingStockMismatch
+                                                            ? "!text-red-600 dark:!text-red-400"
+                                                            : ""
+                                                    }`}
+                                                >
+                                                    {row.closingStockBeforeOverride ?? "-"}
                                                 </td>
                                                 <td className="px-3 py-2 text-right">
                                                     {row.varianceQty ?? "-"}

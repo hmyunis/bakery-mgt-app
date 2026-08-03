@@ -28,18 +28,29 @@ createRoot(document.getElementById("root")!).render(
     </StrictMode>
 );
 
-// Register Service Worker
 if ("serviceWorker" in navigator) {
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let isReloading = false;
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (hadController && !isReloading) {
+            isReloading = true;
+            window.location.reload();
+        }
+    });
+
     window.addEventListener("load", () => {
         navigator.serviceWorker
-            .register("/sw.js")
+            .register("/sw.js", { updateViaCache: "none" })
             .then((registration) => {
                 registration.update();
-                console.log("SW registered: ", registration);
+                window.setInterval(() => registration.update(), 60_000);
+                document.addEventListener("visibilitychange", () => {
+                    if (document.visibilityState === "visible") registration.update();
+                });
             })
             .catch((registrationError) => {
-                console.log("SW registration failed: ", registrationError);
+                console.error("Service worker registration failed:", registrationError);
             });
     });
 }
-// test

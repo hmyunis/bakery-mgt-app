@@ -6,7 +6,12 @@ import { toast } from "sonner";
 import { authService, type LoginCredentials } from "../services/authService";
 import { clearSession, setSession } from "../store/authSlice";
 import { clearAuthTokens, getAuthToken, getRefreshToken } from "../lib/apiClient";
-import { isValidRole } from "../constants/roles";
+import {
+    getDefaultAppPath,
+    isValidRole,
+    PAGE_PERMISSIONS,
+    type PagePermission,
+} from "../constants/roles";
 import type { ApiError } from "../types/api";
 
 export const useAuth = () => {
@@ -26,6 +31,11 @@ export const useAuth = () => {
                     if (tokenParts.length === 3) {
                         const payload = JSON.parse(atob(tokenParts[1]));
                         const userRole = isValidRole(payload.role) ? payload.role : undefined;
+                        const permissions = Array.isArray(payload.permissions)
+                            ? payload.permissions.filter((permission: string) =>
+                                  PAGE_PERMISSIONS.includes(permission as PagePermission)
+                              )
+                            : [];
                         dispatch(
                             setSession({
                                 isAuthenticated: true,
@@ -36,6 +46,7 @@ export const useAuth = () => {
                                     email: payload.email,
                                     avatar: payload.avatar,
                                     role: userRole,
+                                    permissions,
                                     pushNotificationsEnabled:
                                         payload.push_notifications_enabled ?? false,
                                 },
@@ -70,10 +81,7 @@ export const useAuth = () => {
         onSuccess: (response) => {
             queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
-            // Determine redirect path based on role
-            let redirectPath = "/app/dashboard";
-
-            // Try to get role from response or token
+            let permissions: PagePermission[] = response.user?.permissions || [];
             let role = response.user?.role;
             if (!role && response.access) {
                 try {
@@ -81,29 +89,17 @@ export const useAuth = () => {
                     if (tokenParts.length === 3) {
                         const payload = JSON.parse(atob(tokenParts[1]));
                         role = payload.role;
+                        permissions = Array.isArray(payload.permissions) ? payload.permissions : [];
                     }
                 } catch (e) {
                     console.error("Failed to decode token for redirect", e);
                 }
             }
 
-            if (role) {
-                switch (role) {
-                    case "cashier":
-                        redirectPath = "/app/sales";
-                        break;
-                    case "chef":
-                        redirectPath = "/app/production";
-                        break;
-                    case "storekeeper":
-                        redirectPath = "/app/inventory";
-                        break;
-                    case "admin":
-                    default:
-                        redirectPath = "/app/dashboard";
-                        break;
-                }
-            }
+            const redirectPath = getDefaultAppPath(
+                isValidRole(role) ? role : undefined,
+                permissions
+            );
 
             // Navigate after a brief delay to ensure Redux state is persisted
             setTimeout(() => {
@@ -157,6 +153,7 @@ export const useAuth = () => {
                         email: currentUser.email,
                         avatar: currentUser.avatar || undefined,
                         role: isValidRole(currentUser.role) ? currentUser.role : undefined,
+                        permissions: currentUser.permissions,
                         pushNotificationsEnabled: currentUser.pushNotificationsEnabled ?? false,
                     },
                 })

@@ -26,7 +26,7 @@ from .models import (
     ShiftAssignment,
     ShiftTemplate,
 )
-from .permissions import IsAdmin, IsAdminOrOwner
+from .permissions import HasEmployeesPermission, HasHrPermission, IsAdminOrOwner
 from .serializers import (
     AttendanceRecordSerializer,
     ChangePasswordSerializer,
@@ -67,6 +67,8 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == "admin":
             return User.objects.all()
+        if user.has_page_permission("users"):
+            return User.objects.filter(role="staff")
         return User.objects.filter(id=user.id)
 
     # --- New Features ---
@@ -321,7 +323,7 @@ def _iter_month_ranges(start_date, end_date):
 class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.select_related("user").all()
     serializer_class = EmployeeSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [HasEmployeesPermission]
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -331,7 +333,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     search_fields = ["full_name", "phone_number", "position", "user__username"]
     ordering_fields = ["created_at", "full_name", "hire_date"]
 
-    @action(detail=False, methods=["get"], permission_classes=[IsAdmin])
+    @action(detail=False, methods=["get"], permission_classes=[HasEmployeesPermission])
     def prefill(self, request):
         user_id = request.query_params.get("user_id")
         if not user_id:
@@ -354,7 +356,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             }
         )
 
-    @action(detail=True, methods=["get"], permission_classes=[IsAdmin])
+    @action(detail=True, methods=["get"], permission_classes=[HasEmployeesPermission])
     def payroll_summary(self, request, pk=None):
         employee = self.get_object()
         today = timezone.localdate()
@@ -395,7 +397,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             }
         )
 
-    @action(detail=True, methods=["get"], permission_classes=[IsAdmin])
+    @action(detail=True, methods=["get"], permission_classes=[HasEmployeesPermission])
     def payroll_detail(self, request, pk=None):
         employee = self.get_object()
         record_id = request.query_params.get("record_id")
@@ -553,7 +555,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         # Serialize to ensure consistent shape/types (renderer will camelCase the keys)
         return Response(PayrollDetailSerializer(instance=payload).data)
 
-    @action(detail=True, methods=["get"], permission_classes=[IsAdmin])
+    @action(detail=True, methods=["get"], permission_classes=[HasEmployeesPermission])
     def waste_monthly(self, request, pk=None):
         employee = self.get_object()
         if not employee.user:
@@ -582,7 +584,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 class ShiftTemplateViewSet(viewsets.ModelViewSet):
     queryset = ShiftTemplate.objects.all()
     serializer_class = ShiftTemplateSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [HasHrPermission]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name"]
     ordering_fields = ["name", "start_time", "end_time"]
@@ -591,12 +593,12 @@ class ShiftTemplateViewSet(viewsets.ModelViewSet):
 class ShiftAssignmentViewSet(viewsets.ModelViewSet):
     queryset = ShiftAssignment.objects.select_related("employee", "shift").all()
     serializer_class = ShiftAssignmentSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [HasHrPermission]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["employee", "shift", "shift_date"]
     ordering_fields = ["shift_date", "created_at"]
 
-    @action(detail=False, methods=["post"], permission_classes=[IsAdmin])
+    @action(detail=False, methods=["post"], permission_classes=[HasHrPermission])
     def bulk_create(self, request):
         employee_id = request.data.get("employee")
         shift_id = request.data.get("shift")
@@ -706,12 +708,12 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
         "assignment", "assignment__employee", "assignment__shift"
     ).all()
     serializer_class = AttendanceRecordSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [HasHrPermission]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["assignment__employee", "status"]
     ordering_fields = ["recorded_at"]
 
-    @action(detail=False, methods=["post"], permission_classes=[IsAdmin])
+    @action(detail=False, methods=["post"], permission_classes=[HasHrPermission])
     def upsert(self, request):
         """
         Create or update attendance for a shift assignment.
@@ -754,7 +756,7 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
             out.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
         )
 
-    @action(detail=False, methods=["get"], permission_classes=[IsAdmin])
+    @action(detail=False, methods=["get"], permission_classes=[HasHrPermission])
     def daily_summary(self, request):
         date_str = request.query_params.get("date")
         if not date_str:
@@ -816,7 +818,7 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
 class LeaveRecordViewSet(viewsets.ModelViewSet):
     queryset = LeaveRecord.objects.select_related("employee").all()
     serializer_class = LeaveRecordSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [HasHrPermission]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["employee", "leave_type"]
     ordering_fields = ["start_date", "end_date"]
@@ -825,7 +827,7 @@ class LeaveRecordViewSet(viewsets.ModelViewSet):
 class PayrollRecordViewSet(viewsets.ModelViewSet):
     queryset = PayrollRecord.objects.select_related("employee").all()
     serializer_class = PayrollRecordSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [HasHrPermission]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["employee", "status"]
     ordering_fields = ["period_start", "created_at"]

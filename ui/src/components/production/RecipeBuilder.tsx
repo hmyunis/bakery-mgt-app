@@ -1,26 +1,25 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
+    Alert,
     Button,
+    Chip,
     Input,
-    Textarea,
+    Modal,
+    ModalBody,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
     Select,
     SelectItem,
-    Chip,
 } from "@heroui/react";
 import { Plus, Trash2 } from "lucide-react";
-import type { Recipe, CreateRecipeData, UpdateRecipeData } from "../../types/production";
-import type { Ingredient } from "../../types/inventory";
+import type { CreateRecipeData, Recipe, UpdateRecipeData } from "../../types/production";
 import { useIngredients } from "../../hooks/useInventory";
 import {
     useCreateRecipe,
-    useUpdateRecipe,
     useProducts,
     useProductsWithRecipes,
+    useUpdateRecipe,
 } from "../../hooks/useProduction";
 
 interface RecipeBuilderProps {
@@ -30,436 +29,245 @@ interface RecipeBuilderProps {
     preselectedProductId?: number | null;
 }
 
+interface IngredientRow {
+    key: number;
+    ingredient: string;
+    quantity: string;
+}
+
+const emptyRow = (key: number): IngredientRow => ({ key, ingredient: "", quantity: "" });
+
 export function RecipeBuilder({
     isOpen,
     onClose,
     recipe,
     preselectedProductId,
 }: RecipeBuilderProps) {
-    const isEdit = !!recipe;
-
-    const [formData, setFormData] = useState({
-        product: "",
-        instructions: "",
-        standard_yield: "1",
-    });
-
-    const [items, setItems] = useState<Array<{ ingredient: number; quantity: string }>>([]);
+    const [product, setProduct] = useState("");
+    const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>([emptyRow(0)]);
+    const [expectedOutput, setExpectedOutput] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [formKey, setFormKey] = useState("");
+    const [nextRowKey, setNextRowKey] = useState(1);
+
+    const currentKey = `${isOpen}-${recipe?.id || "new"}-${preselectedProductId || "none"}`;
+    if (currentKey !== formKey) {
+        const rows = recipe?.items.length
+            ? recipe.items.map((item, index) => ({
+                  key: index,
+                  ingredient: item.ingredient.toString(),
+                  quantity: item.quantity.toString(),
+              }))
+            : [emptyRow(0)];
+        setFormKey(currentKey);
+        setProduct(recipe?.product?.toString() || preselectedProductId?.toString() || "");
+        setIngredientRows(rows);
+        setNextRowKey(rows.length);
+        setExpectedOutput(recipe?.standard_yield.toString() || "");
+        setErrors({});
+    }
 
     const { data: productsData } = useProducts({ page_size: 100 });
     const { data: ingredientsData } = useIngredients({ page_size: 100 });
-    const { data: productsWithRecipesIds } = useProductsWithRecipes();
+    const { data: configuredIds } = useProductsWithRecipes();
+    const { mutateAsync: createEstimate, isPending: isCreating } = useCreateRecipe();
+    const { mutateAsync: updateEstimate, isPending: isUpdating } = useUpdateRecipe();
 
-    // Ensure productsWithRecipesIds is always an array
-    const productsWithRecipesArray = useMemo(
-        () => (Array.isArray(productsWithRecipesIds) ? productsWithRecipesIds : []),
-        [productsWithRecipesIds]
-    );
-    const { mutateAsync: createRecipe, isPending: isCreating } = useCreateRecipe();
-    const { mutateAsync: updateRecipe, isPending: isUpdating } = useUpdateRecipe();
-
-    const isLoading = isCreating || isUpdating;
-    const allProducts = useMemo(() => productsData?.results ?? [], [productsData]);
-    const ingredients = useMemo(() => ingredientsData?.results ?? [], [ingredientsData]);
-
-    // Filter products to exclude those that already have recipes (unless editing)
-    const availableProducts = useMemo(() => {
-        if (isEdit && recipe?.product) {
-            // When editing, include the current product
-            return allProducts.filter(
-                (p) => !productsWithRecipesArray.includes(p.id) || p.id === recipe.product
-            );
-        }
-        // When creating, exclude all products with recipes
-        return allProducts.filter((p) => !productsWithRecipesArray.includes(p.id));
-    }, [allProducts, productsWithRecipesArray, isEdit, recipe]);
-
-    // Get ingredient map for quick lookup
-    const ingredientMap = useMemo(() => {
-        const map = new Map<number, Ingredient>();
-        ingredients.forEach((ing) => map.set(ing.id, ing));
-        return map;
-    }, [ingredients]);
-
-    // Get available ingredients for a specific row (excludes already selected ingredients)
-    const getAvailableIngredients = (currentIndex: number): Ingredient[] => {
-        const selectedIngredientIds = new Set(
-            items
-                .map((item, index) => (index !== currentIndex ? item.ingredient : null))
-                .filter((id): id is number => id !== null && id !== 0)
+    const products = useMemo(() => {
+        const configured = Array.isArray(configuredIds) ? configuredIds : [];
+        return (productsData?.results || []).filter(
+            (item) => !configured.includes(item.id) || item.id === recipe?.product
         );
-        return ingredients.filter((ing) => !selectedIngredientIds.has(ing.id));
-    };
+    }, [configuredIds, productsData, recipe?.product]);
+    const ingredients = ingredientsData?.results || [];
 
-    // Check if all ingredients are already selected
-    const allIngredientsSelected = useMemo(() => {
-        if (ingredients.length === 0) return false;
-        const selectedIngredientIds = new Set(
-            items.map((item) => item.ingredient).filter((id) => id !== 0)
+    const updateRow = (key: number, changes: Partial<IngredientRow>) => {
+        setIngredientRows((rows) =>
+            rows.map((row) => (row.key === key ? { ...row, ...changes } : row))
         );
-        return selectedIngredientIds.size >= ingredients.length;
-    }, [items, ingredients]);
-
-    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-    const [prevRecipe, setPrevRecipe] = useState(recipe);
-    const [prevPreselectedId, setPrevPreselectedId] = useState(preselectedProductId);
-
-    if (
-        isOpen !== prevIsOpen ||
-        recipe !== prevRecipe ||
-        preselectedProductId !== prevPreselectedId
-    ) {
-        setPrevIsOpen(isOpen);
-        setPrevRecipe(recipe);
-        setPrevPreselectedId(preselectedProductId);
-        if (isOpen) {
-            if (recipe) {
-                setFormData({
-                    product: recipe.product?.toString() || "",
-                    instructions: recipe.instructions || "",
-                    standard_yield: recipe.standard_yield?.toString() || "1",
-                });
-                setItems(
-                    recipe.items.map((item) => ({
-                        ingredient: item.ingredient,
-                        quantity: item.quantity.toString(),
-                    }))
-                );
-            } else {
-                setFormData({
-                    product: preselectedProductId?.toString() || "",
-                    instructions: "",
-                    standard_yield: "1",
-                });
-                setItems([]);
-            }
-            setErrors({});
-        }
-    }
-
-    const handleInputChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-        if (errors[field]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev };
-                delete newErrors[field];
-                return newErrors;
-            });
-        }
     };
 
-    const handleAddItem = () => {
-        const availableIngredients = getAvailableIngredients(-1);
-        if (availableIngredients.length > 0) {
-            setItems((prev) => [
-                ...prev,
-                {
-                    ingredient: availableIngredients[0].id,
-                    quantity: "",
-                },
-            ]);
-        }
+    const addRow = () => {
+        setIngredientRows((rows) => [...rows, emptyRow(nextRowKey)]);
+        setNextRowKey((key) => key + 1);
     };
 
-    const handleRemoveItem = (index: number) => {
-        setItems((prev) => prev.filter((_, i) => i !== index));
+    const removeRow = (key: number) => {
+        setIngredientRows((rows) => rows.filter((row) => row.key !== key));
     };
 
-    const handleItemChange = (index: number, field: "ingredient" | "quantity", value: string) => {
-        setItems((prev) => {
-            const newItems = [...prev];
-            if (field === "ingredient") {
-                newItems[index] = {
-                    ...newItems[index],
-                    ingredient: parseInt(value),
-                };
-            } else {
-                newItems[index] = {
-                    ...newItems[index],
-                    quantity: value,
-                };
-            }
-            return newItems;
-        });
-
-        // Clear errors for this field when it changes
-        if (errors[`item_${index}_${field}`]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev };
-                delete newErrors[`item_${index}_${field}`];
-                return newErrors;
-            });
+    const submit = async () => {
+        const nextErrors: Record<string, string> = {};
+        if (!product) nextErrors.product = "Product is required";
+        if (!expectedOutput || Number(expectedOutput) <= 0) {
+            nextErrors.expectedOutput = "Expected batch output must be greater than 0";
         }
-    };
-
-    const validateForm = (): boolean => {
-        const newErrors: Record<string, string> = {};
-
-        if (!formData.product) {
-            newErrors.product = "Product is required";
-        }
-
-        if (!formData.standard_yield || parseFloat(formData.standard_yield) <= 0) {
-            newErrors.standard_yield = "Standard yield must be greater than 0";
-        }
-
-        if (items.length === 0) {
-            newErrors.items = "At least one ingredient is required";
-        }
-
-        // Check for duplicate ingredients
-        const ingredientIds = items.map((item) => item.ingredient).filter((id) => id !== 0);
-        const duplicateIngredientIds = ingredientIds.filter(
-            (id, index) => ingredientIds.indexOf(id) !== index
-        );
-
-        items.forEach((item, index) => {
-            if (!item.ingredient) {
-                newErrors[`item_${index}_ingredient`] = "Ingredient is required";
-            } else if (duplicateIngredientIds.includes(item.ingredient)) {
-                newErrors[`item_${index}_ingredient`] = "This ingredient is already selected";
-            }
-            const quantity = parseFloat(item.quantity);
-            if (!item.quantity || isNaN(quantity) || quantity <= 0) {
-                newErrors[`item_${index}_quantity`] = "Quantity must be greater than 0";
+        const selectedIds = ingredientRows.map((row) => row.ingredient).filter(Boolean);
+        ingredientRows.forEach((row) => {
+            if (!row.ingredient) nextErrors[`ingredient-${row.key}`] = "Choose an ingredient";
+            if (!row.quantity || Number(row.quantity) <= 0) {
+                nextErrors[`quantity-${row.key}`] = "Enter an amount greater than 0";
             }
         });
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async () => {
-        if (!validateForm()) {
-            return;
+        if (new Set(selectedIds).size !== selectedIds.length) {
+            nextErrors.ingredients = "Each ingredient can only be added once";
         }
+        setErrors(nextErrors);
+        if (Object.keys(nextErrors).length) return;
 
-        try {
-            const recipeItems = items.map((item) => {
-                const quantity = parseFloat(item.quantity);
-                return {
-                    ingredient: item.ingredient,
-                    quantity: isNaN(quantity) ? 0 : quantity,
-                };
-            });
-
-            if (isEdit && recipe) {
-                const updateData: UpdateRecipeData = {
-                    product: parseInt(formData.product) || null,
-                    instructions: formData.instructions || undefined,
-                    standard_yield: parseFloat(formData.standard_yield),
-                    items: recipeItems,
-                };
-                await updateRecipe({ id: recipe.id, data: updateData });
-            } else {
-                const createData: CreateRecipeData = {
-                    product: parseInt(formData.product) || null,
-                    instructions: formData.instructions || undefined,
-                    standard_yield: parseFloat(formData.standard_yield),
-                    items: recipeItems,
-                };
-                await createRecipe(createData);
-            }
-            onClose();
-        } catch {
-            // Error handling is done in the hook
+        const data: CreateRecipeData = {
+            product: Number(product),
+            instructions: "",
+            standard_yield: Number(expectedOutput),
+            items: ingredientRows.map((row) => ({
+                ingredient: Number(row.ingredient),
+                quantity: Number(row.quantity),
+            })),
+        };
+        if (recipe) {
+            await updateEstimate({ id: recipe.id, data: data as UpdateRecipeData });
+        } else {
+            await createEstimate(data);
         }
+        onClose();
     };
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1">
-                    {isEdit ? "Edit Recipe" : "Create Recipe"}
+                <ModalHeader>
+                    {recipe ? "Edit Batch Estimate" : "Create Batch Estimate"}
                 </ModalHeader>
-                <ModalBody>
-                    <div className="space-y-4">
+                <ModalBody className="space-y-5">
+                    <Alert color="primary" variant="flat">
+                        Enter one familiar full batch—for example, the flour, salt, and water used
+                        together to make 200 breads. There is no need to calculate one bread.
+                    </Alert>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <Select
                             label="Product"
-                            placeholder="Select a product"
-                            selectedKeys={formData.product ? [formData.product] : []}
-                            onSelectionChange={(keys) => {
-                                const selected = Array.from(keys)[0] as string;
-                                handleInputChange("product", selected || "");
-                            }}
-                            errorMessage={errors.product}
+                            selectedKeys={product ? [product] : []}
+                            onSelectionChange={(keys) =>
+                                setProduct(String(Array.from(keys)[0] || ""))
+                            }
                             isInvalid={!!errors.product}
-                            isRequired
+                            errorMessage={errors.product}
                             isDisabled={!!preselectedProductId}
                             classNames={{
+                                base: "!w-full !text-left",
                                 trigger: "!w-full !text-left",
                                 label: "!w-full !text-left",
-                                base: "!w-full !text-left",
                                 value: "!text-slate-900 dark:!text-slate-100",
                             }}
                         >
-                            {availableProducts.length > 0 ? (
-                                availableProducts.map((product) => (
-                                    <SelectItem key={product.id.toString()}>
-                                        {product.name}
-                                    </SelectItem>
-                                ))
-                            ) : (
-                                <SelectItem key="none" isDisabled>
-                                    All products already have recipes
-                                </SelectItem>
-                            )}
+                            {products.map((item) => (
+                                <SelectItem key={item.id.toString()}>{item.name}</SelectItem>
+                            ))}
                         </Select>
-
                         <Input
-                            label="Standard Yield"
-                            placeholder="e.g., 100"
+                            label="This full batch usually makes"
                             type="number"
-                            step="0.01"
                             min="0.01"
-                            value={formData.standard_yield}
-                            onValueChange={(value) => handleInputChange("standard_yield", value)}
-                            errorMessage={errors.standard_yield}
-                            isInvalid={!!errors.standard_yield}
-                            isRequired
-                            description="The quantity this recipe produces (e.g., 100 breads)"
-                            classNames={{
-                                input: "!text-zinc-900 dark:!text-zinc-100",
-                                inputWrapper:
-                                    "!placeholder:text-zinc-400 dark:!placeholder:text-zinc-500",
-                            }}
+                            step="0.01"
+                            value={expectedOutput}
+                            onValueChange={setExpectedOutput}
+                            endContent={<span className="text-sm text-zinc-500">pcs</span>}
+                            isInvalid={!!errors.expectedOutput}
+                            errorMessage={errors.expectedOutput}
                         />
+                    </div>
 
-                        <Textarea
-                            label="Instructions"
-                            placeholder="Optional recipe instructions..."
-                            value={formData.instructions}
-                            onValueChange={(value) => handleInputChange("instructions", value)}
-                            minRows={3}
-                            classNames={{
-                                input: "!text-zinc-900 dark:!text-zinc-100",
-                                inputWrapper:
-                                    "!placeholder:text-zinc-400 dark:!placeholder:text-zinc-500",
-                            }}
-                        />
-
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <label className="text-sm font-medium">Ingredients</label>
-                                <Button
-                                    size="sm"
-                                    color="primary"
-                                    variant="flat"
-                                    startContent={<Plus className="h-4 w-4" />}
-                                    onPress={handleAddItem}
-                                    isDisabled={allIngredientsSelected}
-                                >
-                                    Add Ingredient
-                                </Button>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <p className="font-medium">Ingredients for this full batch</p>
+                                <p className="text-sm text-zinc-500">
+                                    Use the totals the kitchen team already works with.
+                                </p>
                             </div>
-
-                            {errors.items && (
-                                <p className="text-danger text-sm mb-2">{errors.items}</p>
-                            )}
-
-                            <div className="space-y-3">
-                                {items.map((item, index) => {
-                                    const ingredient = ingredientMap.get(item.ingredient);
-                                    const availableIngredients = getAvailableIngredients(index);
-                                    return (
-                                        <div
-                                            key={index}
-                                            className="flex gap-2 items-start p-3 border border-zinc-200 dark:border-zinc-800 rounded-lg"
-                                        >
-                                            <Select
-                                                placeholder="Select ingredient"
-                                                selectedKeys={
-                                                    item.ingredient
-                                                        ? [item.ingredient.toString()]
-                                                        : []
-                                                }
-                                                onSelectionChange={(keys) => {
-                                                    const selected = Array.from(keys)[0] as string;
-                                                    handleItemChange(
-                                                        index,
-                                                        "ingredient",
-                                                        selected || ""
-                                                    );
-                                                }}
-                                                errorMessage={errors[`item_${index}_ingredient`]}
-                                                isInvalid={!!errors[`item_${index}_ingredient`]}
-                                                isDisabled={availableIngredients.length === 0}
-                                                classNames={{
-                                                    trigger: "!w-full !text-left flex-1",
-                                                    label: "!w-full !text-left",
-                                                    base: "!w-full !text-left",
-                                                    value: "!text-slate-900 dark:!text-slate-100",
-                                                }}
-                                            >
-                                                {availableIngredients.map((ing) => (
-                                                    <SelectItem key={ing.id.toString()}>
-                                                        {ing.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </Select>
-
-                                            <Input
-                                                placeholder="Quantity"
-                                                type="number"
-                                                step="0.001"
-                                                min="0.001"
-                                                value={item.quantity}
-                                                onValueChange={(value) =>
-                                                    handleItemChange(index, "quantity", value || "")
-                                                }
-                                                errorMessage={errors[`item_${index}_quantity`]}
-                                                isInvalid={!!errors[`item_${index}_quantity`]}
-                                                endContent={
-                                                    ingredient && (
-                                                        <Chip
-                                                            size="sm"
-                                                            variant="flat"
-                                                            className="mr-2"
-                                                        >
-                                                            {ingredient.unit}
-                                                        </Chip>
-                                                    )
-                                                }
-                                                classNames={{
-                                                    input: "!text-zinc-900 dark:!text-zinc-100",
-                                                    inputWrapper:
-                                                        "!placeholder:text-zinc-400 dark:!placeholder:text-zinc-500",
-                                                }}
-                                            />
-
-                                            <Button
-                                                isIconOnly
-                                                variant="light"
-                                                color="danger"
-                                                size="sm"
-                                                onPress={() => handleRemoveItem(index)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    );
-                                })}
-
-                                {items.length === 0 && (
-                                    <div className="text-center py-8 text-zinc-500 dark:text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
-                                        No ingredients added. Click "Add Ingredient" to get started.
-                                    </div>
-                                )}
-                            </div>
+                            <Button
+                                size="sm"
+                                variant="flat"
+                                startContent={<Plus size={16} />}
+                                onPress={addRow}
+                            >
+                                Add ingredient
+                            </Button>
                         </div>
+                        {ingredientRows.map((row, index) => {
+                            const selectedIngredient = ingredients.find(
+                                (item) => item.id.toString() === row.ingredient
+                            );
+                            return (
+                                <div
+                                    key={row.key}
+                                    className="grid grid-cols-1 items-start gap-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-800 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+                                >
+                                    <Select
+                                        label={`Ingredient ${index + 1}`}
+                                        selectedKeys={row.ingredient ? [row.ingredient] : []}
+                                        onSelectionChange={(keys) =>
+                                            updateRow(row.key, {
+                                                ingredient: String(Array.from(keys)[0] || ""),
+                                            })
+                                        }
+                                        isInvalid={!!errors[`ingredient-${row.key}`]}
+                                        errorMessage={errors[`ingredient-${row.key}`]}
+                                        classNames={{
+                                            base: "!w-full !min-w-0 !text-left",
+                                            trigger: "!w-full !text-left",
+                                            label: "!w-full !text-left",
+                                            value: "!text-slate-900 dark:!text-slate-100",
+                                        }}
+                                    >
+                                        {ingredients.map((item) => (
+                                            <SelectItem key={item.id.toString()}>
+                                                {item.name}
+                                            </SelectItem>
+                                        ))}
+                                    </Select>
+                                    <Input
+                                        label="Amount for the full batch"
+                                        type="number"
+                                        min="0.001"
+                                        step="0.001"
+                                        value={row.quantity}
+                                        onValueChange={(quantity) =>
+                                            updateRow(row.key, { quantity })
+                                        }
+                                        endContent={
+                                            selectedIngredient && (
+                                                <Chip size="sm">{selectedIngredient.unit}</Chip>
+                                            )
+                                        }
+                                        isInvalid={!!errors[`quantity-${row.key}`]}
+                                        errorMessage={errors[`quantity-${row.key}`]}
+                                    />
+                                    <Button
+                                        isIconOnly
+                                        aria-label={`Remove ingredient ${index + 1}`}
+                                        color="danger"
+                                        variant="light"
+                                        className="mt-2"
+                                        isDisabled={ingredientRows.length === 1}
+                                        onPress={() => removeRow(row.key)}
+                                    >
+                                        <Trash2 size={18} />
+                                    </Button>
+                                </div>
+                            );
+                        })}
+                        {errors.ingredients && (
+                            <p className="text-sm text-danger">{errors.ingredients}</p>
+                        )}
                     </div>
                 </ModalBody>
                 <ModalFooter>
-                    <Button
-                        variant="light"
-                        onPress={onClose}
-                        className="!text-zinc-700 dark:!text-zinc-300"
-                    >
+                    <Button variant="flat" onPress={onClose}>
                         Cancel
                     </Button>
-                    <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                        {isEdit ? "Update" : "Create"}
+                    <Button color="primary" onPress={submit} isLoading={isCreating || isUpdating}>
+                        {recipe ? "Save Estimate" : "Create Estimate"}
                     </Button>
                 </ModalFooter>
             </ModalContent>

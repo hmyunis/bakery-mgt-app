@@ -18,6 +18,7 @@ class Ingredient(models.Model):
 
     # Inventory Levels
     current_stock = models.DecimalField(max_digits=10, decimal_places=3, default=0.000)
+    kitchen_stock = models.DecimalField(max_digits=10, decimal_places=3, default=0.000)
     reorder_point = models.DecimalField(max_digits=10, decimal_places=3, default=10.000)
 
     # Costing (Weighted Average Cost)
@@ -120,3 +121,26 @@ class StockAdjustment(models.Model):
     reason = models.CharField(max_length=20, choices=REASON_CHOICES)
     notes = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class KitchenTransfer(models.Model):
+    """An immutable movement of raw material from the storehouse to the kitchen."""
+
+    ingredient = models.ForeignKey(
+        Ingredient, on_delete=models.PROTECT, related_name="kitchen_transfers"
+    )
+    quantity = models.DecimalField(max_digits=10, decimal_places=3)
+    transferred_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True
+    )
+    storehouse_balance_before = models.DecimalField(max_digits=10, decimal_places=3)
+    kitchen_balance_before = models.DecimalField(max_digits=10, decimal_places=3)
+    notes = models.TextField(blank=True)
+    transferred_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-transferred_at"]
+
+    def __str__(self):
+        amount = f"{self.quantity} {self.ingredient.unit}"
+        return f"{amount} of {self.ingredient.name} to kitchen"

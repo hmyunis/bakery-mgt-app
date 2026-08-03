@@ -15,6 +15,9 @@ import type {
     StockAdjustmentListParams,
     StockAdjustmentReason,
     Unit,
+    KitchenTransfer,
+    CreateKitchenTransferData,
+    KitchenTransferListParams,
 } from "../types/inventory";
 import type { ApiResponse, WrappedPaginatedResponse, PaginatedResponse } from "../types/api";
 
@@ -38,6 +41,9 @@ class InventoryService {
             unit: ingredient.unit as Unit, // Unit type is a union of strings
             current_stock: parseFloat(
                 (ingredient.currentStock as string) || (ingredient.current_stock as string) || "0"
+            ),
+            kitchen_stock: parseFloat(
+                (ingredient.kitchenStock as string) || (ingredient.kitchen_stock as string) || "0"
             ),
             reorder_point: parseFloat(
                 (ingredient.reorderPoint as string) || (ingredient.reorder_point as string) || "0"
@@ -513,6 +519,98 @@ class InventoryService {
      */
     async deleteStockAdjustment(id: number): Promise<void> {
         await apiClient.delete(`/inventory/adjustments/${id}/`);
+    }
+
+    // ==================== KITCHEN TRANSFERS ====================
+
+    private normalizeKitchenTransfer(transfer: Record<string, unknown>): KitchenTransfer {
+        return {
+            id: transfer.id as number,
+            ingredient: transfer.ingredient as number,
+            ingredient_name: (transfer.ingredientName || transfer.ingredient_name) as string,
+            unit: transfer.unit as Unit,
+            quantity: parseFloat(transfer.quantity?.toString() || "0"),
+            transferred_by: (transfer.transferredBy || transfer.transferred_by) as number | null,
+            transferred_by_name: (transfer.transferredByName ||
+                transfer.transferred_by_name) as string,
+            storehouse_balance_before: parseFloat(
+                transfer.storehouseBalanceBefore?.toString() ||
+                    transfer.storehouse_balance_before?.toString() ||
+                    "0"
+            ),
+            storehouse_balance_after: parseFloat(
+                transfer.storehouseBalanceAfter?.toString() ||
+                    transfer.storehouse_balance_after?.toString() ||
+                    "0"
+            ),
+            kitchen_balance_before: parseFloat(
+                transfer.kitchenBalanceBefore?.toString() ||
+                    transfer.kitchen_balance_before?.toString() ||
+                    "0"
+            ),
+            kitchen_balance_after: parseFloat(
+                transfer.kitchenBalanceAfter?.toString() ||
+                    transfer.kitchen_balance_after?.toString() ||
+                    "0"
+            ),
+            notes: (transfer.notes || "") as string,
+            transferred_at: (transfer.transferredAt || transfer.transferred_at) as string,
+        };
+    }
+
+    async getKitchenTransfers(
+        params: KitchenTransferListParams = {}
+    ): Promise<InventoryListResponse<KitchenTransfer>> {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append("page", params.page.toString());
+        if (params.page_size) queryParams.append("page_size", params.page_size.toString());
+        if (params.ingredient) queryParams.append("ingredient", params.ingredient.toString());
+
+        const response = await apiClient.get<
+            | WrappedPaginatedResponse<Record<string, unknown>>
+            | PaginatedResponse<Record<string, unknown>>
+            | Record<string, unknown>[]
+        >(`/inventory/kitchen-transfers/?${queryParams.toString()}`);
+        const responseData = response.data;
+        if (
+            responseData &&
+            !Array.isArray(responseData) &&
+            "data" in responseData &&
+            "pagination" in responseData
+        ) {
+            const wrapped = responseData as WrappedPaginatedResponse<Record<string, unknown>>;
+            return {
+                count: wrapped.pagination.count || 0,
+                next: wrapped.pagination.next || null,
+                previous: wrapped.pagination.previous || null,
+                results: (wrapped.data || []).map((item) => this.normalizeKitchenTransfer(item)),
+            };
+        }
+        if (responseData && !Array.isArray(responseData) && "results" in responseData) {
+            const paginated = responseData as PaginatedResponse<Record<string, unknown>>;
+            return {
+                ...paginated,
+                results: (paginated.results || []).map((item) =>
+                    this.normalizeKitchenTransfer(item)
+                ),
+            };
+        }
+        const results = Array.isArray(responseData)
+            ? responseData.map((item) =>
+                  this.normalizeKitchenTransfer(item as Record<string, unknown>)
+              )
+            : [];
+        return { count: results.length, next: null, previous: null, results };
+    }
+
+    async createKitchenTransfer(data: CreateKitchenTransferData): Promise<KitchenTransfer> {
+        const response = await apiClient.post<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >("/inventory/kitchen-transfers/", data);
+        const responseData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
+        return this.normalizeKitchenTransfer(responseData);
     }
 }
 

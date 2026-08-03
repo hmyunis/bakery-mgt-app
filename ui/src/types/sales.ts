@@ -12,6 +12,7 @@ export interface SaleItem {
 }
 
 export interface SalePayment {
+    method_id: number;
     method__name: string;
     amount: number;
 }
@@ -45,6 +46,8 @@ export interface CreateSaleData {
     unpaid_reason?: string;
     receipt_issued?: boolean;
 }
+
+export type UpdateSaleData = Partial<CreateSaleData>;
 
 export interface UpdateSalePaymentStatusData {
     payment_status: "paid" | "unpaid_approved";
@@ -110,8 +113,10 @@ export interface ShiftSessionProductCount {
     product: number;
     productName?: string;
     openingCount: number;
+    openingStockBeforeOverride?: number | null;
     expectedClosingCount?: number | null;
     closingCount?: number | null;
+    closingStockBeforeOverride?: number | null;
     variance?: number | null;
 }
 
@@ -170,13 +175,25 @@ export interface ShiftSessionReconciliationProduct {
     productName: string;
     unitPrice: number;
     openingCount: number;
+    openingStockBeforeOverride: number | null;
+    openingStockMismatch: boolean;
     producedInShift: number;
     paidSoldQty: number;
     unpaidQty: number;
     expectedClosingCount: number;
     countedClosingCount: number | null;
+    closingStockBeforeOverride: number | null;
+    closingStockMismatch: boolean;
     varianceQty: number | null;
     varianceValue: number | null;
+}
+
+export interface UpdateShiftSessionReconciliationData {
+    open_notes?: string;
+    close_notes?: string;
+    total_cash_declared?: number;
+    total_digital_declared?: number;
+    counts?: ShiftSessionCountInput[];
 }
 
 export interface ShiftSessionReconciliationResponse {

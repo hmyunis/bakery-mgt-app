@@ -25,10 +25,11 @@ export function DeleteRecipeModal({ isOpen, onClose, recipe }: DeleteRecipeModal
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1">Delete Recipe</ModalHeader>
+                <ModalHeader className="flex flex-col gap-1">Delete Batch Estimate</ModalHeader>
                 <ModalBody>
                     <p>
-                        Are you sure you want to delete this recipe? This action cannot be undone.
+                        Delete this batch estimate? New production runs cannot be recorded for the
+                        product until another estimate is configured.
                     </p>
                 </ModalBody>
                 <ModalFooter>

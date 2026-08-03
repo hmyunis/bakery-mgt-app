@@ -94,8 +94,10 @@ class ShiftSessionProductCount(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
 
     opening_count = models.IntegerField(default=0)
+    opening_stock_before_override = models.IntegerField(null=True, blank=True)
     expected_closing_count = models.IntegerField(null=True, blank=True)
     closing_count = models.IntegerField(null=True, blank=True)
+    closing_stock_before_override = models.IntegerField(null=True, blank=True)
     variance = models.IntegerField(null=True, blank=True)
 
     class Meta:

@@ -37,11 +37,6 @@ export function DeleteProductionRunModal({
     if (!productionRun) return null;
 
     const productName = productionRun.product_name || productionRun.composite_name || "Unknown";
-    const totalWastage = productionRun.usages.reduce(
-        (sum, usage) => sum + parseFloat(usage.wastage.toString()),
-        0
-    );
-
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="md">
             <ModalContent>
@@ -61,7 +56,7 @@ export function DeleteProductionRunModal({
                                 Decrease product stock by{" "}
                                 {productionRun.quantity_produced.toFixed(2)} pcs
                             </li>
-                            <li>Restore ingredient stock (add back actual usage amounts)</li>
+                            <li>Restore the actual usage to the kitchen store</li>
                             <li>Remove all usage records</li>
                         </ul>
                     </Alert>
@@ -79,11 +74,6 @@ export function DeleteProductionRunModal({
                             </p>
                             <p>Date: {new Date(productionRun.date_produced).toLocaleString()}</p>
                             <p>Chef: {productionRun.chef_name || "-"}</p>
-                            {totalWastage > 0 && (
-                                <p className="text-danger-600 dark:text-danger-400 font-medium">
-                                    Total Wastage: {totalWastage.toFixed(3)}
-                                </p>
-                            )}
                         </div>
                     )}
                 </ModalBody>

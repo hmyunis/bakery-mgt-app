@@ -70,7 +70,7 @@ export function FactoryResetForm() {
         delete_users: "Users (except you)",
         delete_products: "Products",
         delete_ingredients: "Ingredients",
-        delete_recipes: "Recipes",
+        delete_recipes: "Batch Estimates",
         delete_production_runs: "Production Runs",
         delete_sales: "Sales",
         delete_purchases: "Purchases",

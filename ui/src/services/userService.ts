@@ -1,5 +1,5 @@
 import { apiClient } from "../lib/apiClient";
-import { type UserRole } from "../constants/roles";
+import { type PagePermission, type UserRole } from "../constants/roles";
 import type { ApiResponse, WrappedPaginatedResponse, PaginatedResponse } from "../types/api";
 
 export interface User {
@@ -9,6 +9,7 @@ export interface User {
     email?: string;
     phoneNumber?: string;
     role: UserRole;
+    permissions: PagePermission[];
     address?: string;
     avatar?: string;
     dateJoined?: string;
@@ -29,6 +30,7 @@ export interface CreateUserData {
     email?: string;
     phoneNumber?: string;
     role: UserRole;
+    permissions?: PagePermission[];
     address?: string;
     password: string;
     confirmPassword: string;
@@ -41,6 +43,7 @@ export interface UpdateUserData {
     email?: string;
     phoneNumber?: string;
     role?: UserRole;
+    permissions?: PagePermission[];
     address?: string;
     password?: string;
     confirmPassword?: string;
@@ -164,6 +167,7 @@ class UserService {
             email: user.email as string,
             phoneNumber: (user.phoneNumber || user.phone_number) as string,
             role: user.role as UserRole,
+            permissions: (user.permissions || []) as PagePermission[],
             address: user.address as string,
             avatar: user.avatar as string,
             dateJoined: (user.dateJoined || user.date_joined) as string,
@@ -185,6 +189,7 @@ class UserService {
         if (data.email) formData.append("email", data.email);
         if (data.phoneNumber) formData.append("phone_number", data.phoneNumber);
         formData.append("role", data.role);
+        formData.append("permissions", JSON.stringify(data.permissions || []));
         if (data.address) formData.append("address", data.address);
         formData.append("password", data.password);
         formData.append("confirm_password", data.confirmPassword);
@@ -216,6 +221,8 @@ class UserService {
         if (data.email !== undefined) formData.append("email", data.email || "");
         if (data.phoneNumber !== undefined) formData.append("phone_number", data.phoneNumber || "");
         if (data.role !== undefined) formData.append("role", data.role);
+        if (data.permissions !== undefined)
+            formData.append("permissions", JSON.stringify(data.permissions));
         if (data.address !== undefined) formData.append("address", data.address || "");
         if (data.isActive !== undefined) formData.append("is_active", data.isActive.toString());
         if (data.password) {

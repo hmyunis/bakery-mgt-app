@@ -22,7 +22,7 @@ class IsAdmin(IsAuthenticated):
     def has_permission(self, request, view):
         return bool(
             super().has_permission(request, view)
-            and getattr(request.user, "role", None) == "admin"
+            and request.user.has_page_permission("dashboard")
         )
 
 
@@ -363,9 +363,8 @@ def bakery_settings(request):
 
     elif request.method == "PATCH":
         # Check admin permission
-        if (
-            not request.user.is_authenticated
-            or getattr(request.user, "role", None) != "admin"
+        if not request.user.is_authenticated or not request.user.has_page_permission(
+            "settings"
         ):
             return Response(
                 {"detail": "You do not have permission to perform this action."},

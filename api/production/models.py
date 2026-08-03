@@ -110,8 +110,9 @@ class ProductionRun(models.Model):
 
 class IngredientUsage(models.Model):
     """
-    Tracks theoretical vs actual usage for a specific run.
-    This is where wastage is calculated.
+    Tracks a rough benchmark and the actual kitchen-store usage for a run.
+
+    Rough batch estimates must not be treated as recipe-accurate wastage.
     """
 
     production_run = models.ForeignKey(
@@ -126,5 +127,5 @@ class IngredientUsage(models.Model):
     wastage = models.DecimalField(max_digits=10, decimal_places=3, default=0)
 
     def save(self, *args, **kwargs):
-        self.wastage = self.actual_amount - self.theoretical_amount
+        self.wastage = 0
         super().save(*args, **kwargs)

@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { UserRole } from "../constants/roles";
+import type { PagePermission, UserRole } from "../constants/roles";
 
 interface UserInfo {
     id?: number;
@@ -9,6 +9,7 @@ interface UserInfo {
     email?: string;
     avatar?: string;
     role?: UserRole;
+    permissions?: PagePermission[];
     pushNotificationsEnabled?: boolean;
 }
 

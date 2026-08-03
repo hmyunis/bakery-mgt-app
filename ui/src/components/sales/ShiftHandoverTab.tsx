@@ -140,7 +140,7 @@ export function ShiftHandoverTab() {
         (isAdmin ||
             (currentUserId !== null &&
                 pendingSession.openedBy !== currentUserId &&
-                user.role === "cashier"));
+                user.role === "staff"));
     const hasDeclaredTotalMismatch = useMemo(() => {
         if (!reconciliationData) return false;
         const declaredTotal =
@@ -211,7 +211,7 @@ export function ShiftHandoverTab() {
                 </p>
             </div>
 
-            {!openedSession && user?.role === "cashier" && (
+            {!openedSession && user?.role === "staff" && (
                 <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         Open Shift

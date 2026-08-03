@@ -11,10 +11,31 @@ import {
     SelectItem,
     Avatar,
     Switch,
+    Checkbox,
+    CheckboxGroup,
 } from "@heroui/react";
 import { User as UserIcon } from "lucide-react";
-import { VALID_ROLES, type UserRole } from "../../constants/roles";
+import {
+    PAGE_PERMISSIONS,
+    VALID_ROLES,
+    type PagePermission,
+    type UserRole,
+} from "../../constants/roles";
 import { type User, type CreateUserData, type UpdateUserData } from "../../services/userService";
+import { useAppSelector } from "../../store";
+
+const permissionLabels: Record<PagePermission, string> = {
+    dashboard: "Dashboard",
+    sales: "Sales",
+    treasury: "Treasury",
+    production: "Production",
+    inventory: "Inventory",
+    users: "Users",
+    employees: "Employees",
+    hr: "HR",
+    audit_logs: "Audit Logs",
+    settings: "Settings",
+};
 
 interface UserFormModalProps {
     isOpen: boolean;
@@ -40,6 +61,7 @@ function UserFormContent({
     isLoading: boolean;
 }) {
     const isEdit = !!user;
+    const isAdmin = useAppSelector((state) => state.auth.user?.role === "admin");
 
     // Initialize state directly from props
     const [formData, setFormData] = useState({
@@ -47,7 +69,8 @@ function UserFormContent({
         fullName: user?.fullName || "",
         email: user?.email || "",
         phoneNumber: user?.phoneNumber || "",
-        role: user?.role || ("cashier" as UserRole),
+        role: user?.role || ("staff" as UserRole),
+        permissions: user?.permissions || ([] as PagePermission[]),
         address: user?.address || "",
         password: "",
         confirmPassword: "",
@@ -59,7 +82,7 @@ function UserFormContent({
     const [avatarRemoved, setAvatarRemoved] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const handleInputChange = (field: string, value: string | boolean) => {
+    const handleInputChange = (field: string, value: string | boolean | PagePermission[]) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
         // Clear error for this field
         if (errors[field]) {
@@ -147,6 +170,7 @@ function UserFormContent({
                     email: formData.email || undefined,
                     phoneNumber: formData.phoneNumber || undefined,
                     role: formData.role,
+                    ...(isAdmin && { permissions: formData.permissions }),
                     address: formData.address || undefined,
                     isActive: formData.isActive,
                     ...(formData.password && {
@@ -173,6 +197,7 @@ function UserFormContent({
                     email: formData.email || undefined,
                     phoneNumber: formData.phoneNumber || undefined,
                     role: formData.role,
+                    ...(isAdmin && { permissions: formData.permissions }),
                     address: formData.address || undefined,
                     password: formData.password,
                     confirmPassword: formData.confirmPassword,
@@ -300,6 +325,25 @@ function UserFormContent({
                             </SelectItem>
                         ))}
                     </Select>
+
+                    {formData.role === "staff" && isAdmin && (
+                        <CheckboxGroup
+                            label="Page Permissions"
+                            value={formData.permissions}
+                            onValueChange={(values) =>
+                                handleInputChange("permissions", values as PagePermission[])
+                            }
+                            orientation="horizontal"
+                            className="sm:col-span-2"
+                            classNames={{ wrapper: "grid grid-cols-2 md:grid-cols-3 gap-2" }}
+                        >
+                            {PAGE_PERMISSIONS.map((permission) => (
+                                <Checkbox key={permission} value={permission}>
+                                    {permissionLabels[permission]}
+                                </Checkbox>
+                            ))}
+                        </CheckboxGroup>
+                    )}
 
                     {!isEdit && (
                         <>

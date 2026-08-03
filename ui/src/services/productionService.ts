@@ -427,6 +427,81 @@ class ProductionService {
                 ),
                 wastage: parseFloat(usage.wastage?.toString() || "0"),
             })),
+            performance: (() => {
+                const performance = (run.performance || {}) as Record<string, unknown>;
+                return {
+                    status: (performance.status ||
+                        "baseline") as ProductionRun["performance"]["status"],
+                    historical_run_count: parseInt(
+                        performance.historicalRunCount?.toString() ||
+                            performance.historical_run_count?.toString() ||
+                            "0"
+                    ),
+                    ingredient_name: (performance.ingredientName ||
+                        performance.ingredient_name) as string,
+                    unit: performance.unit as string,
+                    actual_yield_per_unit: parseFloat(
+                        performance.actualYieldPerUnit?.toString() ||
+                            performance.actual_yield_per_unit?.toString() ||
+                            "0"
+                    ),
+                    average_yield_per_unit: parseFloat(
+                        performance.averageYieldPerUnit?.toString() ||
+                            performance.average_yield_per_unit?.toString() ||
+                            "0"
+                    ),
+                    expected_output_from_average: parseFloat(
+                        performance.expectedOutputFromAverage?.toString() ||
+                            performance.expected_output_from_average?.toString() ||
+                            "0"
+                    ),
+                    deviation_percent: parseFloat(
+                        performance.deviationPercent?.toString() ||
+                            performance.deviation_percent?.toString() ||
+                            "0"
+                    ),
+                    ingredients: ((performance.ingredients as Record<string, unknown>[]) || []).map(
+                        (ingredient) => ({
+                            status: (ingredient.status ||
+                                "baseline") as ProductionRun["performance"]["status"],
+                            historical_run_count: parseInt(
+                                ingredient.historicalRunCount?.toString() ||
+                                    ingredient.historical_run_count?.toString() ||
+                                    "0"
+                            ),
+                            ingredient_name: (ingredient.ingredientName ||
+                                ingredient.ingredient_name ||
+                                "") as string,
+                            unit: (ingredient.unit || "") as string,
+                            actual_amount: parseFloat(
+                                ingredient.actualAmount?.toString() ||
+                                    ingredient.actual_amount?.toString() ||
+                                    "0"
+                            ),
+                            actual_yield_per_unit: parseFloat(
+                                ingredient.actualYieldPerUnit?.toString() ||
+                                    ingredient.actual_yield_per_unit?.toString() ||
+                                    "0"
+                            ),
+                            average_yield_per_unit: parseFloat(
+                                ingredient.averageYieldPerUnit?.toString() ||
+                                    ingredient.average_yield_per_unit?.toString() ||
+                                    "0"
+                            ),
+                            expected_output_from_average: parseFloat(
+                                ingredient.expectedOutputFromAverage?.toString() ||
+                                    ingredient.expected_output_from_average?.toString() ||
+                                    "0"
+                            ),
+                            deviation_percent: parseFloat(
+                                ingredient.deviationPercent?.toString() ||
+                                    ingredient.deviation_percent?.toString() ||
+                                    "0"
+                            ),
+                        })
+                    ),
+                };
+            })(),
         };
     }
 
@@ -443,6 +518,7 @@ class ProductionService {
         if (params.product) queryParams.append("product", params.product.toString());
         if (params.chef) queryParams.append("chef", params.chef.toString());
         if (params.ordering) queryParams.append("ordering", params.ordering);
+        if (params.start_date) queryParams.append("start_date", params.start_date);
 
         const response = await apiClient.get<
             | WrappedPaginatedResponse<Record<string, unknown>>

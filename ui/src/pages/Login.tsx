@@ -10,6 +10,7 @@ import { getAuthToken } from "../lib/apiClient";
 import { toast } from "sonner";
 import { useBakerySettings } from "../hooks/useBakery";
 import type { ApiError, ApiErrorResponse } from "../types/api";
+import { getDefaultAppPath, isValidRole, type PagePermission } from "../constants/roles";
 
 export function Login() {
     const navigate = useNavigate();
@@ -31,7 +32,8 @@ export function Login() {
             // until user profile is loaded. Ideally, we should wait for user profile.
             // But for now, let's try to decode token if user is not in state yet.
 
-            let role = "admin"; // Default
+            let role: string | undefined;
+            let permissions: PagePermission[] = [];
 
             // Try to get role from Redux state first (if available)
             // We need to access the state here, but we can't easily inside useEffect without dependency
@@ -43,28 +45,17 @@ export function Login() {
                     if (tokenParts.length === 3) {
                         const payload = JSON.parse(atob(tokenParts[1]));
                         if (payload.role) role = payload.role;
+                        if (Array.isArray(payload.permissions)) permissions = payload.permissions;
                     }
                 } catch {
                     // Ignore decode error
                 }
             }
 
-            let redirectPath = "/app/dashboard";
-            switch (role) {
-                case "cashier":
-                    redirectPath = "/app/sales";
-                    break;
-                case "chef":
-                    redirectPath = "/app/production";
-                    break;
-                case "storekeeper":
-                    redirectPath = "/app/inventory";
-                    break;
-                case "admin":
-                default:
-                    redirectPath = "/app/dashboard";
-                    break;
-            }
+            const redirectPath = getDefaultAppPath(
+                isValidRole(role) ? role : undefined,
+                permissions
+            );
 
             navigate(redirectPath, { replace: true });
         }

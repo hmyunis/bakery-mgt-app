@@ -8,7 +8,7 @@ import {
     Chip,
     Divider,
 } from "@heroui/react";
-import { Receipt, Calendar, User, CreditCard, Package, Trash2 } from "lucide-react";
+import { Receipt, Calendar, User, CreditCard, Package, Pencil, Trash2 } from "lucide-react";
 import type { Sale } from "../../types/sales";
 
 interface SaleDetailModalProps {
@@ -17,6 +17,7 @@ interface SaleDetailModalProps {
     sale: Sale | null;
     canDelete?: boolean;
     onDelete?: (sale: Sale) => void;
+    onEdit?: (sale: Sale) => void;
 }
 
 export function SaleDetailModal({
@@ -25,6 +26,7 @@ export function SaleDetailModal({
     sale,
     canDelete = false,
     onDelete,
+    onEdit,
 }: SaleDetailModalProps) {
     if (!sale) return null;
 
@@ -157,6 +159,16 @@ export function SaleDetailModal({
                     </div>
                 </ModalBody>
                 <ModalFooter>
+                    {canDelete && onEdit && (
+                        <Button
+                            color="primary"
+                            variant="flat"
+                            onPress={() => onEdit(sale)}
+                            startContent={<Pencil className="h-4 w-4" />}
+                        >
+                            Edit
+                        </Button>
+                    )}
                     {canDelete && onDelete && (
                         <Button
                             color="danger"

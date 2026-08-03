@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 from django.db import transaction
+from django.db.models import Count, Sum
 from rest_framework import serializers
 
 from .models import IngredientUsage, Product, ProductionRun, Recipe, RecipeItem
@@ -54,6 +57,25 @@ class RecipeSerializer(serializers.ModelSerializer):
             "items",
         ]
 
+    def validate_items(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                "Add at least one ingredient for this batch estimate."
+            )
+        ingredient_ids = [item["ingredient"].id for item in value]
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            raise serializers.ValidationError("Each ingredient can only be added once.")
+        if any(item["quantity"] <= 0 for item in value):
+            raise serializers.ValidationError(
+                "Every ingredient quantity must be greater than 0."
+            )
+        return value
+
+    def validate_standard_yield(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Expected output must be greater than 0.")
+        return value
+
     def create(self, validated_data):
         items_data = validated_data.pop("items")
         recipe = Recipe.objects.create(**validated_data)
@@ -85,6 +107,7 @@ class IngredientUsageInputSerializer(serializers.Serializer):
 
 class ProductionRunSerializer(serializers.ModelSerializer):
     usages = serializers.SerializerMethodField()
+    performance = serializers.SerializerMethodField()
     # Input field for actual usage
     usage_inputs = IngredientUsageInputSerializer(
         many=True, write_only=True, required=False
@@ -110,6 +133,7 @@ class ProductionRunSerializer(serializers.ModelSerializer):
             "date_produced",
             "notes",
             "usages",
+            "performance",
             "usage_inputs",
         ]
         read_only_fields = ("chef", "date_produced")
@@ -125,6 +149,98 @@ class ProductionRunSerializer(serializers.ModelSerializer):
                 "wastage",
             )
         )
+
+    def get_performance(self, obj):
+        usages = [
+            usage
+            for usage in obj.usages.all()
+            if usage.actual_amount > 0 and obj.quantity_produced > 0
+        ]
+        if not usages:
+            return {
+                "status": "baseline",
+                "historical_run_count": 0,
+                "ingredients": [],
+            }
+
+        history_rows = (
+            IngredientUsage.objects.filter(
+                production_run__product_id=obj.product_id,
+                ingredient_id__in=[usage.ingredient_id for usage in usages],
+                actual_amount__gt=0,
+                production_run_id__lt=obj.id,
+            )
+            .values("ingredient_id")
+            .annotate(
+                total_input=Sum("actual_amount"),
+                total_output=Sum("production_run__quantity_produced"),
+                run_count=Count("id"),
+            )
+        )
+        history_by_ingredient = {row["ingredient_id"]: row for row in history_rows}
+        ingredient_results = []
+        for usage in usages:
+            current_yield = obj.quantity_produced / usage.actual_amount
+            history = history_by_ingredient.get(usage.ingredient_id, {})
+            total_input = history.get("total_input") or Decimal("0")
+            total_output = history.get("total_output") or Decimal("0")
+            run_count = history.get("run_count") or 0
+            result = {
+                "status": "baseline",
+                "historical_run_count": run_count,
+                "ingredient_name": usage.ingredient.name,
+                "unit": usage.ingredient.unit,
+                "actual_amount": usage.actual_amount,
+                "actual_yield_per_unit": current_yield,
+            }
+            if run_count and total_input > 0 and total_output > 0:
+                average_yield = total_output / total_input
+                deviation = ((current_yield - average_yield) / average_yield) * Decimal(
+                    "100"
+                )
+                status = "normal"
+                if deviation <= Decimal("-15"):
+                    status = "underproducing"
+                elif deviation >= Decimal("15"):
+                    status = "overproducing"
+                result.update(
+                    {
+                        "status": status,
+                        "average_yield_per_unit": average_yield,
+                        "expected_output_from_average": (
+                            usage.actual_amount * average_yield
+                        ),
+                        "deviation_percent": deviation,
+                    }
+                )
+            ingredient_results.append(result)
+
+        comparable = [
+            result for result in ingredient_results if "deviation_percent" in result
+        ]
+        if not comparable:
+            return {
+                "status": "baseline",
+                "historical_run_count": 0,
+                "ingredients": ingredient_results,
+            }
+
+        most_unusual = max(
+            comparable, key=lambda result: abs(result["deviation_percent"])
+        )
+        return {
+            "status": most_unusual["status"],
+            "historical_run_count": most_unusual["historical_run_count"],
+            "ingredient_name": most_unusual["ingredient_name"],
+            "unit": most_unusual["unit"],
+            "actual_yield_per_unit": most_unusual["actual_yield_per_unit"],
+            "average_yield_per_unit": most_unusual["average_yield_per_unit"],
+            "expected_output_from_average": most_unusual[
+                "expected_output_from_average"
+            ],
+            "deviation_percent": most_unusual["deviation_percent"],
+            "ingredients": ingredient_results,
+        }
 
     def validate(self, data):
         # Ensure either product or composite is selected, not both, not neither
@@ -153,16 +269,22 @@ class ProductionRunSerializer(serializers.ModelSerializer):
             recipe = getattr(composite, "recipe", None)
 
         if not recipe:
-            raise serializers.ValidationError("Selected item has no recipe configured.")
+            raise serializers.ValidationError(
+                "Selected item has no batch estimate configured."
+            )
 
-        # Validate recipe has items
-        if not recipe.items.exists():
-            raise serializers.ValidationError("Recipe has no ingredients configured.")
+        recipe_items = list(
+            recipe.items.select_related("ingredient").order_by("ingredient_id")
+        )
+        if not recipe_items:
+            raise serializers.ValidationError(
+                "Selected item has no batch estimate configured."
+            )
 
         # Validate standard_yield
         if recipe.standard_yield <= 0:
             raise serializers.ValidationError(
-                "Recipe standard yield must be greater than 0."
+                "Batch estimate output must be greater than 0."
             )
 
         # Validate quantity
@@ -171,20 +293,55 @@ class ProductionRunSerializer(serializers.ModelSerializer):
                 "Production quantity must be greater than 0."
             )
 
-        # 2. Map User Inputs for fast lookup {ingredient_id: actual_amount}
-        usage_map = {
-            item["ingredient_id"]: item["actual_amount"] for item in usage_inputs
-        }
-
-        # Validate usage inputs (all must be positive)
-        for ingredient_id, actual_amount in usage_map.items():
-            if actual_amount < 0:
-                raise serializers.ValidationError(
-                    f"Actual amount for ingredient {ingredient_id} cannot be negative."
-                )
+        configured_ids = {item.ingredient_id for item in recipe_items}
+        submitted_ids = [usage["ingredient_id"] for usage in usage_inputs]
+        if len(submitted_ids) != len(set(submitted_ids)):
+            raise serializers.ValidationError(
+                {"usage_inputs": "Each ingredient can only be entered once."}
+            )
+        if set(submitted_ids) != configured_ids:
+            raise serializers.ValidationError(
+                {
+                    "usage_inputs": (
+                        "Enter the actual amount used for every ingredient in the "
+                        "configured batch estimate."
+                    )
+                }
+            )
+        if any(usage["actual_amount"] <= 0 for usage in usage_inputs):
+            raise serializers.ValidationError(
+                {
+                    "usage_inputs": (
+                        "Every actual ingredient amount must be greater than 0."
+                    )
+                }
+            )
 
         with transaction.atomic():
-            # Create Run
+            ingredient_model = recipe_items[0].ingredient.__class__
+            ingredients = list(
+                ingredient_model.objects.select_for_update()
+                .filter(pk__in=configured_ids)
+                .order_by("pk")
+            )
+            ingredients_by_id = {
+                ingredient.id: ingredient for ingredient in ingredients
+            }
+            actual_by_id = {
+                usage["ingredient_id"]: usage["actual_amount"] for usage in usage_inputs
+            }
+            for ingredient in ingredients:
+                actual = actual_by_id[ingredient.id]
+                if ingredient.kitchen_stock < actual:
+                    raise serializers.ValidationError(
+                        {
+                            "usage_inputs": (
+                                f"Only {ingredient.kitchen_stock} {ingredient.unit} of "
+                                f"{ingredient.name} is available in the kitchen store."
+                            )
+                        }
+                    )
+
             run = ProductionRun.objects.create(**validated_data)
 
             # Update Stock of the Finished Good (use F() to avoid race conditions)
@@ -196,40 +353,21 @@ class ProductionRunSerializer(serializers.ModelSerializer):
                 )  # Assuming integer units for products like bread
                 product.save(update_fields=["stock_quantity"])
             elif composite:
-                composite.current_stock = F("current_stock") + qty
-                composite.save(update_fields=["current_stock"])
+                composite.kitchen_stock = F("kitchen_stock") + qty
+                composite.save(update_fields=["kitchen_stock"])
 
-            # 3. Calculate Ingredients & Deduct Stock
             ratio = qty / recipe.standard_yield
-
-            # Prefetch recipe items to avoid N+1 queries
-            recipe_items = recipe.items.select_related("ingredient").all()
-
-            for item in recipe_items:
-                theoretical = item.quantity * ratio
-
-                # If Chef input provided, use it. Else assume theoretical.
-                actual = usage_map.get(item.ingredient.id, theoretical)
-
-                # Validate actual amount is not negative
-                if actual < 0:
-                    raise serializers.ValidationError(
-                        f"Actual amount for {item.ingredient.name} cannot be negative."
-                    )
-
-                # Record Usage
+            for recipe_item in recipe_items:
+                ingredient = ingredients_by_id[recipe_item.ingredient_id]
+                actual = actual_by_id[recipe_item.ingredient_id]
                 IngredientUsage.objects.create(
                     production_run=run,
-                    ingredient=item.ingredient,
-                    theoretical_amount=theoretical,
+                    ingredient=ingredient,
+                    theoretical_amount=recipe_item.quantity * ratio,
                     actual_amount=actual,
                 )
-
-                # Deduct Raw Material Stock (use F() to avoid race conditions)
-                # Note: We do not stop production if stock is low
-                # (negative stock allowed per logic)
-                item.ingredient.current_stock = F("current_stock") - actual
-                item.ingredient.save(update_fields=["current_stock"])
+                ingredient.kitchen_stock -= actual
+                ingredient.save(update_fields=["kitchen_stock"])
 
         # Send notification outside transaction
         from notifications.models import NotificationEvent

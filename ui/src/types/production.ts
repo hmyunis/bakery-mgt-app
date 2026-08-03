@@ -86,6 +86,18 @@ export interface IngredientUsage {
     wastage: number;
 }
 
+export interface IngredientPerformance {
+    status: "baseline" | "normal" | "underproducing" | "overproducing";
+    historical_run_count: number;
+    ingredient_name: string;
+    unit: string;
+    actual_amount: number;
+    actual_yield_per_unit: number;
+    average_yield_per_unit?: number;
+    expected_output_from_average?: number;
+    deviation_percent?: number;
+}
+
 export interface ProductionRun {
     id: number;
     chef: number | null;
@@ -98,6 +110,17 @@ export interface ProductionRun {
     date_produced: string;
     notes?: string;
     usages: IngredientUsage[];
+    performance: {
+        status: "baseline" | "normal" | "underproducing" | "overproducing";
+        historical_run_count: number;
+        ingredient_name?: string;
+        unit?: string;
+        actual_yield_per_unit?: number;
+        average_yield_per_unit?: number;
+        expected_output_from_average?: number;
+        deviation_percent?: number;
+        ingredients: IngredientPerformance[];
+    };
 }
 
 export interface CreateProductionRunData {

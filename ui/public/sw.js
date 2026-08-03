@@ -1,77 +1,108 @@
 /// <reference lib="webworker" />
 
-// Cast self to ServiceWorkerGlobalScope to avoid TS errors
 const sw = self;
+const CACHE_NAME = "siro-app-__BUILD_ID__";
+const APP_SHELL = [
+    "/",
+    "/icons/favicon-32x32.png",
+    "/icons/pwa-192x192.png",
+    "/icons/pwa-512x512.png",
+    "__PRECACHE_ASSETS__",
+];
 
-// 1. Handle Installation: Force the new SW to activate immediately
 sw.addEventListener("install", (event) => {
-    // fast-forward to activate
-    sw.skipWaiting();
+    event.waitUntil(
+        caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.addAll(APP_SHELL))
+            .then(() => sw.skipWaiting())
+    );
 });
 
-// 2. Handle Activation: Claim clients immediately so you don't need a refresh
 sw.addEventListener("activate", (event) => {
-    event.waitUntil(sw.clients.claim());
+    event.waitUntil(
+        caches
+            .keys()
+            .then((names) =>
+                Promise.all(
+                    names
+                        .filter((name) => name.startsWith("siro-app-") && name !== CACHE_NAME)
+                        .map((name) => caches.delete(name))
+                )
+            )
+            .then(() => sw.clients.claim())
+    );
 });
 
-// 3. Handle Incoming Push Notifications
+sw.addEventListener("fetch", (event) => {
+    const request = event.request;
+    const url = new URL(request.url);
+
+    // API and cross-origin responses always go directly to the network.
+    if (
+        request.method !== "GET" ||
+        url.origin !== sw.location.origin ||
+        url.pathname.startsWith("/api/")
+    ) {
+        return;
+    }
+
+    if (request.mode === "navigate") {
+        event.respondWith(fetch(request, { cache: "no-store" }).catch(() => caches.match("/")));
+        return;
+    }
+
+    if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/icons/")) {
+        event.respondWith(
+            caches.match(request).then(
+                (cached) =>
+                    cached ||
+                    fetch(request).then((response) => {
+                        if (response.ok) {
+                            const copy = response.clone();
+                            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+                        }
+                        return response;
+                    })
+            )
+        );
+    }
+});
+
 sw.addEventListener("push", (event) => {
     if (!event.data) return;
 
     try {
         const data = event.data.json();
-        // Expecting backend to send: { title, body, icon, data: { url: '/app/inventory' } }
         const { title, body, icon, badge, data: notificationData } = data;
-        const options = {
-            body,
-            icon: icon || "/logo.png",
-            badge: badge || "/logo.png",
-            data: notificationData, // This contains the URL info
-            vibrate: [100, 50, 100],
-            actions: [
-                {
-                    action: "open",
-                    title: "View Details",
-                },
-            ],
-        };
-
-        event.waitUntil(sw.registration.showNotification(title, options));
-    } catch (error) {
-        // Silently handle push event errors
+        event.waitUntil(
+            sw.registration.showNotification(title, {
+                body,
+                icon: icon || "/icons/pwa-192x192.png",
+                badge: badge || "/icons/badge-96x96.png",
+                data: notificationData,
+                vibrate: [100, 50, 100],
+                actions: [{ action: "open", title: "View Details" }],
+            })
+        );
+    } catch {
+        // Ignore malformed push payloads.
     }
 });
 
-// 4. Handle Notification Click (The Deep Linking Logic)
 sw.addEventListener("notificationclick", (event) => {
     event.notification.close();
-
-    // Get the specific URL from the payload, or default to root
     const urlToOpen = event.notification.data?.url || "/";
 
     event.waitUntil(
-        sw.clients
-            .matchAll({
-                type: "window",
-                includeUncontrolled: true,
-            })
-            .then((clientList) => {
-                // 1. Check if the app is already open
-                for (const client of clientList) {
-                    // Check if client is visible and matches our origin
-                    if (client.url.startsWith(sw.location.origin) && "focus" in client) {
-                        // Navigate the existing tab to the correct URL
-                        if ("navigate" in client) {
-                            client.navigate(urlToOpen);
-                        }
-                        return client.focus();
-                    }
+        sw.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+            for (const client of clients) {
+                if (client.url.startsWith(sw.location.origin) && "focus" in client) {
+                    if ("navigate" in client) client.navigate(urlToOpen);
+                    return client.focus();
                 }
-
-                // 2. If app is not open, open a new window with the specific URL
-                if (sw.clients.openWindow) {
-                    return sw.clients.openWindow(urlToOpen);
-                }
-            })
+            }
+            return sw.clients.openWindow?.(urlToOpen);
+        })
     );
 });

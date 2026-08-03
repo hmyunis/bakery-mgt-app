@@ -4,7 +4,7 @@ from rest_framework import serializers
 from treasury.models import BankAccount, Expense
 from treasury.serializers import ExpenseSerializer
 
-from .models import Ingredient, Purchase, StockAdjustment
+from .models import Ingredient, KitchenTransfer, Purchase, StockAdjustment
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -13,6 +13,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = (
             "current_stock",
+            "kitchen_stock",
             "average_cost_per_unit",
             "last_purchased_price",
             "updated_at",
@@ -128,3 +129,63 @@ class StockAdjustmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockAdjustment
         fields = "__all__"
+
+
+class KitchenTransferSerializer(serializers.ModelSerializer):
+    ingredient_name = serializers.CharField(source="ingredient.name", read_only=True)
+    unit = serializers.CharField(source="ingredient.unit", read_only=True)
+    transferred_by_name = serializers.CharField(
+        source="transferred_by.username", read_only=True
+    )
+    storehouse_balance_after = serializers.SerializerMethodField()
+    kitchen_balance_after = serializers.SerializerMethodField()
+
+    class Meta:
+        model = KitchenTransfer
+        fields = "__all__"
+        read_only_fields = (
+            "transferred_by",
+            "storehouse_balance_before",
+            "kitchen_balance_before",
+            "transferred_at",
+        )
+
+    def get_storehouse_balance_after(self, obj):
+        return obj.storehouse_balance_before - obj.quantity
+
+    def get_kitchen_balance_after(self, obj):
+        return obj.kitchen_balance_before + obj.quantity
+
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Transfer quantity must be greater than 0."
+            )
+        return value
+
+    @transaction.atomic
+    def create(self, validated_data):
+        ingredient = Ingredient.objects.select_for_update().get(
+            pk=validated_data["ingredient"].pk
+        )
+        quantity = validated_data["quantity"]
+        if ingredient.current_stock < quantity:
+            raise serializers.ValidationError(
+                {
+                    "quantity": (
+                        f"Only {ingredient.current_stock} {ingredient.unit} "
+                        "is available "
+                        "in the storehouse."
+                    )
+                }
+            )
+
+        transfer = KitchenTransfer.objects.create(
+            **validated_data,
+            storehouse_balance_before=ingredient.current_stock,
+            kitchen_balance_before=ingredient.kitchen_stock,
+        )
+        ingredient.current_stock -= quantity
+        ingredient.kitchen_stock += quantity
+        ingredient.save(update_fields=["current_stock", "kitchen_stock"])
+        return transfer

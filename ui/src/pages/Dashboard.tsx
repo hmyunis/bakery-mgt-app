@@ -14,6 +14,7 @@ import { CashVsDigitalPie } from "../components/dashboard/CashVsDigitalPie";
 import { SalesByHourChart } from "../components/dashboard/SalesByHourChart";
 import { TopProductsChart } from "../components/dashboard/TopProductsChart";
 import { useAppSelector } from "../store";
+import { hasPagePermission } from "../constants/roles";
 
 function formatMoney(n: number) {
     return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n);
@@ -40,17 +41,17 @@ function formatDateShort(isoOrDate: string) {
 
 export function DashboardPage() {
     const { user } = useAppSelector((s) => s.auth);
-    const isAdmin = user?.role === "admin";
+    const isAdmin = hasPagePermission(user?.role, user?.permissions, "dashboard");
 
     const { data, isLoading, isError } = useOwnerDashboard(isAdmin);
 
     if (!isAdmin) {
         return (
             <div className="space-y-6">
-                <PageTitle title="Dashboard" subtitle="High-level overview (Owner/Admin only)." />
+                <PageTitle title="Dashboard" subtitle="High-level overview." />
                 <div className="rounded-xl border border-white/10 bg-[var(--panel)]/80 backdrop-blur-xl p-6">
                     <p className="text-sm text-[var(--muted)]">
-                        Dashboard analytics are available to Admin only.
+                        You do not have dashboard permission.
                     </p>
                 </div>
             </div>

@@ -1,19 +1,19 @@
 import { useState } from "react";
 import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
+    Alert,
     Button,
+    Chip,
     Input,
-    Textarea,
+    Modal,
+    ModalBody,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
     Select,
     SelectItem,
-    Chip,
-    Divider,
+    Textarea,
 } from "@heroui/react";
-import { AlertTriangle } from "lucide-react";
+import { Info } from "lucide-react";
 import type { CreateProductionRunData, Product } from "../../types/production";
 import { useIngredients } from "../../hooks/useInventory";
 import { useCreateProductionRun, useProducts, useRecipeByProduct } from "../../hooks/useProduction";
@@ -24,8 +24,6 @@ interface ProductionRunFormModalProps {
     preselectedProduct?: Product | null;
 }
 
-// Internal component to handle form logic.
-// Mounts freshly when the modal opens or the product context changes.
 function ProductionRunFormContent({
     preselectedProduct,
     onClose,
@@ -33,144 +31,54 @@ function ProductionRunFormContent({
     preselectedProduct?: Product | null;
     onClose: () => void;
 }) {
-    // Initialize form data directly from props
-    const [formData, setFormData] = useState({
-        product: preselectedProduct?.id.toString() || "",
-        quantity_produced: "",
-        notes: "",
-    });
-
-    // Store actual amounts keyed by ingredient ID: { [ingredientId]: "amount" }
-    // We don't need to sync this with recipe; we just clear it if product changes.
-    const [actualAmounts, setActualAmounts] = useState<Record<number, string>>({});
+    const [product, setProduct] = useState(preselectedProduct?.id.toString() || "");
+    const [quantityProduced, setQuantityProduced] = useState("");
+    const [amountsUsed, setAmountsUsed] = useState<Record<number, string>>({});
+    const [notes, setNotes] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const { data: productsData } = useProducts({
-        page_size: 100,
-        is_active: true,
-    });
+    const { data: productsData } = useProducts({ page_size: 100, is_active: true });
     const { data: ingredientsData } = useIngredients({ page_size: 100 });
+    const { data: estimate } = useRecipeByProduct(product ? Number(product) : null);
+    const { mutateAsync: createRun, isPending } = useCreateProductionRun();
 
-    // Fetch recipe based on currently selected product (from state)
-    const { data: recipe } = useRecipeByProduct(
-        formData.product ? parseInt(formData.product) : null
+    const ingredientsById = new Map(
+        (ingredientsData?.results || []).map((ingredient) => [ingredient.id, ingredient])
     );
+    const batchItems = estimate?.items || [];
 
-    const { mutateAsync: createProductionRun, isPending: isCreating } = useCreateProductionRun();
-
-    const products = productsData?.results || [];
-    const ingredients = ingredientsData?.results || [];
-
-    const handleInputChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-
-        // If product changes, reset the actual amounts entered
-        if (field === "product") {
-            setActualAmounts({});
+    const submit = async () => {
+        const nextErrors: Record<string, string> = {};
+        if (!product) nextErrors.product = "Product is required";
+        if (!estimate || !batchItems.length)
+            nextErrors.product = "Configure a batch estimate first";
+        if (!quantityProduced || Number(quantityProduced) <= 0) {
+            nextErrors.quantityProduced = "Output must be greater than 0";
         }
-
-        if (errors[field]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev };
-                delete newErrors[field];
-                return newErrors;
-            });
-        }
-    };
-
-    const handleUsageAmountChange = (ingredientId: number, value: string) => {
-        setActualAmounts((prev) => ({
-            ...prev,
-            [ingredientId]: value,
-        }));
-
-        // Clear specific error if exists
-        const errorKey = `usage_${ingredientId}`;
-        if (errors[errorKey]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev };
-                delete newErrors[errorKey];
-                return newErrors;
-            });
-        }
-    };
-
-    const validateForm = (): boolean => {
-        const newErrors: Record<string, string> = {};
-
-        if (!formData.product) {
-            newErrors.product = "Product is required";
-        }
-
-        if (!formData.quantity_produced || parseFloat(formData.quantity_produced) <= 0) {
-            newErrors.quantity_produced = "Quantity must be greater than 0";
-        }
-
-        // Validate actual amounts
-        Object.entries(actualAmounts).forEach(([ingId, amount]) => {
-            if (amount && parseFloat(amount) < 0) {
-                newErrors[`usage_${ingId}`] = "Actual amount cannot be negative";
+        batchItems.forEach((item) => {
+            const actual = Number(amountsUsed[item.ingredient]);
+            const ingredient = ingredientsById.get(item.ingredient);
+            if (!amountsUsed[item.ingredient] || actual <= 0) {
+                nextErrors[`ingredient-${item.ingredient}`] = "Enter the amount actually used";
+            } else if (ingredient && actual > ingredient.kitchen_stock) {
+                nextErrors[`ingredient-${item.ingredient}`] =
+                    `Only ${ingredient.kitchen_stock.toFixed(3)} ${ingredient.unit} is in the kitchen store`;
             }
         });
+        setErrors(nextErrors);
+        if (Object.keys(nextErrors).length || !batchItems.length) return;
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async () => {
-        if (!validateForm()) {
-            return;
-        }
-
-        try {
-            // Construct usage inputs from the recipe items and the manual overrides (actualAmounts)
-            // If no recipe, usage_inputs is empty.
-            const usage_inputs = recipe?.items
-                ? recipe.items
-                      .map((item) => ({
-                          ingredient: item.ingredient,
-                          actual_amount: actualAmounts[item.ingredient]
-                              ? parseFloat(actualAmounts[item.ingredient])
-                              : 0, // 0 or undefined depending on backend requirement. Usually filtered out if 0.
-                      }))
-                      .filter((usage) => usage.actual_amount > 0)
-                : [];
-
-            const createData: CreateProductionRunData = {
-                product: parseInt(formData.product),
-                quantity_produced: parseFloat(formData.quantity_produced),
-                notes: formData.notes || undefined,
-                usage_inputs: usage_inputs,
-            };
-
-            await createProductionRun(createData);
-            onClose();
-        } catch {
-            // Error handling is done in the hook
-        }
-    };
-
-    // Get ingredient name helper
-    const getIngredientName = (ingredientId: number): string => {
-        const ingredient = ingredients.find((ing) => ing.id === ingredientId);
-        return ingredient?.name || `Ingredient #${ingredientId}`;
-    };
-
-    // Calculate theoretical amount for each ingredient
-    const getTheoreticalAmount = (ingredientId: number): number => {
-        if (!recipe || !formData.quantity_produced) return 0;
-        const recipeItem = recipe.items.find((item) => item.ingredient === ingredientId);
-        if (!recipeItem) return 0;
-        const ratio = parseFloat(formData.quantity_produced) / recipe.standard_yield;
-        return recipeItem.quantity * ratio;
-    };
-
-    // Calculate wastage preview
-    const getWastagePreview = (ingredientId: number, actualAmountStr: string): number => {
-        if (!actualAmountStr) return 0;
-        const theoretical = getTheoreticalAmount(ingredientId);
-        const actual = parseFloat(actualAmountStr);
-        return actual - theoretical;
+        const data: CreateProductionRunData = {
+            product: Number(product),
+            quantity_produced: Number(quantityProduced),
+            usage_inputs: batchItems.map((item) => ({
+                ingredient: item.ingredient,
+                actual_amount: Number(amountsUsed[item.ingredient]),
+            })),
+            notes: notes || undefined,
+        };
+        await createRun(data);
+        onClose();
     };
 
     return (
@@ -180,205 +88,130 @@ function ProductionRunFormContent({
                     ? `Record Production: ${preselectedProduct.name}`
                     : "Record Baking Session"}
             </ModalHeader>
-            <ModalBody className="space-y-4">
-                {/* Product Selection */}
+            <ModalBody className="space-y-5">
                 {!preselectedProduct ? (
                     <Select
                         label="Product"
-                        placeholder="Select a product"
-                        selectionMode="single"
-                        selectedKeys={
-                            formData.product
-                                ? new Set<string>([formData.product])
-                                : new Set<string>()
-                        }
+                        selectedKeys={product ? [product] : []}
                         onSelectionChange={(keys) => {
-                            const selected = Array.from(keys)[0] as string;
-                            if (selected) {
-                                handleInputChange("product", selected);
-                            }
+                            setProduct(String(Array.from(keys)[0] || ""));
+                            setAmountsUsed({});
                         }}
-                        isRequired
                         isInvalid={!!errors.product}
                         errorMessage={errors.product}
-                        items={products.map((p) => ({
-                            key: p.id.toString(),
-                            label: p.name,
-                        }))}
                         classNames={{
+                            base: "!w-full !text-left",
                             trigger: "!w-full !text-left",
                             label: "!w-full !text-left",
-                            base: "!w-full !text-left",
                             value: "!text-slate-900 dark:!text-slate-100",
                         }}
                     >
-                        {(product) => <SelectItem>{product.label}</SelectItem>}
+                        {(productsData?.results || []).map((item) => (
+                            <SelectItem key={item.id.toString()}>{item.name}</SelectItem>
+                        ))}
                     </Select>
                 ) : (
-                    <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3">
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">Product</p>
-                        <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                            {preselectedProduct.name}
-                        </p>
+                    <div className="rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800">
+                        <p className="text-xs text-zinc-500">Product</p>
+                        <p className="font-medium">{preselectedProduct.name}</p>
                     </div>
                 )}
 
-                {/* Recipe Info */}
-                {recipe && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                            Recipe Information
+                {estimate && batchItems.length ? (
+                    <Alert color="primary" variant="flat" icon={<Info className="h-4 w-4" />}>
+                        <p className="font-medium">
+                            Full batch estimate: {estimate.standard_yield.toFixed(2)} pcs
                         </p>
-                        <p className="text-xs text-blue-700 dark:text-blue-300">
-                            Standard Yield: {recipe.standard_yield} pcs
+                        <p className="text-sm">
+                            {batchItems
+                                .map((item) => {
+                                    const ingredient = ingredientsById.get(item.ingredient);
+                                    return `${item.quantity.toFixed(3)} ${ingredient?.unit || item.unit || ""} ${ingredient?.name || item.ingredient_name || "ingredient"}`;
+                                })
+                                .join(" + ")}
                         </p>
-                    </div>
-                )}
+                    </Alert>
+                ) : product ? (
+                    <Alert color="warning" variant="flat">
+                        This product needs a batch estimate before production can be recorded.
+                    </Alert>
+                ) : null}
 
-                {/* Quantity Produced */}
                 <Input
-                    label="Quantity Produced"
+                    label="Actual output from this baking session"
                     type="number"
-                    value={formData.quantity_produced}
-                    onValueChange={(v) => handleInputChange("quantity_produced", v)}
-                    isRequired
-                    placeholder="0.00"
+                    min="0.01"
                     step="0.01"
-                    min="0"
-                    isInvalid={!!errors.quantity_produced}
-                    errorMessage={errors.quantity_produced}
-                    description={
-                        recipe && formData.quantity_produced
-                            ? `Ratio: ${(
-                                  parseFloat(formData.quantity_produced) / recipe.standard_yield
-                              ).toFixed(3)}x`
-                            : undefined
-                    }
-                    classNames={{
-                        input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
-                    }}
+                    value={quantityProduced}
+                    onValueChange={setQuantityProduced}
+                    endContent={<span className="text-sm text-zinc-500">pcs</span>}
+                    isInvalid={!!errors.quantityProduced}
+                    errorMessage={errors.quantityProduced}
                 />
 
-                {/* Ingredient Usage Inputs - Derived from Recipe Items */}
-                {recipe && recipe.items && recipe.items.length > 0 && (
+                {!!batchItems.length && (
                     <div className="space-y-3">
-                        <Divider />
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                                Ingredient Usage (Optional)
-                            </h4>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                Leave empty to use theoretical amounts
+                        <div>
+                            <p className="font-medium">What was actually taken from the kitchen</p>
+                            <p className="text-sm text-zinc-500">
+                                Enter the bulk amount used for each ingredient—no per-piece math.
                             </p>
                         </div>
-
-                        <div className="space-y-3 max-h-64 overflow-y-auto">
-                            {recipe.items.map((item) => {
-                                const theoretical = getTheoreticalAmount(item.ingredient);
-                                const actualVal = actualAmounts[item.ingredient] || "";
-                                const wastage = getWastagePreview(item.ingredient, actualVal);
-                                const ingredient = ingredients.find(
-                                    (ing) => ing.id === item.ingredient
-                                );
-
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {batchItems.map((item) => {
+                                const ingredient = ingredientsById.get(item.ingredient);
+                                const scaledEstimate =
+                                    estimate && Number(quantityProduced) > 0
+                                        ? (item.quantity * Number(quantityProduced)) /
+                                          estimate.standard_yield
+                                        : 0;
                                 return (
-                                    <div
+                                    <Input
                                         key={item.ingredient}
-                                        className="p-3 border border-zinc-200 dark:border-zinc-800 rounded-lg space-y-2"
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                                                {getIngredientName(item.ingredient)}
-                                            </span>
-                                            {ingredient && (
-                                                <Chip variant="flat" size="sm">
-                                                    {ingredient.unit}
-                                                </Chip>
-                                            )}
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2 text-xs">
-                                            <div>
-                                                <span className="text-zinc-500 dark:text-zinc-400">
-                                                    Theoretical:{" "}
-                                                </span>
-                                                <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                                                    {theoretical.toFixed(3)}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <Input
-                                                    size="sm"
-                                                    label="Actual Amount"
-                                                    type="number"
-                                                    value={actualVal}
-                                                    onValueChange={(v) =>
-                                                        handleUsageAmountChange(item.ingredient, v)
-                                                    }
-                                                    placeholder={theoretical.toFixed(3)}
-                                                    step="0.001"
-                                                    min="0"
-                                                    isInvalid={!!errors[`usage_${item.ingredient}`]}
-                                                    errorMessage={
-                                                        errors[`usage_${item.ingredient}`]
-                                                    }
-                                                    classNames={{
-                                                        input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                        {actualVal && parseFloat(actualVal) > 0 && (
-                                            <div className="flex items-center gap-2 text-xs">
-                                                {wastage > 0 ? (
-                                                    <>
-                                                        <AlertTriangle className="h-3 w-3 text-danger-500" />
-                                                        <span className="text-danger-600 dark:text-danger-400 font-medium">
-                                                            Wastage: +{wastage.toFixed(3)}
-                                                        </span>
-                                                    </>
-                                                ) : wastage < 0 ? (
-                                                    <span className="text-success-600 dark:text-success-400">
-                                                        Saved: {Math.abs(wastage).toFixed(3)}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-zinc-500">
-                                                        No wastage
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
+                                        label={`${ingredient?.name || item.ingredient_name || "Ingredient"} actually used`}
+                                        type="number"
+                                        min="0.001"
+                                        step="0.001"
+                                        value={amountsUsed[item.ingredient] || ""}
+                                        onValueChange={(value) =>
+                                            setAmountsUsed((current) => ({
+                                                ...current,
+                                                [item.ingredient]: value,
+                                            }))
+                                        }
+                                        endContent={
+                                            <Chip size="sm">{ingredient?.unit || item.unit}</Chip>
+                                        }
+                                        description={
+                                            ingredient
+                                                ? `Kitchen: ${ingredient.kitchen_stock.toFixed(3)} ${ingredient.unit}${scaledEstimate ? ` · rough amount: ${scaledEstimate.toFixed(3)} ${ingredient.unit}` : ""}`
+                                                : undefined
+                                        }
+                                        isInvalid={!!errors[`ingredient-${item.ingredient}`]}
+                                        errorMessage={errors[`ingredient-${item.ingredient}`]}
+                                    />
                                 );
                             })}
                         </div>
                     </div>
                 )}
 
-                {/* Notes */}
                 <Textarea
-                    label="Notes (Optional)"
-                    value={formData.notes}
-                    onValueChange={(v) => handleInputChange("notes", v)}
-                    placeholder="Additional notes about this production run"
-                    classNames={{
-                        input: "!text-slate-900 dark:!text-zinc-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
-                    }}
+                    label="Notes (optional)"
+                    value={notes}
+                    onValueChange={setNotes}
+                    placeholder="Anything unusual about this run"
                 />
             </ModalBody>
             <ModalFooter>
-                <Button
-                    variant="flat"
-                    onPress={onClose}
-                    disabled={isCreating}
-                    className="!text-zinc-700 dark:!text-zinc-300"
-                >
+                <Button variant="flat" onPress={onClose}>
                     Cancel
                 </Button>
                 <Button
                     color="primary"
-                    onPress={handleSubmit}
-                    isLoading={isCreating}
-                    isDisabled={!recipe || !formData.quantity_produced}
+                    onPress={submit}
+                    isLoading={isPending}
+                    isDisabled={!batchItems.length}
                 >
                     Record Production
                 </Button>
@@ -392,18 +225,14 @@ export function ProductionRunFormModal({
     onClose,
     preselectedProduct,
 }: ProductionRunFormModalProps) {
-    // We use a key to ensure the form content is completely re-mounted
-    // whenever the modal opens or the product changes. This resets all internal state.
-    const formKey = preselectedProduct ? `run-${preselectedProduct.id}` : "run-new";
-
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="3xl" backdrop="blur" scrollBehavior="inside">
-            <ModalContent className="max-h-[90vh]">
-                {(onCloseModal) => (
+        <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
+            <ModalContent>
+                {(closeModal) => (
                     <ProductionRunFormContent
-                        key={formKey}
+                        key={`${isOpen}-${preselectedProduct?.id || "new"}`}
                         preselectedProduct={preselectedProduct}
-                        onClose={onCloseModal}
+                        onClose={closeModal}
                     />
                 )}
             </ModalContent>

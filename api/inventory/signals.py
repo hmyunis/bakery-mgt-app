@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
@@ -29,7 +31,8 @@ def update_inventory_on_purchase(sender, instance, created, **kwargs):
 
         # 1. Update Weighted Average Cost
         # Formula: ((OldStock * OldAvg) + (NewQty * NewPrice)) / (OldStock + NewQty)
-        total_value_old = ingredient.current_stock * ingredient.average_cost_per_unit
+        average_cost = Decimal(str(ingredient.average_cost_per_unit))
+        total_value_old = ingredient.current_stock * average_cost
         total_value_new = instance.total_cost
 
         new_total_qty = ingredient.current_stock + instance.quantity
@@ -188,12 +191,15 @@ def revert_inventory_on_adjustment_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=Ingredient)
 def check_low_stock(sender, instance, **kwargs):
     """Check if ingredient stock is low and send notification"""
-    if instance.current_stock <= instance.reorder_point:
+    current_stock = Ingredient.objects.values_list("current_stock", flat=True).get(
+        pk=instance.pk
+    )
+    if current_stock <= instance.reorder_point:
         send_notification(
             NotificationEvent.LOW_STOCK,
             {
                 "ingredient_name": instance.name,
-                "current_stock": str(instance.current_stock),
+                "current_stock": str(current_stock),
                 "reorder_point": str(instance.reorder_point),
                 "unit": instance.unit,
             },

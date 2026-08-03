@@ -30,6 +30,7 @@ from .serializers import (
     ShiftSessionAcceptSerializer,
     ShiftSessionCloseSerializer,
     ShiftSessionOpenSerializer,
+    ShiftSessionReconciliationUpdateSerializer,
     ShiftSessionSerializer,
 )
 from .services import apply_sale_bank_sync
@@ -37,34 +38,29 @@ from .services import apply_sale_bank_sync
 
 class IsCashierOrAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.user.is_anonymous:
-            return False
-        if view.action in ["create"]:
-            return request.user.role in ["cashier", "admin"]
-        if (
-            view.action in ["list", "retrieve", "destroy", "payment_status"]
-            and request.user.role == "cashier"
-        ):
-            return True
-        return request.user.role == "admin"
+        return bool(
+            request.user.is_authenticated and request.user.has_page_permission("sales")
+        )
 
 
 class IsAdmin(permissions.BasePermission):
     """Admin-only permission for payment method management."""
 
     def has_permission(self, request, view):
-        if request.user.is_anonymous:
+        if not request.user.is_authenticated:
             return False
         if view.action in ["list", "retrieve"]:
-            return request.user.is_authenticated
-        return request.user.role == "admin"
+            return request.user.has_page_permission(
+                "sales"
+            ) or request.user.has_page_permission("treasury")
+        return request.user.has_page_permission("treasury")
 
 
 class IsCashierOrAdminForShiftSession(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.is_anonymous:
             return False
-        return request.user.role in ["cashier", "admin"]
+        return request.user.has_page_permission("sales")
 
 
 class PaymentMethodViewSet(viewsets.ModelViewSet):
@@ -78,7 +74,7 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdmin]
 
     def get_queryset(self):
-        if self.request.user.role == "admin":
+        if self.request.user.has_page_permission("treasury"):
             return PaymentMethod.objects.all()
         return PaymentMethod.objects.filter(is_active=True)
 
@@ -96,7 +92,7 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = super().get_queryset()
         user = self.request.user
 
-        if getattr(user, "role", None) == "cashier":
+        if getattr(user, "role", None) == "staff":
             queryset = queryset.filter(
                 Q(opened_by=user)
                 | Q(status=ShiftSession.STATUS_CLOSED)
@@ -159,9 +155,9 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="open")
     def open_shift(self, request):
-        if request.user.role not in ["cashier", "admin"]:
+        if not request.user.has_page_permission("sales"):
             return Response(
-                {"detail": "Only admin or cashier can open shift sessions."},
+                {"detail": "Sales permission is required to open shift sessions."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         serializer = ShiftSessionOpenSerializer(
@@ -186,7 +182,7 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if request.user.role == "cashier" and session.opened_by_id != request.user.id:
+        if request.user.role == "staff" and session.opened_by_id != request.user.id:
             return Response(
                 {"detail": "Cashier can only close own opened session."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -240,7 +236,7 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
                 row["product_id"]: int(row["total_qty"] or 0) for row in unpaid_rows
             }
 
-            active_products = Product.objects.filter(is_active=True)
+            active_products = Product.objects.select_for_update().filter(is_active=True)
             for product in active_products:
                 row, _created = ShiftSessionProductCount.objects.get_or_create(
                     session=session,
@@ -258,14 +254,18 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
 
                 row.expected_closing_count = expected
                 row.closing_count = closing_count
+                row.closing_stock_before_override = product.stock_quantity
                 row.variance = variance
                 row.save(
                     update_fields=[
                         "expected_closing_count",
                         "closing_count",
+                        "closing_stock_before_override",
                         "variance",
                     ]
                 )
+                product.stock_quantity = closing_count
+                product.save(update_fields=["stock_quantity"])
 
             session.closed_by = request.user
             session.closed_at = closed_at
@@ -304,7 +304,7 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if request.user.role == "cashier" and session.opened_by_id == request.user.id:
+        if request.user.role == "staff" and session.opened_by_id == request.user.id:
             return Response(
                 {"detail": "Cashier cannot accept own session handover."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -341,7 +341,7 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
         if not session.closed_by or (
-            getattr(session.closed_by, "role", None) != "cashier"
+            getattr(session.closed_by, "role", None) != "staff"
         ):
             return Response(
                 {"detail": "Only shifts closed by a cashier can be reopened."},
@@ -369,9 +369,69 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
             ShiftSessionSerializer(session, context={"request": request}).data
         )
 
-    @action(detail=True, methods=["get"], url_path="reconciliation")
+    @action(detail=True, methods=["get", "patch"], url_path="reconciliation")
     def reconciliation(self, request, pk=None):
         session = self.get_object()
+
+        if request.method == "PATCH":
+            if request.user.role != "admin":
+                return Response(
+                    {"detail": "Only admins can edit reconciliation reports."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            serializer = ShiftSessionReconciliationUpdateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            with transaction.atomic():
+                session = ShiftSession.objects.select_for_update().get(pk=session.pk)
+                counts = data.get("counts", [])
+                rows = {
+                    row.product_id: row
+                    for row in session.product_counts.select_for_update().all()
+                }
+                unknown_ids = {row["product_id"] for row in counts} - set(rows)
+                if unknown_ids:
+                    return Response(
+                        {"detail": "One or more products are not part of this report."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                update_fields = []
+                for field in [
+                    "open_notes",
+                    "close_notes",
+                    "total_cash_declared",
+                    "total_digital_declared",
+                ]:
+                    if field in data:
+                        setattr(session, field, data[field])
+                        update_fields.append(field)
+                if update_fields:
+                    session.save(update_fields=update_fields)
+
+                for values in counts:
+                    count = rows[values["product_id"]]
+                    fields = []
+                    if "opening_count" in values:
+                        opening_delta = values["opening_count"] - count.opening_count
+                        count.opening_count = values["opening_count"]
+                        fields.append("opening_count")
+                        if count.expected_closing_count is not None:
+                            count.expected_closing_count += opening_delta
+                            fields.append("expected_closing_count")
+                    if "closing_count" in values:
+                        count.closing_count = values["closing_count"]
+                        fields.append("closing_count")
+                    if (
+                        count.closing_count is not None
+                        and count.expected_closing_count is not None
+                    ):
+                        count.variance = (
+                            count.closing_count - count.expected_closing_count
+                        )
+                        fields.append("variance")
+                    if fields:
+                        count.save(update_fields=list(dict.fromkeys(fields)))
 
         end_time = session.closed_at or timezone.now()
         produced_rows = (
@@ -459,6 +519,13 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
                     "product_name": count.product.name,
                     "unit_price": float(count.product.selling_price or 0),
                     "opening_count": opening_qty,
+                    "opening_stock_before_override": (
+                        count.opening_stock_before_override
+                    ),
+                    "opening_stock_mismatch": (
+                        count.opening_stock_before_override is not None
+                        and int(count.opening_stock_before_override) != opening_qty
+                    ),
                     "produced_in_shift": produced_qty,
                     "paid_sold_qty": paid_qty,
                     "unpaid_qty": unpaid_qty,
@@ -466,6 +533,14 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
                     "counted_closing_count": int(closing_qty)
                     if closing_qty is not None
                     else None,
+                    "closing_stock_before_override": (
+                        count.closing_stock_before_override
+                    ),
+                    "closing_stock_mismatch": (
+                        count.closing_stock_before_override is not None
+                        and closing_qty is not None
+                        and int(count.closing_stock_before_override) != int(closing_qty)
+                    ),
                     "variance_qty": variance_qty,
                     "variance_value": float(variance_value)
                     if variance_value is not None
@@ -541,7 +616,7 @@ class SaleViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         user = self.request.user
 
-        if getattr(user, "role", None) == "cashier":
+        if getattr(user, "role", None) == "staff":
             queryset = queryset.filter(cashier=user)
 
         current_tz = timezone.get_current_timezone()
@@ -583,7 +658,7 @@ class SaleViewSet(viewsets.ModelViewSet):
 
         User = get_user_model()
         try:
-            cashier = User.objects.get(id=int(cashier_id), role="cashier")
+            cashier = User.objects.get(id=int(cashier_id), role="staff")
         except (TypeError, ValueError):
             return Response(
                 {"detail": "cashier must be a valid user id."},
@@ -786,7 +861,7 @@ class SaleViewSet(viewsets.ModelViewSet):
 class DailyClosingViewSet(viewsets.ModelViewSet):
     queryset = DailyClosing.objects.order_by("-date")
     serializer_class = DailyClosingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsCashierOrAdmin]
 
     def create(self, request, *args, **kwargs):
         today = timezone.now().date()

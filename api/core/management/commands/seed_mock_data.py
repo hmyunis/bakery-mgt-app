@@ -131,7 +131,7 @@ class Command(BaseCommand):
 
     def _seed_users(self, count):
         User = get_user_model()
-        roles = ["admin", "storekeeper", "chef", "cashier"]
+        roles = ["admin", "staff"]
         first_names = [
             "Abebe",
             "Aster",
@@ -229,6 +229,7 @@ class Command(BaseCommand):
                 name=names[i % len(names)] + ("" if i < len(names) else f" {i + 1}"),
                 unit=units[i % len(units)],
                 current_stock=Decimal("100.000") + Decimal(i),
+                kitchen_stock=Decimal("30.000") + Decimal(i),
                 reorder_point=Decimal("10.000"),
                 average_cost_per_unit=Decimal("25.00"),
                 last_purchased_price=Decimal("27.50"),

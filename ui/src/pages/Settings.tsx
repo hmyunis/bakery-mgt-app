@@ -1,18 +1,11 @@
-import React, { useState, useMemo } from "react";
-import { Tabs, Tab, Spinner, Button } from "@heroui/react";
-import { CreditCard, Plus, Store, Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { Tabs, Tab, Spinner } from "@heroui/react";
+import { Store, Trash2 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { ProfileSummaryCard } from "../components/profile/ProfileSummaryCard";
 import { ProfileForm } from "../components/profile/ProfileForm";
 import { PageTitle } from "../components/ui/PageTitle";
-import { DataTable } from "../components/ui/DataTable";
-import { DataTablePagination } from "../components/ui/DataTablePagination";
-import { getPaymentMethodColumns } from "../components/payment/PaymentMethodColumns";
-import { PaymentMethodFormModal } from "../components/payment/PaymentMethodFormModal";
-import { DeletePaymentMethodModal } from "../components/payment/DeletePaymentMethodModal";
-import { usePaymentMethods, useUpdatePaymentMethod } from "../hooks/usePayment";
 import type { UserProfile } from "../services/authService";
-import type { PaymentMethod } from "../types/payment";
 import { toast } from "sonner";
 import type { ApiError, ApiErrorResponse } from "../types/api";
 import { useAppSelector } from "../store";
@@ -34,25 +27,6 @@ const SettingsPage: React.FC = () => {
         oldPassword: "",
         newPassword: "",
     });
-
-    // Payment Methods state
-    const [paymentPage, setPaymentPage] = useState(1);
-    const [paymentPageSize, setPaymentPageSize] = useState(10);
-    const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
-    const [editingPaymentMethod, setEditingPaymentMethod] = useState<PaymentMethod | null>(null);
-    const [deletingPaymentMethod, setDeletingPaymentMethod] = useState<PaymentMethod | null>(null);
-
-    const { data: paymentMethodsData, isLoading: isLoadingPaymentMethods } = usePaymentMethods({
-        page: paymentPage,
-        page_size: paymentPageSize,
-    });
-
-    const { mutateAsync: updatePaymentMethod } = useUpdatePaymentMethod();
-
-    const paymentMethodRows = useMemo(
-        () => paymentMethodsData?.results ?? [],
-        [paymentMethodsData]
-    );
 
     const [prevUser, setPrevUser] = useState(user);
 
@@ -99,32 +73,6 @@ const SettingsPage: React.FC = () => {
             });
             setPasswordForm({ oldPassword: "", newPassword: "" });
             setIsEditing(false);
-        }
-    };
-
-    // Payment Methods handlers
-    const handleAddPaymentMethod = () => {
-        setEditingPaymentMethod(null);
-        setIsPaymentFormOpen(true);
-    };
-
-    const handleEditPaymentMethod = (paymentMethod: PaymentMethod) => {
-        setEditingPaymentMethod(paymentMethod);
-        setIsPaymentFormOpen(true);
-    };
-
-    const handleDeletePaymentMethod = (paymentMethod: PaymentMethod) => {
-        setDeletingPaymentMethod(paymentMethod);
-    };
-
-    const handleToggleActive = async (paymentMethod: PaymentMethod) => {
-        try {
-            await updatePaymentMethod({
-                id: paymentMethod.id,
-                data: { is_active: !paymentMethod.is_active },
-            });
-        } catch {
-            // Error handling is done in the hook
         }
     };
 
@@ -250,64 +198,6 @@ const SettingsPage: React.FC = () => {
 
                 {isAdmin && (
                     <Tab
-                        key="payment-methods"
-                        title={
-                            <div className="flex items-center gap-2">
-                                <CreditCard className="h-4 w-4" />
-                                <span>Payment Methods</span>
-                            </div>
-                        }
-                    >
-                        <div className="space-y-4">
-                            <div className="flex justify-end">
-                                <Button
-                                    color="primary"
-                                    startContent={<Plus className="h-4 w-4" />}
-                                    onPress={handleAddPaymentMethod}
-                                >
-                                    Add Payment Method
-                                </Button>
-                            </div>
-
-                            {isLoadingPaymentMethods ? (
-                                <div className="flex justify-center py-12">
-                                    <Spinner size="lg" />
-                                </div>
-                            ) : (
-                                <>
-                                    <DataTable
-                                        columns={getPaymentMethodColumns({
-                                            onEdit: handleEditPaymentMethod,
-                                            onDelete: handleDeletePaymentMethod,
-                                            onToggleActive: handleToggleActive,
-                                        })}
-                                        data={paymentMethodRows}
-                                    />
-                                    {paymentMethodsData && paymentMethodsData.count > 0 && (
-                                        <DataTablePagination
-                                            pagination={{
-                                                count: paymentMethodsData.count,
-                                                page: paymentPage,
-                                                pageSize: paymentPageSize,
-                                                totalPages: Math.ceil(
-                                                    paymentMethodsData.count / paymentPageSize
-                                                ),
-                                            }}
-                                            onPageChange={(newPage) => setPaymentPage(newPage)}
-                                            onPageSizeChange={(newSize) => {
-                                                setPaymentPageSize(newSize);
-                                                setPaymentPage(1);
-                                            }}
-                                        />
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </Tab>
-                )}
-
-                {isAdmin && (
-                    <Tab
                         key="reports"
                         title={
                             <div className="flex items-center gap-2">
@@ -354,22 +244,6 @@ const SettingsPage: React.FC = () => {
                     </Tab>
                 )}
             </Tabs>
-
-            {/* Payment Method Modals */}
-            <PaymentMethodFormModal
-                isOpen={isPaymentFormOpen}
-                onClose={() => {
-                    setIsPaymentFormOpen(false);
-                    setEditingPaymentMethod(null);
-                }}
-                paymentMethod={editingPaymentMethod}
-            />
-
-            <DeletePaymentMethodModal
-                isOpen={!!deletingPaymentMethod}
-                onClose={() => setDeletingPaymentMethod(null)}
-                paymentMethod={deletingPaymentMethod}
-            />
         </div>
     );
 };

@@ -262,16 +262,8 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
                 )}
             </div>
 
-            {/* Desktop spacer so content doesn't go under the fixed cart */}
-            <div
-                aria-hidden
-                className={`hidden md:block transition-all duration-300 shrink-0 ${
-                    isSidebarCollapsed ? "w-0" : "w-80"
-                }`}
-            />
-
             {/* Cart Sidebar */}
-            <div className="md:fixed md:top-20 md:right-4 lg:right-6 md:z-20">
+            <div className="md:sticky md:top-4 md:self-start md:z-20">
                 <POSCartSidebar
                     items={cart}
                     onIncrement={handleIncrement}
@@ -282,7 +274,7 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
                     isSidebarCollapsed={isSidebarCollapsed}
                     setIsSidebarCollapsed={setIsSidebarCollapsed}
                     salesLockedReason={salesLockedReason}
-                    className="h-[calc(100vh-8rem)]"
+                    className="min-h-[calc(100vh-8rem)]"
                 />
             </div>
         </div>

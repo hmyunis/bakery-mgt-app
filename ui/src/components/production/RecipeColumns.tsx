@@ -30,21 +30,26 @@ export const getRecipeColumns = ({
     },
     {
         accessorKey: "standard_yield",
-        header: "Standard Yield",
+        header: "Full Batch Output",
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
-                {parseFloat(row.original.standard_yield.toString()).toFixed(2)}
+                {parseFloat(row.original.standard_yield.toString()).toFixed(2)} pcs
             </span>
         ),
     },
     {
         accessorKey: "items",
-        header: "Ingredients",
+        header: "Batch Ingredients",
         cell: ({ row }) => {
             const items = row.original.items || [];
             return (
                 <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                    {items.length} ingredient{items.length !== 1 ? "s" : ""}
+                    {items.length
+                        ? `${items.length} ingredient${items.length === 1 ? "" : "s"}: ${items
+                              .slice(0, 2)
+                              .map((item) => item.ingredient_name)
+                              .join(", ")}${items.length > 2 ? ` +${items.length - 2}` : ""}`
+                        : "Not configured"}
                 </span>
             );
         },
@@ -57,7 +62,7 @@ export const getRecipeColumns = ({
             return (
                 <div className="relative flex items-center gap-2 p-2">
                     {onEdit && (
-                        <Tooltip content="Edit recipe">
+                        <Tooltip content="Edit batch estimate">
                             <Button
                                 isIconOnly
                                 variant="light"
@@ -70,7 +75,7 @@ export const getRecipeColumns = ({
                         </Tooltip>
                     )}
                     {onDelete && (
-                        <Tooltip content="Delete recipe" color="danger">
+                        <Tooltip content="Delete batch estimate" color="danger">
                             <Button
                                 isIconOnly
                                 variant="light"

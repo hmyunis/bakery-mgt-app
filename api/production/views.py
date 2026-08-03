@@ -13,21 +13,13 @@ class IsChefOrAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.is_anonymous:
             return False
-
-        # Cashiers can list/retrieve products (for POS)
-        if request.user.role == "cashier":
-            # Check if this is the ProductViewSet
-            if view.__class__.__name__ == "ProductViewSet" and view.action in [
-                "list",
-                "retrieve",
-            ]:
-                return True
-            return False
-
-        # Chefs can Read/Create ProductionRuns. Only Admin can manage Recipes/Products.
-        if view.action in ["create", "list", "retrieve", "products_with_recipes"]:
-            return request.user.role in ["admin", "chef", "storekeeper"]
-        return request.user.role == "admin"
+        if request.user.has_page_permission("production"):
+            return True
+        return (
+            view.__class__.__name__ == "ProductViewSet"
+            and view.action in ["list", "retrieve"]
+            and request.user.has_page_permission("sales")
+        )
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -102,17 +94,17 @@ class ProductionRunViewSet(viewsets.ModelViewSet):
                 )
                 instance.product.save(update_fields=["stock_quantity"])
             elif instance.composite_ingredient:
-                instance.composite_ingredient.current_stock = (
-                    F("current_stock") - instance.quantity_produced
+                instance.composite_ingredient.kitchen_stock = (
+                    F("kitchen_stock") - instance.quantity_produced
                 )
-                instance.composite_ingredient.save(update_fields=["current_stock"])
+                instance.composite_ingredient.save(update_fields=["kitchen_stock"])
 
             # Reverse ingredient stock (add back actual usage amounts)
             for usage in instance.usages.all():
-                usage.ingredient.current_stock = (
-                    F("current_stock") + usage.actual_amount
+                usage.ingredient.kitchen_stock = (
+                    F("kitchen_stock") + usage.actual_amount
                 )
-                usage.ingredient.save(update_fields=["current_stock"])
+                usage.ingredient.save(update_fields=["kitchen_stock"])
 
             # Delete the production run
             # (this will cascade delete IngredientUsage records)

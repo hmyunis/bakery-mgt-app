@@ -7,9 +7,20 @@ from core.utils import get_upload_path
 class User(AbstractUser):
     ROLE_CHOICES = (
         ("admin", "Admin"),
-        ("storekeeper", "Storekeeper"),
-        ("chef", "Chef"),
-        ("cashier", "Cashier"),
+        ("staff", "Staff"),
+    )
+
+    PAGE_PERMISSIONS = (
+        "dashboard",
+        "sales",
+        "treasury",
+        "production",
+        "inventory",
+        "users",
+        "employees",
+        "hr",
+        "audit_logs",
+        "settings",
     )
 
     # Override first_name and last_name to be unused
@@ -23,7 +34,8 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     avatar = models.FileField(upload_to=get_upload_path, null=True, blank=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="cashier")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="staff")
+    permissions = models.JSONField(default=list, blank=True)
     push_notifications_enabled = models.BooleanField(
         default=False, help_text="Receive push notifications"
     )
@@ -33,6 +45,9 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.role})"
+
+    def has_page_permission(self, permission):
+        return self.role == "admin" or permission in (self.permissions or [])
 
 
 class Employee(models.Model):

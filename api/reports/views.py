@@ -210,6 +210,11 @@ class ExcelStyler:
 class DashboardStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        if not request.user.has_page_permission("settings"):
+            self.permission_denied(request)
+
     def get(self, request):
         date_str = request.query_params.get("date")
         if not date_str:
@@ -351,6 +356,11 @@ class DashboardStatsView(APIView):
 
 class ExportReportView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        if not request.user.has_page_permission("settings"):
+            self.permission_denied(request)
 
     def get(self, request):
         start_date_str = request.query_params.get("start_date")

@@ -55,8 +55,10 @@ class ShiftSessionProductCountSerializer(serializers.ModelSerializer):
             "product",
             "product_name",
             "opening_count",
+            "opening_stock_before_override",
             "expected_closing_count",
             "closing_count",
+            "closing_stock_before_override",
             "variance",
         ]
 
@@ -110,7 +112,7 @@ class ShiftSessionSerializer(serializers.ModelSerializer):
 class ShiftSessionOpenSerializer(serializers.Serializer):
     open_notes = serializers.CharField(required=False, allow_blank=True)
     cashier = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.filter(role="cashier", is_active=True),
+        queryset=User.objects.filter(role="staff", is_active=True),
         required=False,
     )
     counts = ShiftSessionCountInputSerializer(many=True)
@@ -150,9 +152,13 @@ class ShiftSessionOpenSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     {"cashier": "cashier is required when admin opens a shift."}
                 )
+            if not selected_cashier.has_page_permission("sales"):
+                raise serializers.ValidationError(
+                    {"cashier": "Selected staff member does not have Sales permission."}
+                )
             return attrs
 
-        if request_user.role == "cashier":
+        if request_user.role == "staff" and request_user.has_page_permission("sales"):
             if selected_cashier and selected_cashier.id != request_user.id:
                 raise serializers.ValidationError(
                     {"cashier": "Cashier can only open shift for self."}
@@ -161,7 +167,7 @@ class ShiftSessionOpenSerializer(serializers.Serializer):
             return attrs
 
         raise serializers.ValidationError(
-            {"detail": "Only admin or cashier can open shift sessions."}
+            {"detail": "Only users with Sales permission can open shift sessions."}
         )
 
     def create(self, validated_data):
@@ -201,17 +207,25 @@ class ShiftSessionOpenSerializer(serializers.Serializer):
 
         products = {
             p.id: p
-            for p in Product.objects.filter(id__in=[c["product_id"] for c in counts])
+            for p in Product.objects.select_for_update().filter(
+                id__in=[c["product_id"] for c in counts]
+            )
         }
         count_rows = [
             ShiftSessionProductCount(
                 session=session,
                 product=products[row["product_id"]],
                 opening_count=row["opening_count"],
+                opening_stock_before_override=products[
+                    row["product_id"]
+                ].stock_quantity,
             )
             for row in counts
         ]
         ShiftSessionProductCount.objects.bulk_create(count_rows)
+        for row in counts:
+            products[row["product_id"]].stock_quantity = row["opening_count"]
+        Product.objects.bulk_update(products.values(), ["stock_quantity"])
 
         return session
 
@@ -257,6 +271,24 @@ class ShiftSessionCloseSerializer(serializers.Serializer):
 
 class ShiftSessionAcceptSerializer(serializers.Serializer):
     acceptance_notes = serializers.CharField(required=False, allow_blank=True)
+
+
+class ShiftSessionReconciliationUpdateSerializer(serializers.Serializer):
+    open_notes = serializers.CharField(required=False, allow_blank=True)
+    close_notes = serializers.CharField(required=False, allow_blank=True)
+    total_cash_declared = serializers.DecimalField(
+        max_digits=12, decimal_places=2, required=False, min_value=0
+    )
+    total_digital_declared = serializers.DecimalField(
+        max_digits=12, decimal_places=2, required=False, min_value=0
+    )
+    counts = ShiftSessionCountInputSerializer(many=True, required=False)
+
+    def validate_counts(self, counts):
+        product_ids = [row["product_id"] for row in counts]
+        if len(product_ids) != len(set(product_ids)):
+            raise serializers.ValidationError("Duplicate products are not allowed.")
+        return counts
 
 
 class SalePaymentStatusSerializer(serializers.Serializer):
@@ -326,7 +358,7 @@ class SaleSerializer(serializers.ModelSerializer):
     def get_payments(self, obj):
         if isinstance(obj, dict):
             return []
-        return list(obj.payments.values("method__name", "amount"))
+        return list(obj.payments.values("method_id", "method__name", "amount"))
 
     def _validate_unpaid_requirements(
         self, payment_status, unpaid_reason, total_amount, payment_total
@@ -365,7 +397,7 @@ class SaleSerializer(serializers.ModelSerializer):
                 }
             )
         if (
-            getattr(user, "role", None) == "cashier"
+            getattr(user, "role", None) == "staff"
             and active_session.opened_by_id != user.id
         ):
             raise serializers.ValidationError(
@@ -506,79 +538,129 @@ class SaleSerializer(serializers.ModelSerializer):
         payment_status = validated_data.get("payment_status", instance.payment_status)
         unpaid_reason = validated_data.get("unpaid_reason", instance.unpaid_reason)
 
-        if items_data:
-            raise serializers.ValidationError(
-                "Editing sale items is not supported. Create a new sale instead."
-            )
-
         with transaction.atomic():
             sale = super().update(instance, validated_data)
 
-            if payments_data is None:
-                existing_total = (
-                    sale.payments.aggregate(total=Sum("amount")).get("total") or 0
+            if items_data is not None:
+                if not items_data:
+                    raise serializers.ValidationError(
+                        "A sale must contain at least one item."
+                    )
+                product_ids = [item.get("product_id") for item in items_data]
+                if len(product_ids) != len(set(product_ids)):
+                    raise serializers.ValidationError(
+                        "Duplicate sale products are not allowed."
+                    )
+
+                old_items = list(sale.items.all())
+                old_quantities = {item.product_id: item.quantity for item in old_items}
+                old_prices = {item.product_id: item.unit_price for item in old_items}
+                all_product_ids = set(product_ids) | set(old_quantities)
+                products = {
+                    product.id: product
+                    for product in Product.objects.select_for_update().filter(
+                        id__in=all_product_ids
+                    )
+                }
+                if set(product_ids) - set(products):
+                    raise serializers.ValidationError(
+                        "One or more products were not found."
+                    )
+
+                new_quantities = {}
+                for item in items_data:
+                    product_id = item.get("product_id")
+                    quantity = item.get("quantity", 0)
+                    product = products[product_id]
+                    if not product.is_active and product_id not in old_quantities:
+                        raise serializers.ValidationError(
+                            f"Product {product.name} is inactive."
+                        )
+                    if quantity <= 0:
+                        raise serializers.ValidationError(
+                            f"Quantity must be greater than 0 for {product.name}."
+                        )
+                    available = product.stock_quantity + old_quantities.get(
+                        product_id, 0
+                    )
+                    if quantity > available:
+                        raise serializers.ValidationError(
+                            f"Insufficient stock for {product.name}. "
+                            f"Available: {available}."
+                        )
+                    new_quantities[product_id] = quantity
+
+                for product_id, product in products.items():
+                    product.stock_quantity += old_quantities.get(product_id, 0)
+                    product.stock_quantity -= new_quantities.get(product_id, 0)
+                Product.objects.bulk_update(products.values(), ["stock_quantity"])
+
+                sale.items.all().delete()
+                for item in items_data:
+                    product = products[item["product_id"]]
+                    SaleItem.objects.create(
+                        sale=sale,
+                        product=product,
+                        quantity=item["quantity"],
+                        unit_price=old_prices.get(product.id, product.selling_price),
+                    )
+
+            base_total = sale.items.aggregate(total=Sum("subtotal"))["total"] or 0
+            payment_total = sale.payments.aggregate(total=Sum("amount"))["total"] or 0
+
+            if payments_data is not None:
+                old_payments = list(sale.payments.select_related("method").all())
+                old_method_ids = {payment.method_id for payment in old_payments}
+                old_entries = [
+                    (payment.method, payment.amount) for payment in old_payments
+                ]
+                apply_sale_bank_sync(
+                    old_entries, "subtract", note=f"Sale #{sale.id} updated"
                 )
-                if (
-                    sale.payment_status == Sale.PAYMENT_STATUS_PAID
-                    and existing_total < sale.total_amount
-                ):
-                    raise serializers.ValidationError(
-                        "Payment amount is less than Total Bill."
-                    )
-                self._validate_unpaid_requirements(
-                    payment_status,
-                    unpaid_reason,
-                    sale.total_amount,
-                    existing_total,
+                sale.payments.all().delete()
+
+                payment_total = 0
+                new_entries = []
+                for payment in payments_data:
+                    method_id = payment.get("method_id")
+                    amount = payment.get("amount", 0)
+                    if amount <= 0:
+                        raise serializers.ValidationError(
+                            "Payment amount must be greater than 0."
+                        )
+                    try:
+                        method = PaymentMethod.objects.get(id=method_id)
+                    except PaymentMethod.DoesNotExist:
+                        raise serializers.ValidationError(
+                            f"Payment method with id {method_id} not found or inactive."
+                        )
+                    if not method.is_active and method.id not in old_method_ids:
+                        raise serializers.ValidationError(
+                            f"Payment method {method.name} is inactive."
+                        )
+                    SalePayment.objects.create(sale=sale, method=method, amount=amount)
+                    new_entries.append((method, amount))
+                    payment_total += amount
+                apply_sale_bank_sync(
+                    new_entries, "add", note=f"Sale #{sale.id} updated"
                 )
-                return sale
-
-            old_payments = list(sale.payments.select_related("method").all())
-            old_entries = [(p.method, p.amount) for p in old_payments]
-            apply_sale_bank_sync(
-                old_entries, "subtract", note=f"Sale #{sale.id} updated"
-            )
-
-            sale.payments.all().delete()
-
-            payment_total = 0
-            new_entries = []
-            for pay in payments_data:
-                method_id = pay.get("method_id")
-                amount = pay.get("amount", 0)
-
-                if amount <= 0:
-                    raise serializers.ValidationError(
-                        "Payment amount must be greater than 0"
-                    )
-
-                try:
-                    method = PaymentMethod.objects.get(id=method_id, is_active=True)
-                except PaymentMethod.DoesNotExist:
-                    raise serializers.ValidationError(
-                        f"Payment method with id {method_id} not found or inactive"
-                    )
-
-                SalePayment.objects.create(sale=sale, method=method, amount=amount)
-                new_entries.append((method, amount))
-                payment_total += amount
 
             if (
                 payment_status == Sale.PAYMENT_STATUS_PAID
-                and payment_total < sale.total_amount
+                and payment_total < base_total
             ):
                 raise serializers.ValidationError(
                     "Payment amount is less than Total Bill."
                 )
-
             self._validate_unpaid_requirements(
-                payment_status,
-                unpaid_reason,
-                sale.total_amount,
-                payment_total,
+                payment_status, unpaid_reason, base_total, payment_total
             )
-
-            apply_sale_bank_sync(new_entries, "add", note=f"Sale #{sale.id} updated")
+            sale.total_amount = (
+                0
+                if payment_status == Sale.PAYMENT_STATUS_UNPAID_APPROVED
+                else base_total
+            )
+            sale.save(update_fields=["total_amount"])
 
         return sale
 

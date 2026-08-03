@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Tabs, Tab, Button, Spinner, Input, DatePicker } from "@heroui/react";
-import { Package, Utensils, Plus, Search, History, ChefHat } from "lucide-react";
+import { Package, Gauge, Plus, Search, History, ChefHat, Warehouse } from "lucide-react";
 import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { DataTable } from "../components/ui/DataTable";
@@ -16,6 +16,7 @@ import { RecipeDetailModal } from "../components/production/RecipeDetailModal";
 import { ProductionRunFormModal } from "../components/production/ProductionRunFormModal";
 import { DeleteProductionRunModal } from "../components/production/DeleteProductionRunModal";
 import { ProductionRunDetailModal } from "../components/production/ProductionRunDetailModal";
+import { KitchenStoreTab } from "../components/production/KitchenStoreTab";
 import {
     useProducts,
     useRecipes,
@@ -28,6 +29,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import type { Product, Recipe, ProductionRun } from "../types/production";
 import { useAppSelector } from "../store";
 import { toast } from "sonner";
+import { hasPagePermission } from "../constants/roles";
 
 export function ProductionPage() {
     const [activeTab, setActiveTab] = useState("products");
@@ -61,7 +63,8 @@ export function ProductionPage() {
     const [viewingProductionRun, setViewingProductionRun] = useState<ProductionRun | null>(null);
 
     const { user } = useAppSelector((state) => state.auth);
-    const isAdmin = user?.role === "admin";
+    const isAdmin = hasPagePermission(user?.role, user?.permissions, "production");
+    const canRestockKitchen = hasPagePermission(user?.role, user?.permissions, "inventory");
 
     const debouncedProductSearch = useDebounce(productSearch, 500);
     const debouncedRecipeSearch = useDebounce(recipeSearch, 500);
@@ -188,7 +191,9 @@ export function ProductionPage() {
             productsWithRecipesArray.length >= allProductsList.length
         ) {
             // All products have recipes, show message
-            toast.error("All products already have recipes. Edit an existing recipe instead.");
+            toast.error(
+                "All products already have batch estimates. Edit an existing estimate instead."
+            );
             return;
         }
 
@@ -249,7 +254,7 @@ export function ProductionPage() {
         <div className="space-y-6 lg:space-y-8">
             <PageTitle
                 title="Production"
-                subtitle="Manage production orders, recipes, and track baking schedules."
+                subtitle="Track kitchen stock, practical batch estimates, and baking performance."
             />
 
             <Tabs
@@ -351,8 +356,8 @@ export function ProductionPage() {
                     key="recipes"
                     title={
                         <div className="flex items-center gap-2">
-                            <Utensils className="h-4 w-4" />
-                            <span>Recipe Builder</span>
+                            <Gauge className="h-4 w-4" />
+                            <span>Batch Estimates</span>
                         </div>
                     }
                 >
@@ -366,7 +371,7 @@ export function ProductionPage() {
                                 `}
                             >
                                 <Input
-                                    placeholder="Search by product name or instructions..."
+                                    placeholder="Search batch estimates by product..."
                                     startContent={<Search className="h-4 w-4 text-zinc-400" />}
                                     value={recipeSearch}
                                     onValueChange={setRecipeSearch}
@@ -383,7 +388,7 @@ export function ProductionPage() {
                                 startContent={<Plus className="h-4 w-4" />}
                                 onPress={() => handleOpenRecipeBuilder()}
                             >
-                                Create Recipe
+                                Create Batch Estimate
                             </Button>
                         </div>
 
@@ -427,6 +432,18 @@ export function ProductionPage() {
                             </>
                         )}
                     </div>
+                </Tab>
+
+                <Tab
+                    key="kitchen"
+                    title={
+                        <div className="flex items-center gap-2">
+                            <Warehouse className="h-4 w-4" />
+                            <span>Kitchen Store</span>
+                        </div>
+                    }
+                >
+                    <KitchenStoreTab canRestock={canRestockKitchen} />
                 </Tab>
 
                 <Tab

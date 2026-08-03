@@ -12,6 +12,8 @@ import type {
     ShiftSessionActiveResponse,
     ShiftSessionReconciliationResponse,
     UpdateSalePaymentStatusData,
+    UpdateSaleData,
+    UpdateShiftSessionReconciliationData,
 } from "../types/sales";
 import type { ApiResponse, WrappedPaginatedResponse, PaginatedResponse } from "../types/api";
 
@@ -71,6 +73,7 @@ class SalesService {
                 subtotal: this.normalizeNumber(item.subtotal),
             })),
             payments: ((sale.payments as Record<string, unknown>[]) || []).map((payment) => ({
+                method_id: this.normalizeNumber(payment.methodId ?? payment.method_id),
                 method__name: (payment.method__name ||
                     payment.method_Name ||
                     payment.methodName ||
@@ -115,6 +118,14 @@ class SalesService {
                 product: this.normalizeNumber(count.product),
                 productName: (count.productName || count.product_name || "") as string,
                 openingCount: this.normalizeNumber(count.openingCount ?? count.opening_count),
+                openingStockBeforeOverride:
+                    count.openingStockBeforeOverride === null ||
+                    count.opening_stock_before_override === null
+                        ? null
+                        : this.normalizeNumber(
+                              count.openingStockBeforeOverride ??
+                                  count.opening_stock_before_override
+                          ),
                 expectedClosingCount:
                     count.expectedClosingCount === null || count.expected_closing_count === null
                         ? null
@@ -130,6 +141,14 @@ class SalesService {
                         : count.closingCount === undefined && count.closing_count === undefined
                           ? null
                           : this.normalizeNumber(count.closingCount ?? count.closing_count),
+                closingStockBeforeOverride:
+                    count.closingStockBeforeOverride === null ||
+                    count.closing_stock_before_override === null
+                        ? null
+                        : this.normalizeNumber(
+                              count.closingStockBeforeOverride ??
+                                  count.closing_stock_before_override
+                          ),
                 variance:
                     count.variance === null || count.variance === undefined
                         ? null
@@ -224,6 +243,16 @@ class SalesService {
 
     async deleteSale(id: number): Promise<void> {
         await apiClient.delete(`/sales/sales/${id}/`);
+    }
+
+    async updateSale(id: number, data: UpdateSaleData): Promise<Sale> {
+        const response = await apiClient.patch<
+            ApiResponse<Record<string, unknown>> | Record<string, unknown>
+        >(`/sales/sales/${id}/`, data);
+        const responseData =
+            (response.data as ApiResponse<Record<string, unknown>>).data ||
+            (response.data as Record<string, unknown>);
+        return this.normalizeSale(responseData);
     }
 
     async updateSalePaymentStatus(id: number, data: UpdateSalePaymentStatusData): Promise<Sale> {
@@ -400,6 +429,16 @@ class SalesService {
                 productName: (item.productName || item.product_name || "") as string,
                 unitPrice: this.normalizeNumber(item.unitPrice ?? item.unit_price),
                 openingCount: this.normalizeNumber(item.openingCount ?? item.opening_count),
+                openingStockBeforeOverride:
+                    item.openingStockBeforeOverride === null ||
+                    item.opening_stock_before_override === null
+                        ? null
+                        : this.normalizeNumber(
+                              item.openingStockBeforeOverride ?? item.opening_stock_before_override
+                          ),
+                openingStockMismatch: Boolean(
+                    item.openingStockMismatch ?? item.opening_stock_mismatch
+                ),
                 producedInShift: this.normalizeNumber(
                     item.producedInShift ?? item.produced_in_shift
                 ),
@@ -414,6 +453,16 @@ class SalesService {
                         : this.normalizeNumber(
                               item.countedClosingCount ?? item.counted_closing_count
                           ),
+                closingStockBeforeOverride:
+                    item.closingStockBeforeOverride === null ||
+                    item.closing_stock_before_override === null
+                        ? null
+                        : this.normalizeNumber(
+                              item.closingStockBeforeOverride ?? item.closing_stock_before_override
+                          ),
+                closingStockMismatch: Boolean(
+                    item.closingStockMismatch ?? item.closing_stock_mismatch
+                ),
                 varianceQty:
                     item.varianceQty === null || item.variance_qty === null
                         ? null
@@ -470,6 +519,14 @@ class SalesService {
                 ),
             },
         };
+    }
+
+    async updateShiftSessionReconciliation(
+        id: number,
+        data: UpdateShiftSessionReconciliationData
+    ): Promise<ShiftSessionReconciliationResponse> {
+        await apiClient.patch(`/sales/shift-sessions/${id}/reconciliation/`, data);
+        return this.getShiftSessionReconciliation(id);
     }
 }
 

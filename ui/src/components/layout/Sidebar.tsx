@@ -15,14 +15,14 @@ import {
 import { Button, Tooltip } from "@heroui/react";
 import { cn } from "../../lib/utils";
 import { useAppSelector } from "../../store";
-import type { UserRole } from "../../constants/roles";
+import { hasPagePermission, type PagePermission } from "../../constants/roles";
 import { useBakerySettings } from "../../hooks/useBakery";
 
 interface NavItem {
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     path: string;
-    roles: UserRole[];
+    permission: PagePermission;
 }
 
 const navItems: NavItem[] = [
@@ -30,61 +30,61 @@ const navItems: NavItem[] = [
         label: "Dashboard",
         icon: LayoutDashboard,
         path: "/app/dashboard",
-        roles: ["admin"],
+        permission: "dashboard",
     },
     {
         label: "Sales",
         icon: ShoppingCart,
         path: "/app/sales",
-        roles: ["admin", "cashier"],
+        permission: "sales",
     },
     {
         label: "Treasury",
         icon: Landmark,
         path: "/app/treasury",
-        roles: ["admin"],
+        permission: "treasury",
     },
     {
         label: "Production",
         icon: ChefHat,
         path: "/app/production",
-        roles: ["admin", "chef"],
+        permission: "production",
     },
     {
         label: "Inventory",
         icon: Package,
         path: "/app/inventory",
-        roles: ["admin", "storekeeper"],
+        permission: "inventory",
     },
     {
         label: "Users",
         icon: Users,
         path: "/app/users",
-        roles: ["admin"],
+        permission: "users",
     },
     {
         label: "Employees",
         icon: UserRound,
         path: "/app/employees",
-        roles: ["admin"],
+        permission: "employees",
     },
     {
         label: "HR",
         icon: UsersRound,
         path: "/app/hr",
-        roles: ["admin"],
+        permission: "hr",
     },
     {
         label: "Audit Logs",
         icon: ScrollText,
         path: "/app/audit-logs",
-        roles: ["admin"],
+        permission: "audit_logs",
     },
     {
         label: "Settings",
         icon: Settings,
         path: "/app/settings",
-        roles: ["admin", "storekeeper", "chef", "cashier"],
+        permission: "settings",
     },
 ];
 
@@ -102,11 +102,11 @@ export function Sidebar({
     onNavItemClick,
 }: SidebarProps) {
     const location = useLocation();
-    const { roles } = useAppSelector((state) => state.auth);
+    const { user } = useAppSelector((state) => state.auth);
     const { data: bakerySettings } = useBakerySettings();
 
     const visibleItems = navItems.filter((item) =>
-        roles.some((role: UserRole) => item.roles.includes(role))
+        hasPagePermission(user?.role, user?.permissions, item.permission)
     );
 
     const NavLink = ({ item }: { item: NavItem }) => {

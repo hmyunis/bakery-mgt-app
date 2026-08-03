@@ -2,6 +2,7 @@ import json
 import sys
 
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import connection
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
@@ -14,6 +15,26 @@ IGNORED_MODELS = ["AuditLog", "Session", "LogEntry", "MigrationRecorder"]
 
 # Sensitive fields to redact
 SENSITIVE_FIELDS = ["password", "token"]
+_audit_table_ready = False
+
+
+def _audit_table_exists():
+    global _audit_table_ready
+    if _audit_table_ready:
+        return True
+    table_name = AuditLog._meta.db_table
+    if table_name not in connection.introspection.table_names():
+        return False
+    with connection.cursor() as cursor:
+        columns = {
+            column.name
+            for column in connection.introspection.get_table_description(
+                cursor, table_name
+            )
+        }
+    required_columns = {field.column for field in AuditLog._meta.concrete_fields}
+    _audit_table_ready = required_columns <= columns
+    return _audit_table_ready
 
 
 def is_migrating():
@@ -62,7 +83,7 @@ def log_save(sender, instance, created, **kwargs):
         return
 
     # Skip logging during migrations
-    if is_migrating():
+    if is_migrating() or not _audit_table_exists():
         return
 
     try:
@@ -110,7 +131,7 @@ def log_delete(sender, instance, **kwargs):
         return
 
     # Skip logging during migrations
-    if is_migrating():
+    if is_migrating() or not _audit_table_exists():
         return
 
     try:

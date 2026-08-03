@@ -217,7 +217,7 @@ const SidebarContent = ({
     };
 
     return (
-        <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+        <div className="flex-1 flex flex-col p-4 overflow-y-auto md:overflow-y-visible">
             {items.length === 0 ? (
                 <div className="text-center py-8 text-slate-500 dark:text-slate-400 m-auto">
                     <ShoppingCart className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -227,7 +227,7 @@ const SidebarContent = ({
             ) : (
                 <>
                     {/* Cart Items */}
-                    <div className="space-y-3 flex-grow overflow-y-auto pr-1">
+                    <div className="space-y-3 flex-grow overflow-y-auto pr-1 md:overflow-y-visible">
                         {items.map((item) => {
                             const imageUrl = getImageUrl(item.product.image);
                             return (

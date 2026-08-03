@@ -12,6 +12,8 @@ import type {
     IngredientListParams,
     PurchaseListParams,
     StockAdjustmentListParams,
+    CreateKitchenTransferData,
+    KitchenTransferListParams,
 } from "../types/inventory";
 
 // ==================== INGREDIENTS HOOKS ====================
@@ -164,7 +166,6 @@ export function useShoppingList() {
         queryFn: async () => {
             return await inventoryService.getShoppingList();
         },
-        staleTime: 1000 * 60 * 2, // Refresh every 2 minutes
     });
 }
 
@@ -389,6 +390,37 @@ export function useDeleteStockAdjustment() {
                 apiError.message ||
                 "Failed to delete stock adjustment";
             toast.error(errorMessage);
+        },
+    });
+}
+
+export function useKitchenTransfers(params: KitchenTransferListParams = {}) {
+    return useQuery({
+        queryKey: ["kitchen-transfers", params],
+        queryFn: () => inventoryService.getKitchenTransfers(params),
+        placeholderData: (previousData) => previousData,
+    });
+}
+
+export function useCreateKitchenTransfer() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: CreateKitchenTransferData) =>
+            inventoryService.createKitchenTransfer(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+            queryClient.invalidateQueries({ queryKey: ["kitchen-transfers"] });
+            toast.success("Kitchen store restocked successfully.");
+        },
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            const errorData = apiError.response?.data as ApiErrorResponse;
+            toast.error(
+                errorData?.message ||
+                    errorData?.detail ||
+                    apiError.message ||
+                    "Failed to restock the kitchen store."
+            );
         },
     });
 }

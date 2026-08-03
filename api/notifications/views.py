@@ -142,7 +142,7 @@ class NotificationPreferenceViewSet(viewsets.ModelViewSet):
                     "{ingredient_name} is running low. "
                     "Current stock: {current_stock} {unit}"
                 ),
-                "target_roles": ["admin", "storekeeper"],
+                "target_roles": ["admin", "staff"],
             },
             NotificationEvent.PRICE_ANOMALY: {
                 "title_template": "Price Anomaly Detected",
@@ -150,7 +150,7 @@ class NotificationPreferenceViewSet(viewsets.ModelViewSet):
                     "Purchase of {ingredient_name} at {unit_cost} "
                     "is {percentage}% above average"
                 ),
-                "target_roles": ["admin", "storekeeper"],
+                "target_roles": ["admin", "staff"],
             },
             NotificationEvent.PRODUCTION_COMPLETE: {
                 "title_template": "Production Completed",
@@ -174,7 +174,7 @@ class NotificationPreferenceViewSet(viewsets.ModelViewSet):
                 "body_template": (
                     "{actor_name} adjusted {ingredient_name} by {quantity_change}"
                 ),
-                "target_roles": ["admin", "storekeeper"],
+                "target_roles": ["admin", "staff"],
             },
             NotificationEvent.PURCHASE_CREATED: {
                 "title_template": "Purchase Recorded",

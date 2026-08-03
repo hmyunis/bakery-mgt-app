@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { Tabs, Tab, Chip, Button } from "@heroui/react";
-import { Landmark, FileClock } from "lucide-react";
+import { CreditCard, Landmark, FileClock } from "lucide-react";
 import { type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { BankAccountFormModal } from "../components/treasury/BankAccountFormModal";
@@ -19,6 +19,7 @@ import type {
 import { BankTransactionModal } from "../components/treasury/BankTransactionModal";
 import { TreasuryAccountsTab } from "../components/treasury/TreasuryAccountsTab";
 import { TreasuryExpensesTab } from "../components/treasury/TreasuryExpensesTab";
+import { TreasuryPaymentMethodsTab } from "../components/treasury/TreasuryPaymentMethodsTab";
 import {
     useBankAccounts,
     useBankTransactions,
@@ -566,6 +567,17 @@ export function TreasuryPage() {
                             setExpensePage(1);
                         }}
                     />
+                </Tab>
+                <Tab
+                    key="payment-methods"
+                    title={
+                        <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            <span>Payment Methods</span>
+                        </div>
+                    }
+                >
+                    <TreasuryPaymentMethodsTab />
                 </Tab>
             </Tabs>
 

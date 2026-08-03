@@ -10,6 +10,7 @@ export interface Ingredient {
     name: string;
     unit: Unit;
     current_stock: number;
+    kitchen_stock: number;
     reorder_point: number;
     average_cost_per_unit: number;
     last_purchased_price: number;
@@ -116,4 +117,32 @@ export interface StockAdjustmentListParams {
     page_size?: number;
     ingredient?: number;
     start_date?: string;
+}
+
+export interface KitchenTransfer {
+    id: number;
+    ingredient: number;
+    ingredient_name: string;
+    unit: Unit;
+    quantity: number;
+    transferred_by: number | null;
+    transferred_by_name?: string;
+    storehouse_balance_before: number;
+    storehouse_balance_after: number;
+    kitchen_balance_before: number;
+    kitchen_balance_after: number;
+    notes?: string;
+    transferred_at: string;
+}
+
+export interface CreateKitchenTransferData {
+    ingredient: number;
+    quantity: number;
+    notes?: string;
+}
+
+export interface KitchenTransferListParams {
+    page?: number;
+    page_size?: number;
+    ingredient?: number;
 }

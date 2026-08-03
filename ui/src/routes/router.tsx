@@ -17,6 +17,24 @@ import { HrPage } from "../pages/Hr";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { Navigate } from "react-router-dom";
+import { useAppSelector } from "../store";
+import { getDefaultAppPath } from "../constants/roles";
+import { getAuthToken } from "../lib/apiClient";
+
+function AppIndex() {
+    const user = useAppSelector((state) => state.auth.user);
+    if (user?.role) {
+        return <Navigate to={getDefaultAppPath(user.role, user.permissions)} replace />;
+    }
+    let path = "/access-denied";
+    try {
+        const payload = JSON.parse(atob((getAuthToken() || "").split(".")[1]));
+        path = getDefaultAppPath(payload.role, payload.permissions || []);
+    } catch {
+        // Keep the access-denied fallback for a malformed token.
+    }
+    return <Navigate to={path} replace />;
+}
 
 export const router = createBrowserRouter([
     {
@@ -30,23 +48,27 @@ export const router = createBrowserRouter([
     {
         path: "/app",
         element: (
-            <ProtectedRoute allowedRoles={["admin", "storekeeper", "chef", "cashier"]}>
+            <ProtectedRoute allowedRoles={["admin", "staff"]}>
                 <DashboardLayout />
             </ProtectedRoute>
         ),
         children: [
             {
                 index: true,
-                element: <DashboardPage />,
+                element: <AppIndex />,
             },
             {
                 path: "dashboard",
-                element: <DashboardPage />,
+                element: (
+                    <ProtectedRoute requiredPermission="dashboard">
+                        <DashboardPage />
+                    </ProtectedRoute>
+                ),
             },
             {
                 path: "inventory",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin", "storekeeper"]}>
+                    <ProtectedRoute requiredPermission="inventory">
                         <InventoryPage />
                     </ProtectedRoute>
                 ),
@@ -54,7 +76,7 @@ export const router = createBrowserRouter([
             {
                 path: "production",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin", "chef"]}>
+                    <ProtectedRoute requiredPermission="production">
                         <ProductionPage />
                     </ProtectedRoute>
                 ),
@@ -62,7 +84,7 @@ export const router = createBrowserRouter([
             {
                 path: "sales",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin", "cashier"]}>
+                    <ProtectedRoute requiredPermission="sales">
                         <SalesPage />
                     </ProtectedRoute>
                 ),
@@ -70,7 +92,7 @@ export const router = createBrowserRouter([
             {
                 path: "treasury",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute requiredPermission="treasury">
                         <TreasuryPage />
                     </ProtectedRoute>
                 ),
@@ -78,7 +100,7 @@ export const router = createBrowserRouter([
             {
                 path: "users",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute requiredPermission="users">
                         <UsersPage />
                     </ProtectedRoute>
                 ),
@@ -86,7 +108,7 @@ export const router = createBrowserRouter([
             {
                 path: "employees",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute requiredPermission="employees">
                         <EmployeesPage />
                     </ProtectedRoute>
                 ),
@@ -94,7 +116,7 @@ export const router = createBrowserRouter([
             {
                 path: "employees/:employeeId",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute requiredPermission="employees">
                         <EmployeeDetailPage />
                     </ProtectedRoute>
                 ),
@@ -102,7 +124,7 @@ export const router = createBrowserRouter([
             {
                 path: "hr",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute requiredPermission="hr">
                         <HrPage />
                     </ProtectedRoute>
                 ),
@@ -110,7 +132,7 @@ export const router = createBrowserRouter([
             {
                 path: "attendance",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute requiredPermission="hr">
                         <Navigate to="/app/hr?tab=attendance" replace />
                     </ProtectedRoute>
                 ),
@@ -118,7 +140,7 @@ export const router = createBrowserRouter([
             {
                 path: "leaves",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute requiredPermission="hr">
                         <Navigate to="/app/hr?tab=leaves" replace />
                     </ProtectedRoute>
                 ),
@@ -126,7 +148,7 @@ export const router = createBrowserRouter([
             {
                 path: "shifts",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute requiredPermission="hr">
                         <Navigate to="/app/hr?tab=shifts" replace />
                     </ProtectedRoute>
                 ),
@@ -134,7 +156,7 @@ export const router = createBrowserRouter([
             {
                 path: "settings",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin", "storekeeper", "chef", "cashier"]}>
+                    <ProtectedRoute requiredPermission="settings">
                         <SettingsPage />
                     </ProtectedRoute>
                 ),
@@ -142,7 +164,7 @@ export const router = createBrowserRouter([
             {
                 path: "audit-logs",
                 element: (
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute requiredPermission="audit_logs">
                         <AuditLogsPage />
                     </ProtectedRoute>
                 ),

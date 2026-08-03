@@ -1,16 +1,17 @@
 from django.db import transaction
 from django.db.models import F
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets
+from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from treasury.models import Expense
 from treasury.serializers import ExpenseSerializer
 
-from .models import Ingredient, Purchase, StockAdjustment
+from .models import Ingredient, KitchenTransfer, Purchase, StockAdjustment
 from .serializers import (
     IngredientSerializer,
+    KitchenTransferSerializer,
     PurchaseSerializer,
     StockAdjustmentSerializer,
 )
@@ -20,10 +21,11 @@ class IsStoreKeeperOrAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.is_anonymous:
             return False
-        if view.action in ["list", "retrieve"]:
-            # Chef needs to see stock
-            return request.user.role in ["admin", "storekeeper", "chef"]
-        return request.user.role in ["admin", "storekeeper"]
+        if request.user.has_page_permission("inventory"):
+            return True
+        return view.action in ["list", "retrieve"] and request.user.has_page_permission(
+            "production"
+        )
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
@@ -111,3 +113,21 @@ class StockAdjustmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(actor=self.request.user)
+
+
+class KitchenTransferViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = KitchenTransfer.objects.select_related(
+        "ingredient", "transferred_by"
+    ).all()
+    serializer_class = KitchenTransferSerializer
+    permission_classes = [IsStoreKeeperOrAdmin]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["ingredient"]
+
+    def perform_create(self, serializer):
+        serializer.save(transferred_by=self.request.user)
