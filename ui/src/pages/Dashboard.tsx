@@ -1,4 +1,5 @@
 import { Spinner } from "@heroui/react";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
     Package,
     AlertTriangle,
@@ -15,6 +16,8 @@ import { SalesByHourChart } from "../components/dashboard/SalesByHourChart";
 import { TopProductsChart } from "../components/dashboard/TopProductsChart";
 import { useAppSelector } from "../store";
 import { hasPagePermission } from "../constants/roles";
+import { DataTable } from "../components/ui/DataTable";
+import type { OwnerDashboardResponse } from "../types/dashboard";
 
 function formatMoney(n: number) {
     return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n);
@@ -38,6 +41,46 @@ function formatDateShort(isoOrDate: string) {
         return isoOrDate;
     }
 }
+
+type SalesPerformanceDay = OwnerDashboardResponse["salesPerformance"]["lastThreeDays"][number];
+
+const salesPerformanceColumns: ColumnDef<SalesPerformanceDay>[] = [
+    {
+        accessorKey: "date",
+        header: "Day",
+        cell: ({ row }) => (
+            <span className="font-medium text-[var(--fg)]">{formatDateShort(row.original.date)}</span>
+        ),
+    },
+    {
+        accessorKey: "salesTotal",
+        header: "Sales",
+        cell: ({ row }) => `${formatMoney(row.original.salesTotal)} ETB`,
+    },
+    {
+        accessorKey: "productionCost",
+        header: "Production Cost",
+        cell: ({ row }) => `${formatMoney(row.original.productionCost)} ETB`,
+    },
+    {
+        id: "net",
+        header: "Net",
+        cell: ({ row }) => {
+            const net = row.original.salesTotal - row.original.productionCost;
+            return (
+                <span
+                    className={
+                        net >= 0
+                            ? "font-medium text-emerald-600 dark:text-emerald-400"
+                            : "font-medium text-red-600 dark:text-red-400"
+                    }
+                >
+                    {formatMoney(net)} ETB
+                </span>
+            );
+        },
+    },
+];
 
 export function DashboardPage() {
     const { user } = useAppSelector((s) => s.auth);
@@ -269,53 +312,11 @@ export function DashboardPage() {
                     </div>
 
                     {salesPerformance.lastThreeDays.length > 0 && (
-                        <div className="mt-4 overflow-auto rounded-lg border border-slate-200 dark:border-slate-800">
-                            <table className="min-w-full text-sm">
-                                <thead className="bg-slate-50 dark:bg-slate-900/50">
-                                    <tr className="text-left">
-                                        <th className="px-3 py-2 text-xs font-medium text-[var(--muted)]">
-                                            Day
-                                        </th>
-                                        <th className="px-3 py-2 text-xs font-medium text-[var(--muted)]">
-                                            Sales
-                                        </th>
-                                        <th className="px-3 py-2 text-xs font-medium text-[var(--muted)]">
-                                            Production Cost
-                                        </th>
-                                        <th className="px-3 py-2 text-xs font-medium text-[var(--muted)]">
-                                            Net
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                                    {salesPerformance.lastThreeDays.map((d) => {
-                                        const net = d.salesTotal - d.productionCost;
-                                        return (
-                                            <tr key={d.date}>
-                                                <td className="px-3 py-2 font-medium text-[var(--fg)]">
-                                                    {formatDateShort(d.date)}
-                                                </td>
-                                                <td className="px-3 py-2 text-[var(--fg)]">
-                                                    {formatMoney(d.salesTotal)} ETB
-                                                </td>
-                                                <td className="px-3 py-2 text-[var(--fg)]">
-                                                    {formatMoney(d.productionCost)} ETB
-                                                </td>
-                                                <td
-                                                    className={[
-                                                        "px-3 py-2 font-medium",
-                                                        net >= 0
-                                                            ? "text-emerald-600 dark:text-emerald-400"
-                                                            : "text-red-600 dark:text-red-400",
-                                                    ].join(" ")}
-                                                >
-                                                    {formatMoney(net)} ETB
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+                        <div className="mt-4">
+                            <DataTable
+                                columns={salesPerformanceColumns}
+                                data={salesPerformance.lastThreeDays}
+                            />
                         </div>
                     )}
                 </div>

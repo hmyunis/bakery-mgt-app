@@ -113,6 +113,7 @@ export const getSalesHistoryColumns = (options?: {
             <Button
                 size="sm"
                 variant="flat"
+                className="!min-w-fit !w-auto px-3"
                 onClick={(e) => {
                     e.stopPropagation();
                     options?.onPaymentStatusClick?.(row.original);

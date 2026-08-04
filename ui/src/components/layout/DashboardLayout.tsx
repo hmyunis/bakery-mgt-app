@@ -11,41 +11,18 @@ export function DashboardLayout() {
     const { data: bakerySettings } = useBakerySettings();
     useThemeColor(bakerySettings?.themeColor); // Apply dynamic theme color
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     const toggleSidebar = () => {
-        setIsCollapsed(!isCollapsed);
-    };
-
-    const toggleMobile = () => {
-        setIsMobileOpen(!isMobileOpen);
-    };
-
-    const closeMobile = () => {
-        setIsMobileOpen(false);
-    };
-
-    const handleSidebarNavItemClick = () => {
-        setIsCollapsed(true);
-        setIsMobileOpen(false);
+        setIsCollapsed((collapsed) => !collapsed);
     };
 
     return (
-        <div className="min-h-screen flex bg-[var(--bg)]">
-            <Sidebar
-                isCollapsed={isCollapsed}
-                isMobileOpen={isMobileOpen}
-                onCloseMobile={closeMobile}
-                onNavItemClick={handleSidebarNavItemClick}
-            />
-            <div className="flex-1 flex flex-col min-w-0">
-                <Header
-                    isCollapsed={isCollapsed}
-                    onToggleSidebar={toggleSidebar}
-                    onToggleMobile={toggleMobile}
-                />
+        <div className="flex min-h-screen min-h-dvh bg-[var(--bg)]">
+            <Sidebar isCollapsed={isCollapsed} />
+            <div className="flex min-w-0 flex-1 flex-col">
+                <Header isCollapsed={isCollapsed} onToggleSidebar={toggleSidebar} />
                 {/* Main Content */}
-                <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+                <main className="flex-1 p-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] lg:p-6">
                     <Outlet />
                 </main>
             </div>

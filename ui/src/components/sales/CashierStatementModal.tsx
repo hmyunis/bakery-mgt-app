@@ -15,7 +15,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { now, getLocalTimeZone, type DateValue } from "@internationalized/date";
 import { CreditCard, PackageSearch, ReceiptText, Wallet } from "lucide-react";
 import { useCashierStatement } from "../../hooks/useSales";
-import type { Sale } from "../../types/sales";
+import type { CashierStatementProductTotal, Sale } from "../../types/sales";
 import { DataTable } from "../ui/DataTable";
 
 interface CashierStatementModalProps {
@@ -164,6 +164,32 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
         []
     );
 
+    const productTotalColumns = useMemo<ColumnDef<CashierStatementProductTotal>[]>(
+        () => [
+            {
+                accessorKey: "productName",
+                header: "Product",
+                cell: ({ row }) => (
+                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                        {row.original.productName}
+                    </span>
+                ),
+            },
+            {
+                accessorKey: "quantitySold",
+                header: "Qty Sold",
+            },
+            {
+                accessorKey: "amount",
+                header: "Amount",
+                cell: ({ row }) => (
+                    <span className="font-medium">{formatMoney(row.original.amount)}</span>
+                ),
+            },
+        ],
+        []
+    );
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="5xl" scrollBehavior="inside">
             <ModalContent>
@@ -292,38 +318,10 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                                 No products sold in this range.
                                             </p>
                                         ) : (
-                                            <div className="rounded-md border border-slate-200 dark:border-slate-800">
-                                                <table className="w-full min-w-[420px] text-sm">
-                                                    <thead className="bg-slate-50 dark:bg-slate-900/50">
-                                                        <tr>
-                                                            <th className="px-3 py-2 text-left text-xs text-slate-500">
-                                                                Product
-                                                            </th>
-                                                            <th className="px-3 py-2 text-right text-xs text-slate-500">
-                                                                Qty Sold
-                                                            </th>
-                                                            <th className="px-3 py-2 text-right text-xs text-slate-500">
-                                                                Amount
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                                                        {data.productTotals.map((product) => (
-                                                            <tr key={product.productId}>
-                                                                <td className="px-3 py-2">
-                                                                    {product.productName}
-                                                                </td>
-                                                                <td className="px-3 py-2 text-right font-medium">
-                                                                    {product.quantitySold}
-                                                                </td>
-                                                                <td className="px-3 py-2 text-right font-medium">
-                                                                    {formatMoney(product.amount)}
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                            <DataTable
+                                                columns={productTotalColumns}
+                                                data={data.productTotals}
+                                            />
                                         )}
                                     </div>
 

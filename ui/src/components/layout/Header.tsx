@@ -8,7 +8,7 @@ import {
     Switch,
     Avatar,
 } from "@heroui/react";
-import { Moon, Sun, User, LogOut, Menu, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Moon, Sun, User, LogOut, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { toggleMode } from "../../store/settingsSlice";
 import { useAuth } from "../../hooks/useAuth";
@@ -17,10 +17,9 @@ import { useNavigate } from "react-router-dom";
 interface HeaderProps {
     isCollapsed: boolean;
     onToggleSidebar: () => void;
-    onToggleMobile: () => void;
 }
 
-export function Header({ isCollapsed, onToggleSidebar, onToggleMobile }: HeaderProps) {
+export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
     const dispatch = useAppDispatch();
     const { mode } = useAppSelector((state) => state.settings);
     const { user } = useAppSelector((state) => state.auth);
@@ -39,24 +38,13 @@ export function Header({ isCollapsed, onToggleSidebar, onToggleMobile }: HeaderP
     };
 
     return (
-        <header className="sticky top-0 z-30 bg-gradient-to-r from-[var(--panel)]/90 via-[var(--panel)]/80 to-[var(--panel)]/90 backdrop-blur-xl border-b border-slate-300 dark:border-slate-600 shadow-lg shadow-black/5">
+        <header className="sticky top-0 z-30 border-b border-slate-300 bg-gradient-to-r from-[var(--panel)]/90 via-[var(--panel)]/80 to-[var(--panel)]/90 pt-[env(safe-area-inset-top)] shadow-lg shadow-black/5 backdrop-blur-xl dark:border-slate-600">
             {/* Top gradient accent */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/30 to-transparent" />
 
             <div className="flex items-center justify-between px-4 lg:px-6 h-16">
-                {/* Left side: Menu buttons */}
+                {/* Left side: desktop sidebar control */}
                 <div className="flex items-center gap-2">
-                    {/* Mobile menu button */}
-                    <Button
-                        isIconOnly
-                        variant="light"
-                        size="sm"
-                        className="lg:hidden hover:bg-white/10 transition-colors"
-                        onPress={onToggleMobile}
-                    >
-                        <Menu className="size-5 text-[var(--fg)]" />
-                    </Button>
-
                     {/* Desktop sidebar toggle */}
                     <Button
                         isIconOnly

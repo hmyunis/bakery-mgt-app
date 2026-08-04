@@ -14,6 +14,8 @@
 body {
     margin: 0;
     min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
     background: var(--bg);
     color: var(--fg);
     font-family:
@@ -26,6 +28,16 @@ body {
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+html {
+    min-height: 100%;
+    scroll-padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
 }
 
 @layer base {

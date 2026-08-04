@@ -26,19 +26,24 @@ export function DataTablePagination({
     const lastItem = Math.min(pagination.page * pagination.pageSize, pagination.count);
 
     return (
-        <div className="flex items-center justify-between flex-wrap gap-4 py-2 sm:p-4 border-t dark:border-slate-700">
-            <div className="text-sm text-slate-500 dark:text-slate-400 hidden sm:block">
+        <nav
+            className="flex flex-col gap-3 border-t py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between sm:p-4"
+            aria-label="Table pagination"
+        >
+            <div className="text-center text-xs text-slate-500 dark:text-slate-400 sm:text-left sm:text-sm">
                 {pagination.count > 0
                     ? `Showing ${firstItem}-${lastItem} of ${pagination.count} results`
                     : "No results"}
             </div>
 
-            <div className="flex flex-wrap items-center justify-between w-full sm:w-fit sm:gap-8">
-                <div className="flex items-center gap-2">
+            <div className="flex w-full items-center justify-between gap-2 sm:w-fit sm:gap-6">
+                <div className="flex shrink-0 items-center gap-2">
                     <Select
-                        label={`Rows per page: ${pagination.pageSize}`}
+                        label="Rows"
                         labelPlacement="outside-left"
-                        className="min-w-[75px] [&_button]:bg-transparent [&_button]:hover:bg-transparent [&_button]:focus:ring-0 [&_button]:border-0"
+                        aria-label="Rows per page"
+                        selectedKeys={[String(pagination.pageSize)]}
+                        className="min-w-[72px] [&_button]:border-0 [&_button]:bg-transparent [&_button]:focus:ring-0 [&_button]:hover:bg-transparent"
                         onSelectionChange={(keys) => {
                             const newSize = Array.from(keys)[0];
                             if (newSize) {
@@ -55,8 +60,8 @@ export function DataTablePagination({
                     </Select>
                 </div>
 
-                <div className="flex items-center justify-between w-full sm:w-fit sm:justify-start gap-4">
-                    <p className="text-sm font-medium whitespace-nowrap">
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <p className="whitespace-nowrap text-xs font-medium sm:text-sm">
                         Page {pagination.page} of {pagination.totalPages}
                     </p>
                     <div className="flex items-center gap-1">
@@ -66,7 +71,7 @@ export function DataTablePagination({
                             onPress={() => onPageChange(1)}
                             isDisabled={!hasPreviousPage}
                             aria-label="First page"
-                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white"
+                            className="h-10 min-w-9 rounded-lg px-0.5 text-slate-500 dark:text-slate-400 dark:hover:text-white"
                         >
                             <ChevronsLeft className="h-4 w-4" />
                         </Button>
@@ -76,7 +81,7 @@ export function DataTablePagination({
                             onPress={() => onPageChange(pagination.page - 1)}
                             isDisabled={!hasPreviousPage}
                             aria-label="Previous page"
-                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white"
+                            className="h-10 min-w-9 rounded-lg px-0.5 text-slate-500 dark:text-slate-400 dark:hover:text-white"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -86,7 +91,7 @@ export function DataTablePagination({
                             onPress={() => onPageChange(pagination.page + 1)}
                             isDisabled={!hasNextPage}
                             aria-label="Next page"
-                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white"
+                            className="h-10 min-w-9 rounded-lg px-0.5 text-slate-500 dark:text-slate-400 dark:hover:text-white"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
@@ -96,13 +101,13 @@ export function DataTablePagination({
                             onPress={() => onPageChange(pagination.totalPages)}
                             isDisabled={!hasNextPage}
                             aria-label="Last page"
-                            className="h-9 px-0.5 rounded-sm text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white"
+                            className="h-10 min-w-9 rounded-lg px-0.5 text-slate-500 dark:text-slate-400 dark:hover:text-white"
                         >
                             <ChevronsRight className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
             </div>
-        </div>
+        </nav>
     );
 }

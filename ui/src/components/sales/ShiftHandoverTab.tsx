@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Button, Input, Select, SelectItem, Spinner } from "@heroui/react";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
     useAcceptShiftSession,
     useActiveShiftSession,
@@ -10,11 +11,33 @@ import {
 } from "../../hooks/useSales";
 import { useProducts } from "../../hooks/useProduction";
 import { useAppSelector } from "../../store";
+import type { Product } from "../../types/production";
+import type { ShiftSessionReconciliationProduct } from "../../types/sales";
+import { DataTable } from "../ui/DataTable";
 
 const toWholeNumber = (value: string | undefined, fallback = 0) => {
     const parsed = Number.parseInt(value || "", 10);
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 };
+
+const reconciliationColumns: ColumnDef<ShiftSessionReconciliationProduct>[] = [
+    { accessorKey: "productName", header: "Product" },
+    { accessorKey: "openingCount", header: "Open" },
+    { accessorKey: "producedInShift", header: "Produced" },
+    { accessorKey: "paidSoldQty", header: "Paid Sold" },
+    { accessorKey: "unpaidQty", header: "Unpaid" },
+    { accessorKey: "expectedClosingCount", header: "Expected" },
+    {
+        accessorKey: "countedClosingCount",
+        header: "Counted",
+        cell: ({ row }) => row.original.countedClosingCount ?? "-",
+    },
+    {
+        accessorKey: "varianceQty",
+        header: "Variance",
+        cell: ({ row }) => row.original.varianceQty ?? "-",
+    },
+];
 
 export function ShiftHandoverTab() {
     const { user } = useAppSelector((state) => state.auth);
@@ -191,6 +214,61 @@ export function ShiftHandoverTab() {
         setAcceptanceNotes("");
     };
 
+    const openingColumns: ColumnDef<Product>[] = [
+        { accessorKey: "name", header: "Product" },
+        {
+            id: "openingCount",
+            header: "Opening Count",
+            cell: ({ row }) => (
+                <Input
+                    type="number"
+                    min={0}
+                    aria-label={`Opening count for ${row.original.name}`}
+                    value={resolvedOpeningCounts[row.original.id] ?? "0"}
+                    onValueChange={(value) =>
+                        setOpeningCounts((prev) => ({ ...prev, [row.original.id]: value }))
+                    }
+                    classNames={{
+                        input: "text-right !text-slate-900 dark:!text-slate-100",
+                        label: "!text-slate-700 dark:!text-slate-300",
+                    }}
+                />
+            ),
+        },
+    ];
+
+    const closingColumns: ColumnDef<Product>[] = [
+        { accessorKey: "name", header: "Product" },
+        {
+            id: "closingCount",
+            header: "Closing Count",
+            cell: ({ row }) => (
+                <Input
+                    type="number"
+                    min={0}
+                    aria-label={`Closing count for ${row.original.name}`}
+                    value={resolvedClosingCounts[row.original.id] ?? "0"}
+                    onValueChange={(value) =>
+                        setClosingCountOverrides((prev) => {
+                            if (!openedSession) return prev;
+                            return {
+                                ...prev,
+                                [openedSession.id]: {
+                                    ...(prev[openedSession.id] || {}),
+                                    [row.original.id]: value,
+                                },
+                            };
+                        })
+                    }
+                    classNames={{
+                        input: "text-right !text-slate-900 dark:!text-slate-100",
+                        label: "!text-slate-700 dark:!text-slate-300",
+                    }}
+                />
+            ),
+        },
+    ];
+
     if (isLoadingProducts || isLoadingActive) {
         return (
             <div className="flex justify-center py-12">
@@ -229,42 +307,8 @@ export function ShiftHandoverTab() {
                         placeholder="Optional notes"
                         classNames={visibleInputClassNames}
                     />
-                    <div className="max-h-64 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-800">
-                        <table className="w-full min-w-[420px] text-sm">
-                            <thead className="bg-slate-50 dark:bg-slate-900/50">
-                                <tr>
-                                    <th className="px-3 py-2 text-left">Product</th>
-                                    <th className="px-3 py-2 text-right">Opening Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {products.map((product) => (
-                                    <tr
-                                        key={product.id}
-                                        className="border-t border-slate-200 dark:border-slate-800"
-                                    >
-                                        <td className="px-3 py-2">{product.name}</td>
-                                        <td className="px-3 py-2">
-                                            <Input
-                                                type="number"
-                                                min={0}
-                                                value={resolvedOpeningCounts[product.id] ?? "0"}
-                                                onValueChange={(value) =>
-                                                    setOpeningCounts((prev) => ({
-                                                        ...prev,
-                                                        [product.id]: value,
-                                                    }))
-                                                }
-                                                classNames={{
-                                                    input: "text-right !text-slate-900 dark:!text-slate-100",
-                                                    label: "!text-slate-700 dark:!text-slate-300",
-                                                }}
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="max-h-96 overflow-y-auto">
+                        <DataTable columns={openingColumns} data={products} />
                     </div>
                     <Button
                         color="primary"
@@ -325,48 +369,8 @@ export function ShiftHandoverTab() {
                         placeholder="Optional notes"
                         classNames={visibleInputClassNames}
                     />
-                    <div className="max-h-64 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-800">
-                        <table className="w-full min-w-[420px] text-sm">
-                            <thead className="bg-slate-50 dark:bg-slate-900/50">
-                                <tr>
-                                    <th className="px-3 py-2 text-left">Product</th>
-                                    <th className="px-3 py-2 text-right">Closing Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {products.map((product) => (
-                                    <tr
-                                        key={product.id}
-                                        className="border-t border-slate-200 dark:border-slate-800"
-                                    >
-                                        <td className="px-3 py-2">{product.name}</td>
-                                        <td className="px-3 py-2">
-                                            <Input
-                                                type="number"
-                                                min={0}
-                                                value={resolvedClosingCounts[product.id] ?? "0"}
-                                                onValueChange={(value) =>
-                                                    setClosingCountOverrides((prev) => {
-                                                        if (!openedSession) return prev;
-                                                        return {
-                                                            ...prev,
-                                                            [openedSession.id]: {
-                                                                ...(prev[openedSession.id] || {}),
-                                                                [product.id]: value,
-                                                            },
-                                                        };
-                                                    })
-                                                }
-                                                classNames={{
-                                                    input: "text-right !text-slate-900 dark:!text-slate-100",
-                                                    label: "!text-slate-700 dark:!text-slate-300",
-                                                }}
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="max-h-96 overflow-y-auto">
+                        <DataTable columns={closingColumns} data={products} />
                     </div>
                     <Button
                         color="warning"
@@ -469,52 +473,11 @@ export function ShiftHandoverTab() {
                                 </p>
                             </div>
                         </div>
-                        <div className="max-h-72 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-800">
-                            <table className="w-full min-w-[900px] text-sm text-slate-900 dark:text-slate-100">
-                                <thead className="bg-slate-50 dark:bg-slate-900/50">
-                                    <tr>
-                                        <th className="px-3 py-2 text-left">Product</th>
-                                        <th className="px-3 py-2 text-right">Open</th>
-                                        <th className="px-3 py-2 text-right">Produced</th>
-                                        <th className="px-3 py-2 text-right">Paid Sold</th>
-                                        <th className="px-3 py-2 text-right">Unpaid</th>
-                                        <th className="px-3 py-2 text-right">Expected</th>
-                                        <th className="px-3 py-2 text-right">Counted</th>
-                                        <th className="px-3 py-2 text-right">Variance</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {reconciliationData.products.map((row) => (
-                                        <tr
-                                            key={row.productId}
-                                            className="border-t border-slate-200 dark:border-slate-800"
-                                        >
-                                            <td className="px-3 py-2">{row.productName}</td>
-                                            <td className="px-3 py-2 text-right">
-                                                {row.openingCount}
-                                            </td>
-                                            <td className="px-3 py-2 text-right">
-                                                {row.producedInShift}
-                                            </td>
-                                            <td className="px-3 py-2 text-right">
-                                                {row.paidSoldQty}
-                                            </td>
-                                            <td className="px-3 py-2 text-right">
-                                                {row.unpaidQty}
-                                            </td>
-                                            <td className="px-3 py-2 text-right">
-                                                {row.expectedClosingCount}
-                                            </td>
-                                            <td className="px-3 py-2 text-right">
-                                                {row.countedClosingCount ?? "-"}
-                                            </td>
-                                            <td className="px-3 py-2 text-right">
-                                                {row.varianceQty ?? "-"}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="max-h-[32rem] overflow-y-auto">
+                            <DataTable
+                                columns={reconciliationColumns}
+                                data={reconciliationData.products}
+                            />
                         </div>
                     </div>
                 )}

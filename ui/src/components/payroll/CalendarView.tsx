@@ -1,5 +1,7 @@
 import { Card, CardBody, Chip } from "@heroui/react";
+import type { ColumnDef } from "@tanstack/react-table";
 import type { DailyShiftAttendance } from "../../types/employee";
+import { DataTable } from "../ui/DataTable";
 
 interface CalendarViewProps {
     dailyData: DailyShiftAttendance[];
@@ -97,87 +99,70 @@ export function CalendarView({ dailyData, periodStart, periodEnd }: CalendarView
         return date >= startDate && date <= endDate;
     };
 
+    type CalendarWeek = DailyShiftAttendance[][];
+    const calendarColumns: ColumnDef<CalendarWeek>[] = [
+        {
+            id: "week",
+            header: "Week",
+            cell: ({ row }) => (
+                <span className="font-medium text-gray-900 dark:text-white">
+                    {formatDate(parseDate(row.original[0][0].date), "MMM d")} -{" "}
+                    {formatDate(parseDate(row.original[6][0].date), "MMM d")}
+                </span>
+            ),
+        },
+        ...["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+            (dayName, dayIndex): ColumnDef<CalendarWeek> => ({
+                id: dayName.toLowerCase(),
+                header: dayName,
+                cell: ({ row }) => {
+                    const dayData = row.original[dayIndex][0];
+                    const dayDate = parseDate(dayData.date);
+                    const statusColor = getStatusColor(
+                        dayData.attendanceStatus,
+                        dayData.isOnLeave
+                    );
+
+                    return (
+                        <div className={!isInPeriod(dayDate) ? "opacity-50" : undefined}>
+                            <div className="mb-1 font-medium">{formatDate(dayDate, "d")}</div>
+                            <div className="space-y-1">
+                                {dayData.shiftName && (
+                                    <div className="truncate text-xs font-medium">
+                                        {dayData.shiftName}
+                                    </div>
+                                )}
+                                {dayData.startTime && dayData.endTime && (
+                                    <div className="text-xs text-gray-500">
+                                        {dayData.startTime.substring(0, 5)}-
+                                        {dayData.endTime.substring(0, 5)}
+                                    </div>
+                                )}
+                                {dayData.attendanceStatus && (
+                                    <Chip size="sm" className={`${statusColor} text-xs`}>
+                                        {dayData.attendanceStatus}
+                                    </Chip>
+                                )}
+                                {dayData.isOnLeave && (
+                                    <Chip
+                                        size="sm"
+                                        className="bg-blue-100 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                    >
+                                        {dayData.leaveType || "Leave"}
+                                    </Chip>
+                                )}
+                            </div>
+                        </div>
+                    );
+                },
+            })
+        ),
+    ];
+
     return (
         <Card>
             <CardBody>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead>
-                            <tr>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Week
-                                </th>
-                                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                                    <th
-                                        key={day}
-                                        className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        {day}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            {weeks.map((week, weekIndex) => (
-                                <tr key={weekIndex}>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                        {formatDate(parseDate(week[0][0].date), "MMM d")} -{" "}
-                                        {formatDate(parseDate(week[6][0].date), "MMM d")}
-                                    </td>
-                                    {week.map((day, dayIndex) => {
-                                        const dayData = day[0];
-                                        const dayDate = parseDate(dayData.date);
-                                        const inPeriod = isInPeriod(dayDate);
-                                        const statusColor = getStatusColor(
-                                            dayData.attendanceStatus,
-                                            dayData.isOnLeave
-                                        );
-
-                                        return (
-                                            <td
-                                                key={dayIndex}
-                                                className={`px-2 py-1 text-xs ${!inPeriod ? "opacity-50" : ""}`}
-                                            >
-                                                <div className="text-center mb-1 font-medium">
-                                                    {formatDate(dayDate, "d")}
-                                                </div>
-                                                <div className="space-y-1">
-                                                    {dayData.shiftName && (
-                                                        <div className="truncate text-xs font-medium">
-                                                            {dayData.shiftName}
-                                                        </div>
-                                                    )}
-                                                    {dayData.startTime && dayData.endTime && (
-                                                        <div className="text-xs text-gray-500">
-                                                            {dayData.startTime.substring(0, 5)}-
-                                                            {dayData.endTime.substring(0, 5)}
-                                                        </div>
-                                                    )}
-                                                    {dayData.attendanceStatus && (
-                                                        <Chip
-                                                            size="sm"
-                                                            className={`${statusColor} text-xs`}
-                                                        >
-                                                            {dayData.attendanceStatus}
-                                                        </Chip>
-                                                    )}
-                                                    {dayData.isOnLeave && (
-                                                        <Chip
-                                                            size="sm"
-                                                            className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs"
-                                                        >
-                                                            {dayData.leaveType || "Leave"}
-                                                        </Chip>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable columns={calendarColumns} data={weeks} />
             </CardBody>
         </Card>
     );

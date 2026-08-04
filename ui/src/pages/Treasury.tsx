@@ -346,7 +346,7 @@ export function TreasuryPage() {
                             size="sm"
                             variant="light"
                             onPress={() => openEditExpense(row.original)}
-                            className="text-slate-700 dark:text-slate-200"
+                            className="!min-w-fit !w-auto px-3 text-slate-700 dark:text-slate-200"
                         >
                             Edit
                         </Button>
@@ -354,7 +354,7 @@ export function TreasuryPage() {
                             size="sm"
                             variant="light"
                             onPress={() => setDeletingExpense(row.original)}
-                            className="text-danger"
+                            className="!min-w-fit !w-auto px-3 text-danger"
                         >
                             Delete
                         </Button>
@@ -427,7 +427,7 @@ export function TreasuryPage() {
                             size="sm"
                             variant="light"
                             onPress={() => openEditTransaction(row.original)}
-                            className="text-slate-700 dark:text-slate-200"
+                            className="!min-w-fit !w-auto px-3 text-slate-700 dark:text-slate-200"
                         >
                             Edit
                         </Button>
@@ -435,7 +435,7 @@ export function TreasuryPage() {
                             size="sm"
                             variant="light"
                             onPress={() => setDeletingTransaction(row.original)}
-                            className="text-danger"
+                            className="!min-w-fit !w-auto px-3 text-danger"
                         >
                             Delete
                         </Button>
