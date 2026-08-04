@@ -402,10 +402,7 @@ export function TreasuryAccountsTab({
                                     selectedKeys={new Set([transactionFilter])}
                                     onSelectionChange={(keys) => {
                                         const key = Array.from(keys)[0] as
-                                            | "all"
-                                            | "deposit"
-                                            | "withdrawal"
-                                            | undefined;
+                                            "all" | "deposit" | "withdrawal" | undefined;
                                         if (!key) return;
                                         onTransactionFilterChange(key);
                                     }}

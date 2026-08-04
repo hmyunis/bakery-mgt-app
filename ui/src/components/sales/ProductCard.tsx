@@ -54,8 +54,7 @@ export function ProductCard({ product, quantity, onIncrement, onDecrement }: Pro
                         )}
                         {!isOutOfStock && (
                             <span className="text-xs text-slate-500">
-                                {tr("Stock:")}
-                                {product.stock_quantity} {tr("pcs")}
+                                {tr("Stock:")} {product.stock_quantity}
                             </span>
                         )}
                     </div>

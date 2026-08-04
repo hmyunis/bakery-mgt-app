@@ -106,6 +106,42 @@ export interface CashierStatementResponse {
     sales: Sale[];
 }
 
+export interface CbeCommissionType {
+    commissionType?: string;
+    commissionAmt?: string;
+}
+
+export interface CbeTaxType {
+    taxType?: string;
+    taxAmt?: string;
+}
+
+export interface CbeTransactionDetail {
+    id?: string;
+    debitAccountNo?: string;
+    debitCurrency?: string;
+    debitAmount?: string;
+    debitValueDate?: string;
+    creditAccountNo?: string;
+    creditCurrency?: string;
+    creditValueDate?: string;
+    processingDate?: string;
+    commissionTypes?: CbeCommissionType[];
+    taxTypes?: CbeTaxType[];
+    amountDebitedWithCurrency?: string;
+    amountCreditedWithCurrency?: string;
+    totalChargeAmountWithCurrency?: string;
+    totalTaxAmountWithCurrency?: string;
+    amountDebited?: string;
+    amountCredited?: string;
+    totalChargeAmount?: string;
+    totalTaxAmount?: string;
+    dateTimes?: string[];
+    creditAccountHolder?: string;
+    debitAccountHolder?: string;
+    encodedReceipt?: string;
+}
+
 export type ShiftSessionStatus = "opened" | "pending_handover_acceptance" | "closed";
 
 export interface ShiftSessionProductCount {

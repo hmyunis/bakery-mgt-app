@@ -8,6 +8,7 @@ import { ProductRow } from "./ProductRow";
 import { POSCartSidebar, type CartItem } from "./POSCartSidebar";
 import { useDebounce } from "../../hooks/useDebounce";
 import { Spinner } from "@heroui/react";
+import { CbeReceiptScanner } from "./CbeReceiptScanner";
 
 interface POSTerminalProps {
     salesLockedReason?: string | null;
@@ -18,6 +19,7 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+    const [showMobileCartFab, setShowMobileCartFab] = useState(false);
 
     const debouncedSearch = useDebounce(searchQuery, 300);
     const {
@@ -64,6 +66,25 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
     useEffect(() => {
         scrollContainerRef.current?.scrollTo({ top: 0 });
     }, [debouncedSearch]);
+
+    useEffect(() => {
+        const root = scrollContainerRef.current;
+
+        const updateMobileCartFab = () => {
+            const internalScroll = root?.scrollTop ?? 0;
+            const pageScroll = window.scrollY ?? 0;
+            setShowMobileCartFab(Math.max(internalScroll, pageScroll) > 80);
+        };
+
+        updateMobileCartFab();
+        root?.addEventListener("scroll", updateMobileCartFab, { passive: true });
+        window.addEventListener("scroll", updateMobileCartFab, { passive: true });
+
+        return () => {
+            root?.removeEventListener("scroll", updateMobileCartFab);
+            window.removeEventListener("scroll", updateMobileCartFab);
+        };
+    }, []);
 
     const getKnownProduct = (productId: number) => {
         return (
@@ -176,7 +197,7 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
                         />
                         <div
                             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                            className="relative w-fit cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                            className="relative hidden w-fit flex-shrink-0 cursor-pointer transition-opacity hover:opacity-80 md:flex"
                         >
                             <ShoppingCart className="h-6 w-6 text-slate-700 dark:text-slate-300" />
                             {cart.length > 0 && (
@@ -278,6 +299,27 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
                     className="min-h-[calc(100vh-8rem)]"
                 />
             </div>
+
+            <CbeReceiptScanner />
+
+            {cart.length > 0 && isSidebarCollapsed && (
+                <Button
+                    isIconOnly
+                    color="primary"
+                    aria-label={tr("Open cart")}
+                    onPress={() => setIsSidebarCollapsed(false)}
+                    className={`fixed bottom-[calc(6.25rem+env(safe-area-inset-bottom))] right-4 z-[55] !h-14 !w-14 !min-w-14 overflow-visible rounded-full shadow-lg transition-all md:hidden ${
+                        showMobileCartFab
+                            ? "translate-y-0 opacity-100"
+                            : "pointer-events-none translate-y-4 opacity-0"
+                    }`}
+                >
+                    <ShoppingCart className="h-6 w-6" />
+                    <span className="absolute -right-1.5 -top-1.5 z-10 flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-1.5 text-xs font-bold text-white shadow-sm ring-2 ring-background">
+                        {cart.length}
+                    </span>
+                </Button>
+            )}
         </div>
     );
 }

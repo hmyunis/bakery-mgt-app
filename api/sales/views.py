@@ -1,6 +1,8 @@
+import re
 from datetime import datetime
 from decimal import Decimal
 
+import requests
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Count, F, Q, Sum
@@ -612,6 +614,8 @@ class SaleViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["cashier", "receipt_issued", "payment_status", "shift_session"]
 
+    CBE_TRANSACTION_ID_PATTERN = re.compile(r"^v2-[A-Za-z0-9_-]{8,128}$")
+
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
@@ -792,6 +796,52 @@ class SaleViewSet(viewsets.ModelViewSet):
                 "sales": sales_data,
             }
         )
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path=r"cbe-transaction/(?P<identifier>[^/]+)",
+    )
+    def cbe_transaction(self, request, identifier=None):
+        if not identifier or not self.CBE_TRANSACTION_ID_PATTERN.fullmatch(identifier):
+            return Response(
+                {"detail": "Invalid CBE receipt identifier."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        url = (
+            "https://mb.cbe.com.et/api/v1/transactions/public/"
+            f"transaction-detail/{identifier}"
+        )
+        try:
+            response = requests.get(
+                url,
+                timeout=10,
+                headers={
+                    "Accept": "application/json",
+                    "X-App-ID": "d1292e42-7400-49de-a2d3-9731caa4c819",
+                    "X-App-Version": "0a01980b-9859-1369-8198-59f403820000",
+                },
+            )
+            response.raise_for_status()
+        except requests.Timeout:
+            return Response(
+                {"detail": "CBE transaction lookup timed out."},
+                status=status.HTTP_504_GATEWAY_TIMEOUT,
+            )
+        except requests.RequestException:
+            return Response(
+                {"detail": "Unable to load CBE transaction details."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        try:
+            return Response(response.json())
+        except ValueError:
+            return Response(
+                {"detail": "CBE returned an invalid transaction response."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
 
     def perform_create(self, serializer):
         serializer.save()

@@ -230,9 +230,7 @@ class InventoryService {
                     ? (purchase.isPriceAnomaly as boolean)
                     : (purchase.is_price_anomaly as boolean) || false,
             expense_id: (purchase.expenseId || purchase.expense_id || purchase.expense) as
-                | number
-                | null
-                | undefined,
+                number | null | undefined,
             bank_account_id: (purchase.bankAccountId ||
                 purchase.bank_account_id ||
                 purchase.bank_account) as number | null | undefined,

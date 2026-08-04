@@ -65,7 +65,7 @@ export function ProductRow({
                                     </Chip>
                                 ) : (
                                     <Chip color="default" variant="flat" size="sm">
-                                        {product.stock_quantity} {tr("pcs")}
+                                        {tr("Stock:")} {product.stock_quantity}
                                     </Chip>
                                 )}
                             </div>

@@ -178,8 +178,7 @@ export function AttendanceTab() {
                                 selectedKeys={selectedStatusKeys}
                                 onSelectionChange={(keys) => {
                                     const selected = Array.from(keys)[0] as
-                                        | AttendanceStatus
-                                        | undefined;
+                                        AttendanceStatus | undefined;
                                     if (!selected) return;
                                     setStatus(selected);
                                 }}

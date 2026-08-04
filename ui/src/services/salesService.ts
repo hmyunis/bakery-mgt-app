@@ -3,6 +3,7 @@ import type {
     AcceptShiftSessionData,
     CashierStatementParams,
     CashierStatementResponse,
+    CbeTransactionDetail,
     CloseShiftSessionData,
     CreateSaleData,
     OpenShiftSessionData,
@@ -52,13 +53,11 @@ class SalesService {
                 sale.cashier__username) as string,
             shift_session: (sale.shiftSession ?? sale.shift_session ?? null) as number | null,
             payment_status: (sale.paymentStatus || sale.payment_status || "paid") as
-                | "paid"
-                | "unpaid_approved",
+                "paid" | "unpaid_approved",
             unpaid_reason: (sale.unpaidReason || sale.unpaid_reason || "") as string,
             approved_by: (sale.approvedBy ?? sale.approved_by ?? null) as number | null,
             approved_by_name: (sale.approvedByName || sale.approved_by_name || null) as
-                | string
-                | null,
+                string | null,
             receipt_issued:
                 typeof sale.receiptIssued === "boolean"
                     ? sale.receiptIssued
@@ -94,8 +93,7 @@ class SalesService {
             openedBy: this.normalizeNumber(row.openedBy ?? row.opened_by),
             openedByName: (row.openedByName || row.opened_by_name || "") as string,
             openedByFullName: (row.openedByFullName || row.opened_by_full_name || null) as
-                | string
-                | null,
+                string | null,
             openedAt: (row.openedAt || row.opened_at || "") as string,
             openNotes: (row.openNotes || row.open_notes || "") as string,
             closedBy: (row.closedBy ?? row.closed_by ?? null) as number | null,
@@ -321,6 +319,13 @@ class SalesService {
                 this.normalizeSale(item)
             ),
         };
+    }
+
+    async getCbeTransactionDetail(identifier: string): Promise<CbeTransactionDetail> {
+        const response = await apiClient.get<
+            ApiResponse<CbeTransactionDetail> | CbeTransactionDetail
+        >(`/sales/sales/cbe-transaction/${encodeURIComponent(identifier)}/`);
+        return (response.data as ApiResponse<CbeTransactionDetail>).data || response.data;
     }
 
     async getShiftSessions(

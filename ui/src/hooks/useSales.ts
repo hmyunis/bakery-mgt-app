@@ -223,6 +223,22 @@ export function useCashierStatement(
     });
 }
 
+export function useCbeTransactionLookup() {
+    return useMutation({
+        mutationFn: async (identifier: string) => {
+            return await salesService.getCbeTransactionDetail(identifier);
+        },
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(
+                apiError.response?.data?.detail ||
+                    apiError.response?.data?.message ||
+                    "Unable to verify CBE receipt."
+            );
+        },
+    });
+}
+
 /**
  * Create a new sale
  */

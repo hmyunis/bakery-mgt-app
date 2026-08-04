@@ -271,10 +271,7 @@ export function SalesPage() {
                                     selectedKeys={new Set([receiptFilter])}
                                     onSelectionChange={(keys) => {
                                         const key = Array.from(keys)[0] as
-                                            | "all"
-                                            | "issued"
-                                            | "not_issued"
-                                            | undefined;
+                                            "all" | "issued" | "not_issued" | undefined;
                                         if (!key) return;
                                         setReceiptFilter(key);
                                         setHistoryPage(1);
