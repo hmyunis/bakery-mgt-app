@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Card, CardBody, Chip } from "@heroui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DailyShiftAttendance } from "../../types/employee";
@@ -103,7 +104,7 @@ export function CalendarView({ dailyData, periodStart, periodEnd }: CalendarView
     const calendarColumns: ColumnDef<CalendarWeek>[] = [
         {
             id: "week",
-            header: "Week",
+            header: tr("Week"),
             cell: ({ row }) => (
                 <span className="font-medium text-gray-900 dark:text-white">
                     {formatDate(parseDate(row.original[0][0].date), "MMM d")} -{" "}
@@ -118,10 +119,7 @@ export function CalendarView({ dailyData, periodStart, periodEnd }: CalendarView
                 cell: ({ row }) => {
                     const dayData = row.original[dayIndex][0];
                     const dayDate = parseDate(dayData.date);
-                    const statusColor = getStatusColor(
-                        dayData.attendanceStatus,
-                        dayData.isOnLeave
-                    );
+                    const statusColor = getStatusColor(dayData.attendanceStatus, dayData.isOnLeave);
 
                     return (
                         <div className={!isInPeriod(dayDate) ? "opacity-50" : undefined}>
@@ -148,7 +146,7 @@ export function CalendarView({ dailyData, periodStart, periodEnd }: CalendarView
                                         size="sm"
                                         className="bg-blue-100 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                                     >
-                                        {dayData.leaveType || "Leave"}
+                                        {dayData.leaveType || tr("Leave")}
                                     </Chip>
                                 )}
                             </div>

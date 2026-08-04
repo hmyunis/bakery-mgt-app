@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import {
     BarChart,
     Bar,
@@ -30,7 +31,7 @@ export function TopProductsChart({ data, className }: TopProductsChartProps) {
                     className
                 )}
             >
-                No product sales today
+                {tr("No product sales today")}
             </div>
         );
     }
@@ -60,10 +61,12 @@ export function TopProductsChart({ data, className }: TopProductsChartProps) {
                         {item.name}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Revenue: {formatMoney(item.revenue)} ETB
+                        {tr("Revenue:")}
+                        {formatMoney(item.revenue)} {tr("ETB")}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Quantity: {item.quantity} sold
+                        {tr("Quantity:")}
+                        {item.quantity} {tr("sold")}
                     </p>
                 </div>
             );

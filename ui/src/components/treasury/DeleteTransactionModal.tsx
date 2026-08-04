@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 
 interface DeleteTransactionModalProps {
@@ -16,24 +17,25 @@ export function DeleteTransactionModal({
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="md">
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1">Delete activity?</ModalHeader>
+                <ModalHeader className="flex flex-col gap-1">{tr("Delete activity?")}</ModalHeader>
                 <ModalBody>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
-                        This will remove the{" "}
+                        {tr("This will remove the")}{" "}
                         <span className="font-semibold">
                             {transaction?.type === "deposit" ? "deposit" : "withdrawal"}
                         </span>{" "}
-                        activity. This action cannot be undone.
+                        {tr("activity. This action cannot be undone.")}
                     </p>
                     {transaction ? (
                         <p className="text-sm text-slate-500">
-                            Amount: ETB {transaction.amount.toLocaleString()}
+                            {tr("Amount: ETB")}
+                            {transaction.amount.toLocaleString()}
                         </p>
                     ) : null}
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="light" onPress={onClose}>
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button color="danger" onPress={onConfirm}>
                         Delete

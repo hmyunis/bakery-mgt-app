@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Button, Select, SelectItem } from "@heroui/react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
@@ -28,20 +29,20 @@ export function DataTablePagination({
     return (
         <nav
             className="flex flex-col gap-3 border-t py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between sm:p-4"
-            aria-label="Table pagination"
+            aria-label={tr("Table pagination")}
         >
             <div className="text-center text-xs text-slate-500 dark:text-slate-400 sm:text-left sm:text-sm">
                 {pagination.count > 0
                     ? `Showing ${firstItem}-${lastItem} of ${pagination.count} results`
-                    : "No results"}
+                    : tr("No results")}
             </div>
 
             <div className="flex w-full items-center justify-between gap-2 sm:w-fit sm:gap-6">
                 <div className="flex shrink-0 items-center gap-2">
                     <Select
-                        label="Rows"
+                        label={tr("Rows")}
                         labelPlacement="outside-left"
-                        aria-label="Rows per page"
+                        aria-label={tr("Rows per page")}
                         selectedKeys={[String(pagination.pageSize)]}
                         className="min-w-[72px] [&_button]:border-0 [&_button]:bg-transparent [&_button]:focus:ring-0 [&_button]:hover:bg-transparent"
                         onSelectionChange={(keys) => {
@@ -62,7 +63,9 @@ export function DataTablePagination({
 
                 <div className="flex items-center gap-2 sm:gap-4">
                     <p className="whitespace-nowrap text-xs font-medium sm:text-sm">
-                        Page {pagination.page} of {pagination.totalPages}
+                        {tr("Page")}
+                        {pagination.page} {tr("of")}
+                        {pagination.totalPages}
                     </p>
                     <div className="flex items-center gap-1">
                         <Button
@@ -70,7 +73,7 @@ export function DataTablePagination({
                             isIconOnly
                             onPress={() => onPageChange(1)}
                             isDisabled={!hasPreviousPage}
-                            aria-label="First page"
+                            aria-label={tr("First page")}
                             className="h-10 min-w-9 rounded-lg px-0.5 text-slate-500 dark:text-slate-400 dark:hover:text-white"
                         >
                             <ChevronsLeft className="h-4 w-4" />
@@ -80,7 +83,7 @@ export function DataTablePagination({
                             isIconOnly
                             onPress={() => onPageChange(pagination.page - 1)}
                             isDisabled={!hasPreviousPage}
-                            aria-label="Previous page"
+                            aria-label={tr("Previous page")}
                             className="h-10 min-w-9 rounded-lg px-0.5 text-slate-500 dark:text-slate-400 dark:hover:text-white"
                         >
                             <ChevronLeft className="h-4 w-4" />
@@ -90,7 +93,7 @@ export function DataTablePagination({
                             isIconOnly
                             onPress={() => onPageChange(pagination.page + 1)}
                             isDisabled={!hasNextPage}
-                            aria-label="Next page"
+                            aria-label={tr("Next page")}
                             className="h-10 min-w-9 rounded-lg px-0.5 text-slate-500 dark:text-slate-400 dark:hover:text-white"
                         >
                             <ChevronRight className="h-4 w-4" />
@@ -100,7 +103,7 @@ export function DataTablePagination({
                             isIconOnly
                             onPress={() => onPageChange(pagination.totalPages)}
                             isDisabled={!hasNextPage}
-                            aria-label="Last page"
+                            aria-label={tr("Last page")}
                             className="h-10 min-w-9 rounded-lg px-0.5 text-slate-500 dark:text-slate-400 dark:hover:text-white"
                         >
                             <ChevronsRight className="h-4 w-4" />

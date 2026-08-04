@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useMemo, useState } from "react";
 import { Input, Select, SelectItem, Spinner, DatePicker } from "@heroui/react";
 import { Search } from "lucide-react";
@@ -46,8 +47,10 @@ export function AuditLogsPage() {
     return (
         <div className="space-y-6">
             <PageTitle
-                title="Audit Logs"
-                subtitle="Searchable record of who did what. Start with Delete actions to catch fraud."
+                title={tr("Audit Logs")}
+                subtitle={tr(
+                    "Searchable record of who did what. Start with Delete actions to catch fraud."
+                )}
             />
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -59,7 +62,7 @@ export function AuditLogsPage() {
         `}
                 >
                     <Input
-                        placeholder="Search by actor, table, record ID, IP…"
+                        placeholder={tr("Search by actor, table, record ID, IP…")}
                         value={search}
                         isClearable
                         onValueChange={(v) => {
@@ -75,8 +78,8 @@ export function AuditLogsPage() {
 
                 <div className="w-full sm:w-48">
                     <Select
-                        placeholder="Filter by action"
-                        aria-label="Filter by action"
+                        placeholder={tr("Filter by action")}
+                        aria-label={tr("Filter by action")}
                         selectedKeys={action === "ALL" ? [] : [action]}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as string;
@@ -98,15 +101,15 @@ export function AuditLogsPage() {
                             value: "!text-slate-800 dark:!text-slate-100",
                         }}
                     >
-                        <SelectItem key="DELETE">Delete</SelectItem>
-                        <SelectItem key="UPDATE">Update</SelectItem>
-                        <SelectItem key="CREATE">Create</SelectItem>
-                        <SelectItem key="ALL">All</SelectItem>
+                        <SelectItem key="DELETE">{tr("Delete")}</SelectItem>
+                        <SelectItem key="UPDATE">{tr("Update")}</SelectItem>
+                        <SelectItem key="CREATE">{tr("Create")}</SelectItem>
+                        <SelectItem key="ALL">{tr("All")}</SelectItem>
                     </Select>
                 </div>
                 <div className="w-full sm:w-48">
                     <DatePicker
-                        label="Filter from Date"
+                        label={tr("Filter from Date")}
                         variant="bordered"
                         showMonthAndYearPickers
                         value={startDate}

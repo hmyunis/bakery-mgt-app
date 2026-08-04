@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState, useMemo } from "react";
 import {
     Modal,
@@ -166,17 +167,17 @@ function PurchaseFormContent({
         const newErrors: Record<string, string> = {};
 
         if (!formData.ingredient) {
-            newErrors.ingredient = "Ingredient is required";
+            newErrors.ingredient = tr("Ingredient is required");
         }
 
         const qty = parseFloat(formData.quantity);
         if (!formData.quantity || isNaN(qty) || qty <= 0) {
-            newErrors.quantity = "Quantity must be greater than 0";
+            newErrors.quantity = tr("Quantity must be greater than 0");
         }
 
         const totalCost = calculateTotalCost();
         if (isNaN(totalCost) || totalCost < 0) {
-            newErrors.total_cost = "Total cost cannot be negative";
+            newErrors.total_cost = tr("Total cost cannot be negative");
         }
 
         setErrors(newErrors);
@@ -236,17 +237,18 @@ function PurchaseFormContent({
     return (
         <>
             <ModalHeader className="flex flex-col gap-1">
-                {isEdit ? "Edit Purchase Record" : "Record New Purchase"}
+                {isEdit ? tr("Edit Purchase Record") : tr("Record New Purchase")}
                 {selectedIngredient && (
                     <p className="text-sm font-normal text-slate-500">
-                        Purchasing {selectedIngredient.name}
+                        {tr("Purchasing")}
+                        {selectedIngredient.name}
                     </p>
                 )}
             </ModalHeader>
             <ModalBody className="space-y-4">
                 <Select
-                    label="Ingredient"
-                    placeholder="Select an ingredient"
+                    label={tr("Ingredient")}
+                    placeholder={tr("Select an ingredient")}
                     selectedKeys={ingredientSelectedKeys}
                     onSelectionChange={(keys) => {
                         const selected = Array.from(keys)[0] as string;
@@ -274,7 +276,7 @@ function PurchaseFormContent({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input
-                        label="Quantity"
+                        label={tr("Quantity")}
                         type="number"
                         placeholder="0.000"
                         value={formData.quantity}
@@ -293,7 +295,7 @@ function PurchaseFormContent({
                     />
 
                     <RadioGroup
-                        label="Cost Input Mode"
+                        label={tr("Cost Input Mode")}
                         orientation="horizontal"
                         value={costInputMode}
                         onValueChange={(v) => setCostInputMode(v as CostInputMode)}
@@ -301,14 +303,14 @@ function PurchaseFormContent({
                             label: "text-xs",
                         }}
                     >
-                        <Radio value="total">Total Cost</Radio>
-                        <Radio value="unit">Unit Cost</Radio>
+                        <Radio value="total">{tr("Total Cost")}</Radio>
+                        <Radio value="unit">{tr("Unit Cost")}</Radio>
                     </RadioGroup>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input
-                        label="Total Cost"
+                        label={tr("Total Cost")}
                         type="number"
                         placeholder="0.00"
                         value={
@@ -321,14 +323,14 @@ function PurchaseFormContent({
                         isRequired={costInputMode === "total"}
                         isInvalid={!!errors.total_cost}
                         errorMessage={errors.total_cost}
-                        startContent={<span className="text-xs text-slate-500">ETB</span>}
+                        startContent={<span className="text-xs text-slate-500">{tr("ETB")}</span>}
                         classNames={{
                             input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
                         }}
                     />
 
                     <Input
-                        label="Unit Cost"
+                        label={tr("Unit Cost")}
                         type="number"
                         placeholder="0.00"
                         value={
@@ -339,7 +341,7 @@ function PurchaseFormContent({
                         onValueChange={(v) => handleInputChange("unit_cost", v)}
                         isDisabled={costInputMode === "total"}
                         isRequired={costInputMode === "unit"}
-                        startContent={<span className="text-xs text-slate-500">ETB</span>}
+                        startContent={<span className="text-xs text-slate-500">{tr("ETB")}</span>}
                         classNames={{
                             input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
                         }}
@@ -347,8 +349,8 @@ function PurchaseFormContent({
                 </div>
 
                 <Select
-                    label="Deduct From Bank (Optional)"
-                    placeholder="Don't deduct from bank"
+                    label={tr("Deduct From Bank (Optional)")}
+                    placeholder={tr("Don't deduct from bank")}
                     selectedKeys={bankSelectedKeys}
                     onSelectionChange={(keys) => {
                         const selected = Array.from(keys)[0] as string | undefined;
@@ -373,19 +375,20 @@ function PurchaseFormContent({
                     selectedIngredient.reorder_point > selectedIngredient.current_stock && (
                         <Alert
                             color="warning"
-                            title="Low Stock Warning"
+                            title={tr("Low Stock Warning")}
                             icon={<AlertTriangle className="h-4 w-4" />}
                         >
-                            Current stock ({selectedIngredient.current_stock}{" "}
-                            {selectedIngredient.unit}) is below reorder point (
+                            {tr("Current stock (")}
+                            {selectedIngredient.current_stock} {selectedIngredient.unit}
+                            {tr(") is below reorder point (")}
                             {selectedIngredient.reorder_point} {selectedIngredient.unit}).
                         </Alert>
                     )}
 
                 <div className="space-y-2">
                     <Input
-                        label="Vendor"
-                        placeholder="Enter vendor name"
+                        label={tr("Vendor")}
+                        placeholder={tr("Enter vendor name")}
                         value={formData.vendor}
                         onValueChange={(v) => handleInputChange("vendor", v)}
                         classNames={{
@@ -395,7 +398,9 @@ function PurchaseFormContent({
 
                     {recentVendors.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-1">
-                            <span className="text-xs text-slate-500 self-center">Recent:</span>
+                            <span className="text-xs text-slate-500 self-center">
+                                {tr("Recent:")}
+                            </span>
                             {recentVendors.map((vendor) => (
                                 <Chip
                                     key={vendor}
@@ -414,8 +419,8 @@ function PurchaseFormContent({
                 </div>
 
                 <Textarea
-                    label="Notes"
-                    placeholder="Any additional details..."
+                    label={tr("Notes")}
+                    placeholder={tr("Any additional details...")}
                     value={formData.notes}
                     onValueChange={(v) => handleInputChange("notes", v)}
                     classNames={{
@@ -425,10 +430,10 @@ function PurchaseFormContent({
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose} isDisabled={isLoading}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    {isEdit ? "Update Record" : "Record Purchase"}
+                    {isEdit ? tr("Update Record") : tr("Record Purchase")}
                 </Button>
             </ModalFooter>
         </>

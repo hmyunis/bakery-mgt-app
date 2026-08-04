@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -15,10 +16,10 @@ import type { AttendanceRecord, AttendanceStatus } from "../../types/attendance"
 import type { UpdateAttendanceRecordData } from "../../services/attendanceService";
 
 const STATUS_OPTIONS: Array<{ key: AttendanceStatus; label: string }> = [
-    { key: "present", label: "Present" },
-    { key: "late", label: "Late" },
-    { key: "absent", label: "Absent" },
-    { key: "overtime", label: "Overtime" },
+    { key: "present", label: tr("Present") },
+    { key: "late", label: tr("Late") },
+    { key: "absent", label: tr("Absent") },
+    { key: "overtime", label: tr("Overtime") },
 ];
 
 interface AttendanceRecordFormModalProps {
@@ -83,7 +84,7 @@ function AttendanceRecordFormContent({
 
     return (
         <>
-            <ModalHeader>Edit Attendance</ModalHeader>
+            <ModalHeader>{tr("Edit Attendance")}</ModalHeader>
             <ModalBody className="space-y-4">
                 {record && (
                     <div className="text-xs text-slate-500">
@@ -92,7 +93,7 @@ function AttendanceRecordFormContent({
                 )}
 
                 <Select
-                    label="Status"
+                    label={tr("Status")}
                     selectedKeys={statusKeys}
                     onSelectionChange={(keys) => {
                         const selected = Array.from(keys)[0] as AttendanceStatus;
@@ -114,7 +115,7 @@ function AttendanceRecordFormContent({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Input
-                        label="Late Minutes"
+                        label={tr("Late Minutes")}
                         type="number"
                         value={lateMinutes}
                         onValueChange={setLateMinutes}
@@ -122,12 +123,12 @@ function AttendanceRecordFormContent({
                         isInvalid={status === "late" && lateMinutesInt === undefined}
                         errorMessage={
                             status === "late" && lateMinutesInt === undefined
-                                ? "Enter a valid non-negative integer"
+                                ? tr("Enter a valid non-negative integer")
                                 : undefined
                         }
                     />
                     <Input
-                        label="Overtime Minutes"
+                        label={tr("Overtime Minutes")}
                         type="number"
                         value={overtimeMinutes}
                         onValueChange={setOvertimeMinutes}
@@ -135,14 +136,14 @@ function AttendanceRecordFormContent({
                         isInvalid={status === "overtime" && overtimeMinutesInt === undefined}
                         errorMessage={
                             status === "overtime" && overtimeMinutesInt === undefined
-                                ? "Enter a valid non-negative integer"
+                                ? tr("Enter a valid non-negative integer")
                                 : undefined
                         }
                     />
                 </div>
 
                 <Textarea
-                    label="Notes (optional)"
+                    label={tr("Notes (optional)")}
                     value={notes}
                     onValueChange={setNotes}
                     minRows={3}
@@ -150,7 +151,7 @@ function AttendanceRecordFormContent({
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose} isDisabled={isLoading}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button
                     color="primary"
@@ -158,7 +159,7 @@ function AttendanceRecordFormContent({
                     isLoading={isLoading}
                     isDisabled={!canSubmit}
                 >
-                    Save
+                    {tr("Save")}
                 </Button>
             </ModalFooter>
         </>

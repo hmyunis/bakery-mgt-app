@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Card, Chip, Button } from "@heroui/react";
 import { Plus, Minus } from "lucide-react";
 import type { Product } from "../../types/production";
@@ -60,11 +61,11 @@ export function ProductRow({
                                 </h3>
                                 {isOutOfStock ? (
                                     <Chip color="danger" variant="flat" size="sm">
-                                        Out of Stock
+                                        {tr("Out of Stock")}
                                     </Chip>
                                 ) : (
                                     <Chip color="default" variant="flat" size="sm">
-                                        {product.stock_quantity} pcs
+                                        {product.stock_quantity} {tr("pcs")}
                                     </Chip>
                                 )}
                             </div>
@@ -77,7 +78,8 @@ export function ProductRow({
                     </div>
                     <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
                         <span className="text-sm font-bold text-primary whitespace-nowrap">
-                            ETB {product.selling_price.toFixed(2)}
+                            {tr("ETB")}
+                            {product.selling_price.toFixed(2)}
                         </span>
                         <Button
                             variant="bordered"

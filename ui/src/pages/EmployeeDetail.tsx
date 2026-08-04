@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button, Card, CardBody, Chip, Divider, Input, Skeleton } from "@heroui/react";
@@ -170,19 +171,19 @@ export function EmployeeDetailPage() {
                     onPress={() => navigate("/app/employees")}
                     startContent={<ArrowLeft className="h-4 w-4" />}
                 >
-                    Back
+                    {tr("Back")}
                 </Button>
                 <Divider orientation="vertical" className="h-8" />
                 <PageTitle
-                    title={employee?.fullName ? employee.fullName : "Employee"}
-                    subtitle="Payroll, attendance, leaves and waste performance"
+                    title={employee?.fullName ? employee.fullName : tr("Employee")}
+                    subtitle={tr("Payroll, attendance, leaves and waste performance")}
                 />
             </div>
 
             <Card>
                 <CardBody className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
-                        <p className="text-xs text-slate-500">Position</p>
+                        <p className="text-xs text-slate-500">{tr("Position")}</p>
                         {isEmployeeLoading ? (
                             <Skeleton className="h-6 w-48 rounded" />
                         ) : (
@@ -190,7 +191,7 @@ export function EmployeeDetailPage() {
                         )}
                     </div>
                     <div>
-                        <p className="text-xs text-slate-500">Phone</p>
+                        <p className="text-xs text-slate-500">{tr("Phone")}</p>
                         {isEmployeeLoading ? (
                             <Skeleton className="h-6 w-48 rounded" />
                         ) : (
@@ -198,7 +199,7 @@ export function EmployeeDetailPage() {
                         )}
                     </div>
                     <div>
-                        <p className="text-xs text-slate-500">Monthly Base Salary</p>
+                        <p className="text-xs text-slate-500">{tr("Monthly Base Salary")}</p>
                         {isEmployeeLoading ? (
                             <Skeleton className="h-6 w-48 rounded" />
                         ) : (
@@ -214,7 +215,7 @@ export function EmployeeDetailPage() {
                         )}
                     </div>
                     <div>
-                        <p className="text-xs text-slate-500">Address</p>
+                        <p className="text-xs text-slate-500">{tr("Address")}</p>
                         {isEmployeeLoading ? (
                             <Skeleton className="h-6 w-48 rounded" />
                         ) : (
@@ -222,7 +223,7 @@ export function EmployeeDetailPage() {
                         )}
                     </div>
                     <div>
-                        <p className="text-xs text-slate-500">Hire Date</p>
+                        <p className="text-xs text-slate-500">{tr("Hire Date")}</p>
                         {isEmployeeLoading ? (
                             <Skeleton className="h-6 w-48 rounded" />
                         ) : (
@@ -238,7 +239,7 @@ export function EmployeeDetailPage() {
                         )}
                     </div>
                     <div>
-                        <p className="text-xs text-slate-500">User Account</p>
+                        <p className="text-xs text-slate-500">{tr("User Account")}</p>
                         {isEmployeeLoading ? (
                             <Skeleton className="h-6 w-48 rounded" />
                         ) : (
@@ -252,7 +253,7 @@ export function EmployeeDetailPage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <span className="text-slate-500">No linked user</span>
+                                    <span className="text-slate-500">{tr("No linked user")}</span>
                                 )}
                             </div>
                         )}
@@ -262,8 +263,10 @@ export function EmployeeDetailPage() {
 
             <div className="space-y-3">
                 <PageTitle
-                    title="Payroll"
-                    subtitle="Latest month is expanded by default. Details are loaded on demand."
+                    title={tr("Payroll")}
+                    subtitle={tr(
+                        "Latest month is expanded by default. Details are loaded on demand."
+                    )}
                 />
 
                 {isPayrollLoading && (
@@ -275,7 +278,7 @@ export function EmployeeDetailPage() {
                 )}
 
                 {!isPayrollLoading && records.length === 0 && (
-                    <div className="text-sm text-slate-500">No payroll records found.</div>
+                    <div className="text-sm text-slate-500">{tr("No payroll records found.")}</div>
                 )}
 
                 <div className="space-y-2">
@@ -314,7 +317,7 @@ export function EmployeeDetailPage() {
                                                 variant="flat"
                                                 onPress={() => onToggleRecord(r.id)}
                                             >
-                                                {isOpen ? "Collapse" : "Expand"}
+                                                {isOpen ? tr("Collapse") : tr("Expand")}
                                             </Button>
                                         </div>
                                     </div>
@@ -334,8 +337,9 @@ export function EmployeeDetailPage() {
                                             {!isPayrollDetailLoading &&
                                                 payrollDetailQuery.isError && (
                                                     <div className="text-sm text-danger">
-                                                        Failed to load payroll details for this
-                                                        record.
+                                                        {tr(
+                                                            "Failed to load payroll details for this record."
+                                                        )}
                                                     </div>
                                                 )}
 
@@ -343,8 +347,9 @@ export function EmployeeDetailPage() {
                                                 !payrollDetailQuery.isError &&
                                                 !payrollDetail && (
                                                     <div className="text-sm text-slate-500">
-                                                        No details available for this payroll
-                                                        record.
+                                                        {tr(
+                                                            "No details available for this payroll record."
+                                                        )}
                                                     </div>
                                                 )}
 
@@ -353,10 +358,10 @@ export function EmployeeDetailPage() {
                                                     <Card className="bg-slate-50 dark:bg-slate-900/30">
                                                         <CardBody className="space-y-2">
                                                             <p className="text-sm font-semibold">
-                                                                Attendance Summary
+                                                                {tr("Attendance Summary")}
                                                             </p>
                                                             <p className="text-xs text-slate-500">
-                                                                Total records:{" "}
+                                                                {tr("Total records:")}{" "}
                                                                 {
                                                                     payrollDetail.attendanceSummary
                                                                         .total
@@ -381,13 +386,15 @@ export function EmployeeDetailPage() {
                                                     <Card className="bg-slate-50 dark:bg-slate-900/30">
                                                         <CardBody className="space-y-2">
                                                             <p className="text-sm font-semibold">
-                                                                Leave Summary
+                                                                {tr("Leave Summary")}
                                                             </p>
                                                             {Object.keys(
                                                                 payrollDetail.leaveSummary || {}
                                                             ).length === 0 ? (
                                                                 <p className="text-xs text-slate-500">
-                                                                    No leaves in this period.
+                                                                    {tr(
+                                                                        "No leaves in this period."
+                                                                    )}
                                                                 </p>
                                                             ) : (
                                                                 <div className="flex flex-wrap gap-2">
@@ -412,7 +419,7 @@ export function EmployeeDetailPage() {
                                                             <CardBody className="space-y-2">
                                                                 <div className="flex items-center justify-between gap-3">
                                                                     <p className="text-sm font-semibold">
-                                                                        Waste (User-linked)
+                                                                        {tr("Waste (User-linked)")}
                                                                     </p>
                                                                     <Button
                                                                         size="sm"
@@ -422,13 +429,15 @@ export function EmployeeDetailPage() {
                                                                         }
                                                                         isDisabled
                                                                     >
-                                                                        Export
+                                                                        {tr("Export")}
                                                                     </Button>
                                                                 </div>
                                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                                     <div>
                                                                         <p className="text-xs text-slate-500">
-                                                                            Total Wastage Volume
+                                                                            {tr(
+                                                                                "Total Wastage Volume"
+                                                                            )}
                                                                         </p>
                                                                         <p className="text-sm font-medium">
                                                                             {
@@ -440,7 +449,9 @@ export function EmployeeDetailPage() {
                                                                     </div>
                                                                     <div>
                                                                         <p className="text-xs text-slate-500">
-                                                                            Total Wastage Value
+                                                                            {tr(
+                                                                                "Total Wastage Value"
+                                                                            )}
                                                                         </p>
                                                                         <p className="text-sm font-medium">
                                                                             {
@@ -458,7 +469,7 @@ export function EmployeeDetailPage() {
                                                     <Card className="lg:col-span-2">
                                                         <CardBody>
                                                             <p className="text-lg font-semibold mb-4">
-                                                                Monthly Calendar
+                                                                {tr("Monthly Calendar")}
                                                             </p>
                                                             <CalendarView
                                                                 dailyData={
@@ -479,11 +490,11 @@ export function EmployeeDetailPage() {
                                                     <Card className="lg:col-span-2">
                                                         <CardBody className="space-y-3">
                                                             <p className="text-sm font-semibold">
-                                                                Payment
+                                                                {tr("Payment")}
                                                             </p>
                                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                                 <Input
-                                                                    label="Amount Paid"
+                                                                    label={tr("Amount Paid")}
                                                                     type="number"
                                                                     value={amountPaidInput}
                                                                     onValueChange={
@@ -513,7 +524,9 @@ export function EmployeeDetailPage() {
                                                                     >
                                                                         {receiptFile
                                                                             ? `Receipt: ${receiptFile.name}`
-                                                                            : "Upload Receipt (optional)"}
+                                                                            : tr(
+                                                                                  "Upload Receipt (optional)"
+                                                                              )}
                                                                     </Button>
                                                                     {receiptFile && (
                                                                         <Button
@@ -530,7 +543,7 @@ export function EmployeeDetailPage() {
                                                                                         "";
                                                                             }}
                                                                         >
-                                                                            Remove receipt
+                                                                            {tr("Remove receipt")}
                                                                         </Button>
                                                                     )}
 
@@ -540,7 +553,9 @@ export function EmployeeDetailPage() {
                                                                                 src={
                                                                                     receiptPreviewUrl
                                                                                 }
-                                                                                alt="Receipt preview"
+                                                                                alt={tr(
+                                                                                    "Receipt preview"
+                                                                                )}
                                                                                 className="w-full max-h-40 object-contain bg-white dark:bg-slate-900"
                                                                             />
                                                                         </div>
@@ -565,7 +580,9 @@ export function EmployeeDetailPage() {
                                                                                                 .receipt
                                                                                         )
                                                                                     )}
-                                                                                    alt="Receipt preview"
+                                                                                    alt={tr(
+                                                                                        "Receipt preview"
+                                                                                    )}
                                                                                     className="w-full max-h-40 object-contain bg-white dark:bg-slate-900"
                                                                                 />
                                                                             </div>
@@ -592,13 +609,15 @@ export function EmployeeDetailPage() {
                                                                                     )
                                                                                 }
                                                                             >
-                                                                                Download receipt
+                                                                                {tr(
+                                                                                    "Download receipt"
+                                                                                )}
                                                                             </Button>
                                                                         </div>
                                                                     )}
                                                                 </div>
                                                                 <Input
-                                                                    label="Notes (optional)"
+                                                                    label={tr("Notes (optional)")}
                                                                     value={notesInput}
                                                                     onValueChange={setNotesInput}
                                                                     placeholder={r.notes || ""}
@@ -618,7 +637,7 @@ export function EmployeeDetailPage() {
                                                                         updatePayroll.isPending
                                                                     }
                                                                 >
-                                                                    Save Payment
+                                                                    {tr("Save Payment")}
                                                                 </Button>
                                                             </div>
                                                         </CardBody>

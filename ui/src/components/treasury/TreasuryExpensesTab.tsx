@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import {
     Button,
     Card,
@@ -67,7 +68,7 @@ export function TreasuryExpensesTab({
                 <Card className="border border-slate-200/60 dark:border-slate-800/80">
                     <CardHeader className="flex items-center justify-between px-5 py-4">
                         <div>
-                            <p className="text-xs text-slate-500">Total Expenses</p>
+                            <p className="text-xs text-slate-500">{tr("Total Expenses")}</p>
                             <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                                 {formatCurrency(totalExpenseAmount)}
                             </p>
@@ -77,14 +78,14 @@ export function TreasuryExpensesTab({
                         </div>
                     </CardHeader>
                     <CardBody className="pt-0 px-5 pb-4 text-xs text-slate-500">
-                        Sum of all recorded expenses.
+                        {tr("Sum of all recorded expenses.")}
                     </CardBody>
                 </Card>
 
                 <Card className="border border-slate-200/60 dark:border-slate-800/80">
                     <CardHeader className="flex items-center justify-between px-5 py-4">
                         <div>
-                            <p className="text-xs text-slate-500">Paid</p>
+                            <p className="text-xs text-slate-500">{tr("Paid")}</p>
                             <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                                 {formatCurrency(paidExpenseAmount)}
                             </p>
@@ -94,14 +95,14 @@ export function TreasuryExpensesTab({
                         </div>
                     </CardHeader>
                     <CardBody className="pt-0 px-5 pb-4 text-xs text-slate-500">
-                        Expenses already settled.
+                        {tr("Expenses already settled.")}
                     </CardBody>
                 </Card>
 
                 <Card className="border border-slate-200/60 dark:border-slate-800/80">
                     <CardHeader className="flex items-center justify-between px-5 py-4">
                         <div>
-                            <p className="text-xs text-slate-500">Pending</p>
+                            <p className="text-xs text-slate-500">{tr("Pending")}</p>
                             <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                                 {formatCurrency(pendingExpenseAmount)}
                             </p>
@@ -111,7 +112,7 @@ export function TreasuryExpensesTab({
                         </div>
                     </CardHeader>
                     <CardBody className="pt-0 px-5 pb-4 text-xs text-slate-500">
-                        Expenses awaiting payment.
+                        {tr("Expenses awaiting payment.")}
                     </CardBody>
                 </Card>
             </div>
@@ -120,10 +121,10 @@ export function TreasuryExpensesTab({
                 <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                            Expense Log
+                            {tr("Expense Log")}
                         </p>
                         <p className="text-sm text-slate-500">
-                            Track and manage business expenses.
+                            {tr("Track and manage business expenses.")}
                         </p>
                     </div>
                     <Button
@@ -131,7 +132,7 @@ export function TreasuryExpensesTab({
                         startContent={<Plus className="h-4 w-4" />}
                         onPress={onCreateExpense}
                     >
-                        Add Expense
+                        {tr("Add Expense")}
                     </Button>
                 </CardHeader>
                 <CardBody className="pt-0 space-y-4">
@@ -139,7 +140,7 @@ export function TreasuryExpensesTab({
                         <div className="flex flex-wrap gap-3">
                             <div className="w-full sm:w-64 self-end">
                                 <Input
-                                    placeholder="Search expenses..."
+                                    placeholder={tr("Search expenses...")}
                                     value={expenseSearch}
                                     isClearable
                                     onValueChange={onExpenseSearchChange}
@@ -163,15 +164,15 @@ export function TreasuryExpensesTab({
                                     label: "!w-40 !text-left",
                                     value: "!text-slate-900 dark:!text-slate-100",
                                 }}
-                                aria-label="Filter by status"
+                                aria-label={tr("Filter by status")}
                             >
-                                <SelectItem key="all">All</SelectItem>
-                                <SelectItem key="paid">Paid</SelectItem>
-                                <SelectItem key="pending">Pending</SelectItem>
+                                <SelectItem key="all">{tr("All")}</SelectItem>
+                                <SelectItem key="paid">{tr("Paid")}</SelectItem>
+                                <SelectItem key="pending">{tr("Pending")}</SelectItem>
                             </Select>
                             <div className="w-full sm:w-44">
                                 <DatePicker
-                                    label="Start Date"
+                                    label={tr("Start Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={expenseStartDate}
@@ -180,7 +181,7 @@ export function TreasuryExpensesTab({
                             </div>
                             <div className="w-full sm:w-44">
                                 <DatePicker
-                                    label="End Date"
+                                    label={tr("End Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={expenseEndDate}

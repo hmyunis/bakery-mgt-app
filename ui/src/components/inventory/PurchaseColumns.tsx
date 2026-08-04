@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Purchase } from "../../types/inventory";
 import { Button, Chip, Tooltip } from "@heroui/react";
@@ -25,7 +26,7 @@ export const getPurchaseColumns = ({
     },
     {
         accessorKey: "ingredient_name",
-        header: "Ingredient",
+        header: tr("Ingredient"),
         cell: ({ row }) => (
             <span className="font-medium text-zinc-900 dark:text-zinc-100">
                 {row.original.ingredient_name || `Ingredient #${row.original.ingredient}`}
@@ -34,7 +35,7 @@ export const getPurchaseColumns = ({
     },
     {
         accessorKey: "quantity",
-        header: "Quantity",
+        header: tr("Quantity"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
                 {row.original.quantity.toFixed(3)}
@@ -43,22 +44,22 @@ export const getPurchaseColumns = ({
     },
     {
         accessorKey: "total_cost",
-        header: "Total Cost",
+        header: tr("Total Cost"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
-                {row.original.total_cost.toFixed(2)} ETB
+                {row.original.total_cost.toFixed(2)} {tr("ETB")}
             </span>
         ),
     },
     {
         accessorKey: "unit_cost",
-        header: "Unit Cost",
+        header: tr("Unit Cost"),
         cell: ({ row }) => {
             const purchase = row.original;
             return (
                 <div className="flex items-center gap-2">
                     {purchase.is_price_anomaly && (
-                        <Tooltip content="Price anomaly detected (>30% above average)">
+                        <Tooltip content={tr("Price anomaly detected (>30% above average)")}>
                             <AlertTriangle className="h-4 w-4 text-warning-500 flex-shrink-0" />
                         </Tooltip>
                     )}
@@ -69,11 +70,11 @@ export const getPurchaseColumns = ({
                                 : "text-zinc-900 dark:text-zinc-100"
                         }
                     >
-                        {purchase.unit_cost.toFixed(2)} ETB
+                        {purchase.unit_cost.toFixed(2)} {tr("ETB")}
                     </span>
                     {purchase.is_price_anomaly && (
                         <Chip color="warning" variant="flat" size="sm">
-                            Anomaly
+                            {tr("Anomaly")}
                         </Chip>
                     )}
                 </div>
@@ -82,14 +83,14 @@ export const getPurchaseColumns = ({
     },
     {
         accessorKey: "vendor",
-        header: "Vendor",
+        header: tr("Vendor"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">{row.original.vendor || "-"}</span>
         ),
     },
     {
         accessorKey: "purchaser_name",
-        header: "Purchaser",
+        header: tr("Purchaser"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
                 {row.original.purchaser_name || "-"}
@@ -98,7 +99,7 @@ export const getPurchaseColumns = ({
     },
     {
         accessorKey: "purchase_date",
-        header: "Date",
+        header: tr("Date"),
         cell: ({ row }) => (
             <span className="text-sm text-zinc-600 dark:text-zinc-400">
                 {formatDateTime(row.original.purchase_date)}
@@ -107,13 +108,13 @@ export const getPurchaseColumns = ({
     },
     {
         id: "actions",
-        header: "Actions",
+        header: tr("Actions"),
         cell: ({ row }) => {
             const purchase = row.original;
             return (
                 <div className="flex items-center gap-2 p-2">
                     {onEdit && (
-                        <Tooltip content="Edit Purchase" placement="top">
+                        <Tooltip content={tr("Edit Purchase")} placement="top">
                             <Button
                                 isIconOnly
                                 size="sm"
@@ -127,7 +128,7 @@ export const getPurchaseColumns = ({
                         </Tooltip>
                     )}
                     {onDelete && (
-                        <Tooltip content="Delete Purchase" placement="top">
+                        <Tooltip content={tr("Delete Purchase")} placement="top">
                             <Button
                                 isIconOnly
                                 size="sm"

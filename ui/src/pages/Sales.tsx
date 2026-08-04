@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useState, useMemo } from "react";
 import { Tabs, Tab, Spinner, DatePicker, Select, SelectItem, Button } from "@heroui/react";
 import { ShoppingCart, History, FileText, Handshake } from "lucide-react";
@@ -51,13 +52,14 @@ export function SalesPage() {
     const salesLockedReason = useMemo(() => {
         const openedSession = activeShiftData?.openedSession || null;
         if (isSalesStaff && isLoadingActiveShift) return null;
-        if (!openedSession) return "No active shift session. Open and verify shift handover first.";
+        if (!openedSession)
+            return tr("No active shift session. Open and verify shift handover first.");
         if (
             user?.role === "staff" &&
             currentUserId !== null &&
             openedSession.openedBy !== currentUserId
         ) {
-            return "Active shift belongs to another cashier. Accept handover before selling.";
+            return tr("Active shift belongs to another cashier. Accept handover before selling.");
         }
         return null;
     }, [
@@ -163,35 +165,36 @@ export function SalesPage() {
     return (
         <div className="space-y-6 lg:space-y-8">
             <PageTitle
-                title="Sales"
-                subtitle="Process transactions, manage orders, and track daily revenue."
+                title={tr("Sales")}
+                subtitle={tr("Process transactions, manage orders, and track daily revenue.")}
             />
 
             {isSalesStaff && (
                 <div className="space-y-2">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-                            <p className="text-xs text-slate-500">Cash In Hand Now</p>
+                            <p className="text-xs text-slate-500">{tr("Cash In Hand Now")}</p>
                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                                ETB {(liveShiftReconciliation?.money.cashCollected ?? 0).toFixed(2)}
+                                {tr("ETB")}
+                                {(liveShiftReconciliation?.money.cashCollected ?? 0).toFixed(2)}
                             </p>
                         </div>
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-                            <p className="text-xs text-slate-500">Total Collected</p>
+                            <p className="text-xs text-slate-500">{tr("Total Collected")}</p>
                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                                ETB{" "}
+                                {tr("ETB")}{" "}
                                 {(liveShiftReconciliation?.money.collectedTotal ?? 0).toFixed(2)}
                             </p>
                         </div>
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-                            <p className="text-xs text-slate-500">Digital Collected</p>
+                            <p className="text-xs text-slate-500">{tr("Digital Collected")}</p>
                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                                ETB{" "}
+                                {tr("ETB")}{" "}
                                 {(liveShiftReconciliation?.money.digitalCollected ?? 0).toFixed(2)}
                             </p>
                         </div>
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-                            <p className="text-xs text-slate-500">Sales Count</p>
+                            <p className="text-xs text-slate-500">{tr("Sales Count")}</p>
                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
                                 {liveShiftReconciliation?.money.saleCount ?? 0}
                             </p>
@@ -199,14 +202,14 @@ export function SalesPage() {
                     </div>
                     {!myOpenedSessionId && (
                         <p className="text-xs text-warning-600 dark:text-warning-300">
-                            No active shift session assigned to your account.
+                            {tr("No active shift session assigned to your account.")}
                         </p>
                     )}
                 </div>
             )}
 
             <Tabs
-                aria-label="Sales"
+                aria-label={tr("Sales")}
                 selectedKey={activeTab}
                 onSelectionChange={(key) => setActiveTab(String(key))}
                 color="primary"
@@ -221,7 +224,7 @@ export function SalesPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <ShoppingCart className="h-4 w-4" />
-                            <span>POS Terminal</span>
+                            <span>{tr("POS Terminal")}</span>
                         </div>
                     }
                 >
@@ -235,7 +238,7 @@ export function SalesPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <Handshake className="h-4 w-4" />
-                            <span>Shift Handover</span>
+                            <span>{tr("Shift Handover")}</span>
                         </div>
                     }
                 >
@@ -247,7 +250,7 @@ export function SalesPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <History className="h-4 w-4" />
-                            <span>History</span>
+                            <span>{tr("History")}</span>
                         </div>
                     }
                 >
@@ -255,7 +258,7 @@ export function SalesPage() {
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                                 <DatePicker
-                                    label="Filter from Date"
+                                    label={tr("Filter from Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={historyStartDate}
@@ -263,7 +266,7 @@ export function SalesPage() {
                                     className="w-full sm:w-48"
                                 />
                                 <Select
-                                    label="Receipt"
+                                    label={tr("Receipt")}
                                     variant="bordered"
                                     selectedKeys={new Set([receiptFilter])}
                                     onSelectionChange={(keys) => {
@@ -283,15 +286,15 @@ export function SalesPage() {
                                         label: "!w-36 !text-left",
                                         value: "!text-slate-900 dark:!text-slate-100",
                                     }}
-                                    aria-label="Filter by receipt issued"
+                                    aria-label={tr("Filter by receipt issued")}
                                 >
-                                    <SelectItem key="all">All</SelectItem>
-                                    <SelectItem key="issued">Issued</SelectItem>
-                                    <SelectItem key="not_issued">Not issued</SelectItem>
+                                    <SelectItem key="all">{tr("All")}</SelectItem>
+                                    <SelectItem key="issued">{tr("Issued")}</SelectItem>
+                                    <SelectItem key="not_issued">{tr("Not issued")}</SelectItem>
                                 </Select>
                                 {isAdmin && (
                                     <Select
-                                        label="Cashier"
+                                        label={tr("Cashier")}
                                         variant="bordered"
                                         selectedKeys={
                                             cashierFilter
@@ -311,10 +314,10 @@ export function SalesPage() {
                                             label: "!w-full md:!w-full lg:!w-56 !text-left",
                                             value: "!text-slate-900 dark:!text-slate-100",
                                         }}
-                                        aria-label="Filter by cashier"
+                                        aria-label={tr("Filter by cashier")}
                                     >
                                         {[
-                                            <SelectItem key="all">All cashiers</SelectItem>,
+                                            <SelectItem key="all">{tr("All cashiers")}</SelectItem>,
                                             ...(cashiersData?.results || []).map((cashier) => (
                                                 <SelectItem key={String(cashier.id)}>
                                                     {cashier.fullName || cashier.username}
@@ -332,7 +335,7 @@ export function SalesPage() {
                                     isDisabled={!cashierFilter}
                                     onPress={openStatementModal}
                                 >
-                                    Generate Cashier Statement
+                                    {tr("Generate Cashier Statement")}
                                 </Button>
                             )}
                         </div>

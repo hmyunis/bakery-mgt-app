@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import { Button, Spinner } from "@heroui/react";
 import { Plus } from "lucide-react";
@@ -30,7 +31,7 @@ export function TreasuryPaymentMethodsTab() {
                         setIsFormOpen(true);
                     }}
                 >
-                    Add Payment Method
+                    {tr("Add Payment Method")}
                 </Button>
             </div>
             {isLoading ? (

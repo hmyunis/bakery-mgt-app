@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -41,7 +42,7 @@ export function useCreateBankAccount() {
     return useMutation({
         mutationFn: (data: CreateBankAccountData) => treasuryService.createBankAccount(data),
         onSuccess: () => {
-            toast.success("Bank account created successfully");
+            toast.success(tr("Bank account created successfully"));
             queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
         },
         onError: (error) => {
@@ -56,7 +57,7 @@ export function useUpdateBankAccount() {
         mutationFn: ({ id, data }: { id: number; data: UpdateBankAccountData }) =>
             treasuryService.updateBankAccount(id, data),
         onSuccess: () => {
-            toast.success("Bank account updated successfully");
+            toast.success(tr("Bank account updated successfully"));
             queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
         },
         onError: (error) => {
@@ -70,7 +71,7 @@ export function useDeleteBankAccount() {
     return useMutation({
         mutationFn: (id: number) => treasuryService.deleteBankAccount(id),
         onSuccess: () => {
-            toast.success("Bank account deleted successfully");
+            toast.success(tr("Bank account deleted successfully"));
             queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
             queryClient.invalidateQueries({ queryKey: transactionKeys.all });
             queryClient.invalidateQueries({ queryKey: expenseKeys.all });
@@ -94,7 +95,7 @@ export function useCreateBankTransaction() {
         mutationFn: (data: CreateBankTransactionData) =>
             treasuryService.createBankTransaction(data),
         onSuccess: () => {
-            toast.success("Transaction saved");
+            toast.success(tr("Transaction saved"));
             queryClient.invalidateQueries({ queryKey: transactionKeys.all });
             queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
         },
@@ -110,7 +111,7 @@ export function useUpdateBankTransaction() {
         mutationFn: ({ id, data }: { id: number; data: UpdateBankTransactionData }) =>
             treasuryService.updateBankTransaction(id, data),
         onSuccess: () => {
-            toast.success("Transaction updated");
+            toast.success(tr("Transaction updated"));
             queryClient.invalidateQueries({ queryKey: transactionKeys.all });
             queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
         },
@@ -125,7 +126,7 @@ export function useDeleteBankTransaction() {
     return useMutation({
         mutationFn: (id: number) => treasuryService.deleteBankTransaction(id),
         onSuccess: () => {
-            toast.success("Transaction deleted");
+            toast.success(tr("Transaction deleted"));
             queryClient.invalidateQueries({ queryKey: transactionKeys.all });
             queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
         },
@@ -147,7 +148,7 @@ export function useCreateExpense() {
     return useMutation({
         mutationFn: (data: CreateExpenseData) => treasuryService.createExpense(data),
         onSuccess: () => {
-            toast.success("Expense saved");
+            toast.success(tr("Expense saved"));
             queryClient.invalidateQueries({ queryKey: expenseKeys.all });
             queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
         },
@@ -163,7 +164,7 @@ export function useUpdateExpense() {
         mutationFn: ({ id, data }: { id: number; data: UpdateExpenseData }) =>
             treasuryService.updateExpense(id, data),
         onSuccess: () => {
-            toast.success("Expense updated");
+            toast.success(tr("Expense updated"));
             queryClient.invalidateQueries({ queryKey: expenseKeys.all });
             queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
         },
@@ -178,7 +179,7 @@ export function useDeleteExpense() {
     return useMutation({
         mutationFn: (id: number) => treasuryService.deleteExpense(id),
         onSuccess: () => {
-            toast.success("Expense deleted");
+            toast.success(tr("Expense deleted"));
             queryClient.invalidateQueries({ queryKey: expenseKeys.all });
             queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
         },

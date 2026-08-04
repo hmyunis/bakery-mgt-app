@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import React from "react";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
@@ -28,7 +29,7 @@ export const UserFilterCard: React.FC<UserFilterCardProps> = ({
         `}
             >
                 <Input
-                    placeholder="Search by name, email, or phone..."
+                    placeholder={tr("Search by name, email, or phone...")}
                     value={searchQuery}
                     onValueChange={onSearchChange}
                     isDisabled={isLoading}
@@ -39,8 +40,8 @@ export const UserFilterCard: React.FC<UserFilterCardProps> = ({
 
             <div className="w-full sm:w-48">
                 <Select
-                    placeholder="Filter by status"
-                    aria-label="Filter by status"
+                    placeholder={tr("Filter by status")}
+                    aria-label={tr("Filter by status")}
                     selectedKeys={isActiveFilter === null ? [] : [isActiveFilter.toString()]}
                     onSelectionChange={(keys) => {
                         const selected = Array.from(keys)[0] as string;
@@ -59,9 +60,9 @@ export const UserFilterCard: React.FC<UserFilterCardProps> = ({
                         base: "!w-full !text-left",
                     }}
                 >
-                    <SelectItem key="all">All Users</SelectItem>
-                    <SelectItem key="true">Active Only</SelectItem>
-                    <SelectItem key="false">Inactive Only</SelectItem>
+                    <SelectItem key="all">{tr("All Users")}</SelectItem>
+                    <SelectItem key="true">{tr("Active Only")}</SelectItem>
+                    <SelectItem key="false">{tr("Inactive Only")}</SelectItem>
                 </Select>
             </div>
         </div>

@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { apiClient } from "../lib/apiClient";
 import type { ApiResponse, PaginatedResponse, WrappedPaginatedResponse } from "../types/api";
 import type {
@@ -202,7 +203,7 @@ export class AttendanceService {
             if (typeof val === "string") return val;
         }
 
-        return "Something went wrong";
+        return tr("Something went wrong");
     }
 }
 

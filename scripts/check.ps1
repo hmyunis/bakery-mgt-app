@@ -23,6 +23,8 @@ Run-Check { bun run tsc --noEmit }
 Write-Host "Running ESLint..."
 Run-Check { bun run lint }
 cd ..
+Write-Host "Running Localization Audit..."
+Run-Check { node scripts/localize-ui.cjs --check }
 
 if ($HasErrors) {
     Write-Host "--- ❌ Checks Failed! Please fix the issues above. ---" -ForegroundColor Red

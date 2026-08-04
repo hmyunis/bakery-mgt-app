@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import { Button, Input, Select, SelectItem, Spinner } from "@heroui/react";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -21,20 +22,20 @@ const toWholeNumber = (value: string | undefined, fallback = 0) => {
 };
 
 const reconciliationColumns: ColumnDef<ShiftSessionReconciliationProduct>[] = [
-    { accessorKey: "productName", header: "Product" },
-    { accessorKey: "openingCount", header: "Open" },
-    { accessorKey: "producedInShift", header: "Produced" },
-    { accessorKey: "paidSoldQty", header: "Paid Sold" },
-    { accessorKey: "unpaidQty", header: "Unpaid" },
-    { accessorKey: "expectedClosingCount", header: "Expected" },
+    { accessorKey: "productName", header: tr("Product") },
+    { accessorKey: "openingCount", header: tr("Open") },
+    { accessorKey: "producedInShift", header: tr("Produced") },
+    { accessorKey: "paidSoldQty", header: tr("Paid Sold") },
+    { accessorKey: "unpaidQty", header: tr("Unpaid") },
+    { accessorKey: "expectedClosingCount", header: tr("Expected") },
     {
         accessorKey: "countedClosingCount",
-        header: "Counted",
+        header: tr("Counted"),
         cell: ({ row }) => row.original.countedClosingCount ?? "-",
     },
     {
         accessorKey: "varianceQty",
-        header: "Variance",
+        header: tr("Variance"),
         cell: ({ row }) => row.original.varianceQty ?? "-",
     },
 ];
@@ -215,10 +216,10 @@ export function ShiftHandoverTab() {
     };
 
     const openingColumns: ColumnDef<Product>[] = [
-        { accessorKey: "name", header: "Product" },
+        { accessorKey: "name", header: tr("Product") },
         {
             id: "openingCount",
-            header: "Opening Count",
+            header: tr("Opening Count"),
             cell: ({ row }) => (
                 <Input
                     type="number"
@@ -238,10 +239,10 @@ export function ShiftHandoverTab() {
     ];
 
     const closingColumns: ColumnDef<Product>[] = [
-        { accessorKey: "name", header: "Product" },
+        { accessorKey: "name", header: tr("Product") },
         {
             id: "closingCount",
-            header: "Closing Count",
+            header: tr("Closing Count"),
             cell: ({ row }) => (
                 <Input
                     type="number"
@@ -281,30 +282,33 @@ export function ShiftHandoverTab() {
         <div className="space-y-4">
             <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Shift State
+                    {tr("Shift State")}
                 </h3>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    Opened: {openedSession ? `#${openedSession.id}` : "None"} | Pending Acceptance:{" "}
-                    {pendingSession ? `#${pendingSession.id}` : "None"}
+                    {tr("Opened:")}
+                    {openedSession ? `#${openedSession.id}` : tr("None")}{" "}
+                    {tr("| Pending Acceptance:")}{" "}
+                    {pendingSession ? `#${pendingSession.id}` : tr("None")}
                 </p>
             </div>
 
             {!openedSession && user?.role === "staff" && (
                 <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        Open Shift
+                        {tr("Open Shift")}
                     </h3>
                     {pendingSessionCount >= 3 && (
                         <p className="text-sm text-danger-600 dark:text-danger-400">
-                            You cannot open a new shift while 3 sessions are pending handover
-                            acceptance.
+                            {tr(
+                                "You cannot open a new shift while 3 sessions are pending handover acceptance."
+                            )}
                         </p>
                     )}
                     <Input
-                        label="Open Notes"
+                        label={tr("Open Notes")}
                         value={openNotes}
                         onValueChange={setOpenNotes}
-                        placeholder="Optional notes"
+                        placeholder={tr("Optional notes")}
                         classNames={visibleInputClassNames}
                     />
                     <div className="max-h-96 overflow-y-auto">
@@ -316,7 +320,7 @@ export function ShiftHandoverTab() {
                         isLoading={openShiftMutation.isPending}
                         isDisabled={!products.length || pendingSessionCount >= 3}
                     >
-                        Open Shift Session
+                        {tr("Open Shift Session")}
                     </Button>
                 </div>
             )}
@@ -324,13 +328,14 @@ export function ShiftHandoverTab() {
             {openedSession && canCloseOpenedSession && (
                 <div className="space-y-3 rounded-lg border border-warning-300/60 p-4">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        Close Shift #{openedSession.id}
+                        {tr("Close Shift #")}
+                        {openedSession.id}
                     </h3>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <Input
                             type="number"
                             min={0}
-                            label="Cash Declared"
+                            label={tr("Cash Declared")}
                             value={resolvedCashDeclared}
                             onValueChange={(value) => {
                                 if (!openedSession) return;
@@ -344,7 +349,7 @@ export function ShiftHandoverTab() {
                         <Input
                             type="number"
                             min={0}
-                            label="Digital Declared"
+                            label={tr("Digital Declared")}
                             value={resolvedDigitalDeclared}
                             onValueChange={(value) => {
                                 if (!openedSession) return;
@@ -357,7 +362,7 @@ export function ShiftHandoverTab() {
                         />
                     </div>
                     <Input
-                        label="Close Notes"
+                        label={tr("Close Notes")}
                         value={resolvedCloseNotes}
                         onValueChange={(value) => {
                             if (!openedSession) return;
@@ -366,7 +371,7 @@ export function ShiftHandoverTab() {
                                 [openedSession.id]: value,
                             }));
                         }}
-                        placeholder="Optional notes"
+                        placeholder={tr("Optional notes")}
                         classNames={visibleInputClassNames}
                     />
                     <div className="max-h-96 overflow-y-auto">
@@ -377,7 +382,7 @@ export function ShiftHandoverTab() {
                         onPress={handleCloseShift}
                         isLoading={closeShiftMutation.isPending}
                     >
-                        Close & Send for Acceptance
+                        {tr("Close & Send for Acceptance")}
                     </Button>
                 </div>
             )}
@@ -385,13 +390,14 @@ export function ShiftHandoverTab() {
             {pendingSession && (
                 <div className="space-y-3 rounded-lg border border-primary-300/60 p-4">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        Pending Handover Acceptance #{pendingSession.id}
+                        {tr("Pending Handover Acceptance #")}
+                        {pendingSession.id}
                     </h3>
                     <Input
-                        label="Acceptance Notes"
+                        label={tr("Acceptance Notes")}
                         value={acceptanceNotes}
                         onValueChange={setAcceptanceNotes}
-                        placeholder="Optional notes"
+                        placeholder={tr("Optional notes")}
                         classNames={visibleInputClassNames}
                     />
                     <Button
@@ -400,17 +406,17 @@ export function ShiftHandoverTab() {
                         isLoading={acceptShiftMutation.isPending}
                         isDisabled={!canAcceptPendingSession}
                     >
-                        Accept Handover
+                        {tr("Accept Handover")}
                     </Button>
                 </div>
             )}
 
             <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Reconciliation Report
+                    {tr("Reconciliation Report")}
                 </h3>
                 <Select
-                    label="Session"
+                    label={tr("Session")}
                     selectedKeys={
                         selectedSessionId ? new Set([String(selectedSessionId)]) : new Set()
                     }
@@ -443,13 +449,13 @@ export function ShiftHandoverTab() {
                     </div>
                 ) : !reconciliationData ? (
                     <p className="text-sm text-slate-500">
-                        Select a session to view reconciliation.
+                        {tr("Select a session to view reconciliation.")}
                     </p>
                 ) : (
                     <div className="space-y-3 [&_th]:!text-slate-700 dark:[&_th]:!text-slate-300 [&_td]:!text-slate-900 dark:[&_td]:!text-slate-100">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
-                                <p className="text-xs text-slate-500">Collected Total</p>
+                                <p className="text-xs text-slate-500">{tr("Collected Total")}</p>
                                 <p
                                     className={`text-lg font-semibold ${
                                         hasDeclaredTotalMismatch
@@ -457,19 +463,22 @@ export function ShiftHandoverTab() {
                                             : "!text-slate-900 dark:!text-slate-100"
                                     }`}
                                 >
-                                    ETB {reconciliationData.money.collectedTotal.toFixed(2)}
+                                    {tr("ETB")}
+                                    {reconciliationData.money.collectedTotal.toFixed(2)}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
-                                <p className="text-xs text-slate-500">Unpaid Value</p>
+                                <p className="text-xs text-slate-500">{tr("Unpaid Value")}</p>
                                 <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
-                                    ETB {reconciliationData.money.unpaidValue.toFixed(2)}
+                                    {tr("ETB")}
+                                    {reconciliationData.money.unpaidValue.toFixed(2)}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
-                                <p className="text-xs text-slate-500">Variance Value</p>
+                                <p className="text-xs text-slate-500">{tr("Variance Value")}</p>
                                 <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
-                                    ETB {reconciliationData.totals.varianceTotalValue.toFixed(2)}
+                                    {tr("ETB")}
+                                    {reconciliationData.totals.varianceTotalValue.toFixed(2)}
                                 </p>
                             </div>
                         </div>

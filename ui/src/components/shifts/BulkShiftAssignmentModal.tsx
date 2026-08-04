@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -126,12 +127,12 @@ export function BulkShiftAssignmentModal({
             <ModalContent>
                 {(close) => (
                     <>
-                        <ModalHeader>Bulk Create Assignments</ModalHeader>
+                        <ModalHeader>{tr("Bulk Create Assignments")}</ModalHeader>
                         <ModalBody className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Select
-                                    label="Employee"
-                                    placeholder="Select employee"
+                                    label={tr("Employee")}
+                                    placeholder={tr("Select employee")}
                                     selectedKeys={employeeKeys}
                                     onSelectionChange={(keys) => {
                                         const selected = Array.from(keys)[0] as string | undefined;
@@ -155,8 +156,8 @@ export function BulkShiftAssignmentModal({
                                 </Select>
 
                                 <Select
-                                    label="Shift"
-                                    placeholder="Select shift"
+                                    label={tr("Shift")}
+                                    placeholder={tr("Select shift")}
                                     selectedKeys={shiftKeys}
                                     onSelectionChange={(keys) => {
                                         const selected = Array.from(keys)[0] as string | undefined;
@@ -180,7 +181,7 @@ export function BulkShiftAssignmentModal({
                                 </Select>
 
                                 <DatePicker
-                                    label="Start Date"
+                                    label={tr("Start Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={startDate}
@@ -191,7 +192,7 @@ export function BulkShiftAssignmentModal({
                                 />
 
                                 <DatePicker
-                                    label="End Date"
+                                    label={tr("End Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={endDate}
@@ -204,13 +205,13 @@ export function BulkShiftAssignmentModal({
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <Checkbox isSelected={skipWeekends} onValueChange={setSkipWeekends}>
-                                    Skip weekends
+                                    {tr("Skip weekends")}
                                 </Checkbox>
                                 <Checkbox
                                     isSelected={skipLeaveDays}
                                     onValueChange={setSkipLeaveDays}
                                 >
-                                    Skip leave days
+                                    {tr("Skip leave days")}
                                 </Checkbox>
                             </div>
 
@@ -219,25 +220,25 @@ export function BulkShiftAssignmentModal({
                                     <Divider />
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                                         <div>
-                                            <div className="text-slate-500">Created</div>
+                                            <div className="text-slate-500">{tr("Created")}</div>
                                             <div className="font-semibold text-slate-900 dark:text-slate-100">
                                                 {result.createdCount}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-slate-500">Existing</div>
+                                            <div className="text-slate-500">{tr("Existing")}</div>
                                             <div className="font-semibold text-slate-900 dark:text-slate-100">
                                                 {result.skippedExisting}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-slate-500">Weekends</div>
+                                            <div className="text-slate-500">{tr("Weekends")}</div>
                                             <div className="font-semibold text-slate-900 dark:text-slate-100">
                                                 {result.skippedWeekends}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-slate-500">Leave days</div>
+                                            <div className="text-slate-500">{tr("Leave days")}</div>
                                             <div className="font-semibold text-slate-900 dark:text-slate-100">
                                                 {result.skippedLeaveDays}
                                             </div>
@@ -255,10 +256,10 @@ export function BulkShiftAssignmentModal({
                                     close();
                                 }}
                             >
-                                Close
+                                {tr("Close")}
                             </Button>
                             <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                                Generate
+                                {tr("Generate")}
                             </Button>
                         </ModalFooter>
                     </>

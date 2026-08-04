@@ -1,13 +1,14 @@
+import { tr } from "../../locales";
 import { memo } from "react";
 import { Card, CardBody, Select, SelectItem } from "@heroui/react";
 import type { Employee } from "../../types/employee";
 import type { LeaveType } from "../../types/leave";
 
 const LEAVE_TYPES: Array<{ key: LeaveType; label: string }> = [
-    { key: "sick", label: "Sick" },
-    { key: "annual", label: "Annual" },
-    { key: "holiday", label: "Holiday" },
-    { key: "other", label: "Other" },
+    { key: "sick", label: tr("Sick") },
+    { key: "annual", label: tr("Annual") },
+    { key: "holiday", label: tr("Holiday") },
+    { key: "other", label: tr("Other") },
 ];
 
 function LeaveFilterCard({
@@ -31,8 +32,8 @@ function LeaveFilterCard({
             <CardBody className="py-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Select
-                        label="Employee"
-                        placeholder="All"
+                        label={tr("Employee")}
+                        placeholder={tr("All")}
                         selectedKeys={employeeKeys}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as string | undefined;
@@ -53,8 +54,8 @@ function LeaveFilterCard({
                     </Select>
 
                     <Select
-                        label="Leave Type"
-                        placeholder="All"
+                        label={tr("Leave Type")}
+                        placeholder={tr("All")}
                         selectedKeys={leaveTypeKeys}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as LeaveType | undefined;

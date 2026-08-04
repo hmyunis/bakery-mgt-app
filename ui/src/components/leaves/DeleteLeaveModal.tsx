@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@heroui/react";
 import { AlertTriangle } from "lucide-react";
 import type { LeaveRecord } from "../../types/leave";
@@ -32,21 +33,21 @@ export function DeleteLeaveModal({
                 <ModalHeader className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="size-5 text-danger" />
-                        <span>Delete Leave</span>
+                        <span>{tr("Delete Leave")}</span>
                     </div>
                 </ModalHeader>
                 <ModalBody>
                     <p className="text-[var(--muted)]">
-                        Are you sure you want to delete this leave record for{" "}
+                        {tr("Are you sure you want to delete this leave record for")}{" "}
                         <span className="font-semibold text-[var(--fg)]">
                             {leave?.employeeName}
                         </span>
-                        ? This action cannot be undone.
+                        {tr("? This action cannot be undone.")}
                     </p>
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="light" onPress={onClose} isDisabled={isLoading}>
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button
                         color="danger"

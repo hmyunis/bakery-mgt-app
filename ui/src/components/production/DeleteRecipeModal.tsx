@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import type { Recipe } from "../../types/production";
 import { useDeleteRecipe } from "../../hooks/useProduction";
@@ -25,11 +26,14 @@ export function DeleteRecipeModal({ isOpen, onClose, recipe }: DeleteRecipeModal
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1">Delete Batch Estimate</ModalHeader>
+                <ModalHeader className="flex flex-col gap-1">
+                    {tr("Delete Batch Estimate")}
+                </ModalHeader>
                 <ModalBody>
                     <p>
-                        Delete this batch estimate? New production runs cannot be recorded for the
-                        product until another estimate is configured.
+                        {tr(
+                            "Delete this batch estimate? New production runs cannot be recorded for the product until another estimate is configured."
+                        )}
                     </p>
                 </ModalBody>
                 <ModalFooter>
@@ -38,7 +42,7 @@ export function DeleteRecipeModal({ isOpen, onClose, recipe }: DeleteRecipeModal
                         onPress={onClose}
                         className="!text-zinc-700 dark:!text-zinc-300"
                     >
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button color="danger" onPress={handleDelete} isLoading={isDeleting}>
                         Delete

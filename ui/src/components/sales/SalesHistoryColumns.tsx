@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Sale } from "../../types/sales";
 import { Button, Chip } from "@heroui/react";
@@ -20,7 +21,7 @@ export const getSalesHistoryColumns = (options?: {
     },
     {
         accessorKey: "created_at",
-        header: "Timestamp",
+        header: tr("Timestamp"),
         cell: ({ row }) => (
             <span className="text-sm text-zinc-600 dark:text-zinc-400">
                 {formatDateTime(row.original.created_at)}
@@ -29,7 +30,7 @@ export const getSalesHistoryColumns = (options?: {
     },
     {
         accessorKey: "cashier_name",
-        header: "Cashier",
+        header: tr("Cashier"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
                 {row.original.cashier_name || "-"}
@@ -38,7 +39,7 @@ export const getSalesHistoryColumns = (options?: {
     },
     {
         id: "items",
-        header: "Items",
+        header: tr("Items"),
         cell: ({ row }) => {
             const items = row.original.items || [];
             if (items.length === 0) return <span className="text-zinc-500">-</span>;
@@ -52,7 +53,7 @@ export const getSalesHistoryColumns = (options?: {
                     ))}
                     {items.length > 3 && (
                         <Chip variant="flat" size="sm">
-                            +{items.length - 3} more
+                            +{items.length - 3} {tr("more")}
                         </Chip>
                     )}
                 </div>
@@ -61,16 +62,17 @@ export const getSalesHistoryColumns = (options?: {
     },
     {
         accessorKey: "total_amount",
-        header: "Total Amount",
+        header: tr("Total Amount"),
         cell: ({ row }) => (
             <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                ETB {row.original.total_amount.toFixed(2)}
+                {tr("ETB")}
+                {row.original.total_amount.toFixed(2)}
             </span>
         ),
     },
     {
         accessorKey: "payment_status",
-        header: "Status",
+        header: tr("Status"),
         cell: ({ row }) => {
             const sale = row.original;
             const isUnpaid = sale.payment_status === "unpaid_approved";
@@ -81,14 +83,14 @@ export const getSalesHistoryColumns = (options?: {
                     color={isUnpaid ? "warning" : "success"}
                     className={isUnpaid ? "capitalize" : "capitalize"}
                 >
-                    {isUnpaid ? "Unpaid" : "Paid"}
+                    {isUnpaid ? tr("Unpaid") : tr("Paid")}
                 </Chip>
             );
         },
     },
     {
         id: "payments",
-        header: "Payment Methods",
+        header: tr("Payment Methods"),
         cell: ({ row }) => {
             const sale = row.original;
             if (!sale.payments || sale.payments.length === 0) {
@@ -99,7 +101,9 @@ export const getSalesHistoryColumns = (options?: {
                 <div className="flex flex-wrap gap-1">
                     {sale.payments.map((payment, index) => (
                         <Chip key={index} variant="flat" size="sm">
-                            {payment.method__name}: ETB {payment.amount.toFixed(2)}
+                            {payment.method__name}
+                            {tr(": ETB")}
+                            {payment.amount.toFixed(2)}
                         </Chip>
                     ))}
                 </div>
@@ -108,7 +112,7 @@ export const getSalesHistoryColumns = (options?: {
     },
     {
         id: "actions",
-        header: "Actions",
+        header: tr("Actions"),
         cell: ({ row }) => (
             <Button
                 size="sm"
@@ -119,7 +123,7 @@ export const getSalesHistoryColumns = (options?: {
                     options?.onPaymentStatusClick?.(row.original);
                 }}
             >
-                Payment Status
+                {tr("Payment Status")}
             </Button>
         ),
     },

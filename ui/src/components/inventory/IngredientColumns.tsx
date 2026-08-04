@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Ingredient } from "../../types/inventory";
 import { Button, Chip, Tooltip } from "@heroui/react";
@@ -22,7 +23,7 @@ export const getIngredientColumns = ({
     },
     {
         accessorKey: "name",
-        header: "Name",
+        header: tr("Name"),
         cell: ({ row }) => (
             <span className="font-medium text-zinc-900 dark:text-zinc-100">
                 {row.original.name}
@@ -31,7 +32,7 @@ export const getIngredientColumns = ({
     },
     {
         accessorKey: "unit",
-        header: "Unit",
+        header: tr("Unit"),
         cell: ({ row }) => (
             <Chip variant="flat" size="sm" className="uppercase">
                 {row.original.unit}
@@ -40,7 +41,7 @@ export const getIngredientColumns = ({
     },
     {
         accessorKey: "current_stock",
-        header: "Current Stock",
+        header: tr("Current Stock"),
         cell: ({ row }) => {
             const ingredient = row.original;
             const isLowStock = ingredient.current_stock <= ingredient.reorder_point;
@@ -65,7 +66,7 @@ export const getIngredientColumns = ({
     },
     {
         accessorKey: "reorder_point",
-        header: "Reorder Point",
+        header: tr("Reorder Point"),
         cell: ({ row }) => {
             const ingredient = row.original;
             const isLowStock = ingredient.current_stock <= ingredient.reorder_point;
@@ -83,7 +84,7 @@ export const getIngredientColumns = ({
                     </span>
                     {isLowStock && (
                         <Chip color="warning" variant="flat" size="sm">
-                            Low Stock
+                            {tr("Low Stock")}
                         </Chip>
                     )}
                 </div>
@@ -92,22 +93,22 @@ export const getIngredientColumns = ({
     },
     {
         accessorKey: "average_cost_per_unit",
-        header: "Avg Cost/Unit",
+        header: tr("Avg Cost/Unit"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
-                {row.original.average_cost_per_unit.toFixed(2)} ETB
+                {row.original.average_cost_per_unit.toFixed(2)} {tr("ETB")}
             </span>
         ),
     },
     {
         id: "actions",
-        header: "Actions",
+        header: tr("Actions"),
         cell: ({ row }) => {
             const ingredient = row.original;
             return (
                 <div className="flex items-center gap-2">
                     {onAddPurchase && (
-                        <Tooltip content="Record Purchase" placement="top">
+                        <Tooltip content={tr("Record Purchase")} placement="top">
                             <Button
                                 isIconOnly
                                 size="sm"
@@ -121,7 +122,7 @@ export const getIngredientColumns = ({
                         </Tooltip>
                     )}
                     {onAdjustStock && (
-                        <Tooltip content="Adjust Stock" placement="top">
+                        <Tooltip content={tr("Adjust Stock")} placement="top">
                             <Button
                                 isIconOnly
                                 size="sm"
@@ -135,7 +136,7 @@ export const getIngredientColumns = ({
                         </Tooltip>
                     )}
                     {onEdit && (
-                        <Tooltip content="Edit Ingredient" placement="top">
+                        <Tooltip content={tr("Edit Ingredient")} placement="top">
                             <Button
                                 isIconOnly
                                 size="sm"
@@ -149,7 +150,7 @@ export const getIngredientColumns = ({
                         </Tooltip>
                     )}
                     {onDelete && (
-                        <Tooltip content="Delete Ingredient" placement="top">
+                        <Tooltip content={tr("Delete Ingredient")} placement="top">
                             <Button
                                 isIconOnly
                                 size="sm"

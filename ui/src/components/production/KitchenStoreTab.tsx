@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -69,8 +70,8 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
         <div className="space-y-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Input
-                    aria-label="Search kitchen ingredients"
-                    placeholder="Search ingredients..."
+                    aria-label={tr("Search kitchen ingredients")}
+                    placeholder={tr("Search ingredients...")}
                     value={search}
                     onValueChange={setSearch}
                     isClearable
@@ -83,16 +84,16 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                         startContent={<PackagePlus className="h-4 w-4" />}
                         onPress={() => openTransfer()}
                     >
-                        Restock Kitchen
+                        {tr("Restock Kitchen")}
                     </Button>
                 )}
             </div>
 
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
                 <div className="grid grid-cols-[minmax(140px,1fr)_110px_110px_90px] gap-3 bg-zinc-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:bg-zinc-900/60">
-                    <span>Ingredient</span>
-                    <span className="text-right">Storehouse</span>
-                    <span className="text-right">Kitchen</span>
+                    <span>{tr("Ingredient")}</span>
+                    <span className="text-right">{tr("Storehouse")}</span>
+                    <span className="text-right">{tr("Kitchen")}</span>
                     <span />
                 </div>
                 {isLoading ? (
@@ -109,7 +110,10 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                                 <p className="font-medium text-zinc-900 dark:text-zinc-100">
                                     {item.name}
                                 </p>
-                                <p className="text-xs text-zinc-500">Measured in {item.unit}</p>
+                                <p className="text-xs text-zinc-500">
+                                    {tr("Measured in")}
+                                    {item.unit}
+                                </p>
                             </div>
                             <span className="text-right text-sm">
                                 {item.current_stock.toFixed(3)}
@@ -124,21 +128,23 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                                         variant="flat"
                                         onPress={() => openTransfer(item.id)}
                                     >
-                                        Move
+                                        {tr("Move")}
                                     </Button>
                                 )}
                             </div>
                         </div>
                     ))
                 ) : (
-                    <p className="py-10 text-center text-sm text-zinc-500">No ingredients found.</p>
+                    <p className="py-10 text-center text-sm text-zinc-500">
+                        {tr("No ingredients found.")}
+                    </p>
                 )}
             </div>
 
             <div>
                 <div className="mb-3 flex items-center gap-2">
                     <History className="h-4 w-4 text-zinc-500" />
-                    <h3 className="font-semibold">Recent storehouse transfers</h3>
+                    <h3 className="font-semibold">{tr("Recent storehouse transfers")}</h3>
                 </div>
                 <div className="space-y-2">
                     {isLoadingTransfers ? (
@@ -156,7 +162,7 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                                             {transfer.ingredient_name}
                                         </p>
                                         <p className="text-xs text-zinc-500">
-                                            {transfer.transferred_by_name || "System"} ·{" "}
+                                            {transfer.transferred_by_name || tr("System")} ·{" "}
                                             {new Date(transfer.transferred_at).toLocaleString()}
                                         </p>
                                     </div>
@@ -165,14 +171,15 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                                     <span>{transfer.storehouse_balance_before.toFixed(3)}</span>
                                     <ArrowRight className="h-3 w-3 text-zinc-400" />
                                     <Chip color="primary" variant="flat">
-                                        +{transfer.quantity.toFixed(3)} {transfer.unit} to kitchen
+                                        +{transfer.quantity.toFixed(3)} {transfer.unit}{" "}
+                                        {tr("to kitchen")}
                                     </Chip>
                                 </div>
                             </div>
                         ))
                     ) : (
                         <p className="rounded-lg border border-dashed p-6 text-center text-sm text-zinc-500 dark:border-zinc-800">
-                            No kitchen restocks recorded yet.
+                            {tr("No kitchen restocks recorded yet.")}
                         </p>
                     )}
                 </div>
@@ -180,10 +187,10 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
 
             <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
                 <ModalContent>
-                    <ModalHeader>Restock Kitchen Store</ModalHeader>
+                    <ModalHeader>{tr("Restock Kitchen Store")}</ModalHeader>
                     <ModalBody className="space-y-3">
                         <Select
-                            label="Ingredient"
+                            label={tr("Ingredient")}
                             selectedKeys={ingredientId ? [ingredientId] : []}
                             onSelectionChange={(keys) => {
                                 setIngredientId(String(Array.from(keys)[0] || ""));
@@ -199,12 +206,12 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                             {ingredients.map((item) => (
                                 <SelectItem key={item.id.toString()}>
                                     {item.name} · {item.current_stock.toFixed(3)} {item.unit}{" "}
-                                    available
+                                    {tr("available")}
                                 </SelectItem>
                             ))}
                         </Select>
                         <Input
-                            label="Amount to move"
+                            label={tr("Amount to move")}
                             type="number"
                             min="0.001"
                             step="0.001"
@@ -217,14 +224,18 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                             isInvalid={!!error}
                             errorMessage={error}
                         />
-                        <Textarea label="Notes (optional)" value={notes} onValueChange={setNotes} />
+                        <Textarea
+                            label={tr("Notes (optional)")}
+                            value={notes}
+                            onValueChange={setNotes}
+                        />
                     </ModalBody>
                     <ModalFooter>
                         <Button variant="flat" onPress={() => setIsOpen(false)}>
-                            Cancel
+                            {tr("Cancel")}
                         </Button>
                         <Button color="primary" onPress={submit} isLoading={isPending}>
-                            Move to Kitchen
+                            {tr("Move to Kitchen")}
                         </Button>
                     </ModalFooter>
                 </ModalContent>

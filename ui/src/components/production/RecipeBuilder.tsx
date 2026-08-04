@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Alert,
@@ -98,19 +99,19 @@ export function RecipeBuilder({
 
     const submit = async () => {
         const nextErrors: Record<string, string> = {};
-        if (!product) nextErrors.product = "Product is required";
+        if (!product) nextErrors.product = tr("Product is required");
         if (!expectedOutput || Number(expectedOutput) <= 0) {
-            nextErrors.expectedOutput = "Expected batch output must be greater than 0";
+            nextErrors.expectedOutput = tr("Expected batch output must be greater than 0");
         }
         const selectedIds = ingredientRows.map((row) => row.ingredient).filter(Boolean);
         ingredientRows.forEach((row) => {
-            if (!row.ingredient) nextErrors[`ingredient-${row.key}`] = "Choose an ingredient";
+            if (!row.ingredient) nextErrors[`ingredient-${row.key}`] = tr("Choose an ingredient");
             if (!row.quantity || Number(row.quantity) <= 0) {
-                nextErrors[`quantity-${row.key}`] = "Enter an amount greater than 0";
+                nextErrors[`quantity-${row.key}`] = tr("Enter an amount greater than 0");
             }
         });
         if (new Set(selectedIds).size !== selectedIds.length) {
-            nextErrors.ingredients = "Each ingredient can only be added once";
+            nextErrors.ingredients = tr("Each ingredient can only be added once");
         }
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length) return;
@@ -136,16 +137,17 @@ export function RecipeBuilder({
         <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
             <ModalContent>
                 <ModalHeader>
-                    {recipe ? "Edit Batch Estimate" : "Create Batch Estimate"}
+                    {recipe ? tr("Edit Batch Estimate") : tr("Create Batch Estimate")}
                 </ModalHeader>
                 <ModalBody className="space-y-5">
                     <Alert color="primary" variant="flat">
-                        Enter one familiar full batch—for example, the flour, salt, and water used
-                        together to make 200 breads. There is no need to calculate one bread.
+                        {tr(
+                            "Enter one familiar full batch—for example, the flour, salt, and water used together to make 200 breads. There is no need to calculate one bread."
+                        )}
                     </Alert>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <Select
-                            label="Product"
+                            label={tr("Product")}
                             selectedKeys={product ? [product] : []}
                             onSelectionChange={(keys) =>
                                 setProduct(String(Array.from(keys)[0] || ""))
@@ -165,13 +167,13 @@ export function RecipeBuilder({
                             ))}
                         </Select>
                         <Input
-                            label="This full batch usually makes"
+                            label={tr("This full batch usually makes")}
                             type="number"
                             min="0.01"
                             step="0.01"
                             value={expectedOutput}
                             onValueChange={setExpectedOutput}
-                            endContent={<span className="text-sm text-zinc-500">pcs</span>}
+                            endContent={<span className="text-sm text-zinc-500">{tr("pcs")}</span>}
                             isInvalid={!!errors.expectedOutput}
                             errorMessage={errors.expectedOutput}
                         />
@@ -180,9 +182,11 @@ export function RecipeBuilder({
                     <div className="space-y-3">
                         <div className="flex items-center justify-between gap-3">
                             <div>
-                                <p className="font-medium">Ingredients for this full batch</p>
+                                <p className="font-medium">
+                                    {tr("Ingredients for this full batch")}
+                                </p>
                                 <p className="text-sm text-zinc-500">
-                                    Use the totals the kitchen team already works with.
+                                    {tr("Use the totals the kitchen team already works with.")}
                                 </p>
                             </div>
                             <Button
@@ -191,7 +195,7 @@ export function RecipeBuilder({
                                 startContent={<Plus size={16} />}
                                 onPress={addRow}
                             >
-                                Add ingredient
+                                {tr("Add ingredient")}
                             </Button>
                         </div>
                         {ingredientRows.map((row, index) => {
@@ -227,7 +231,7 @@ export function RecipeBuilder({
                                         ))}
                                     </Select>
                                     <Input
-                                        label="Amount for the full batch"
+                                        label={tr("Amount for the full batch")}
                                         type="number"
                                         min="0.001"
                                         step="0.001"
@@ -264,10 +268,10 @@ export function RecipeBuilder({
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="flat" onPress={onClose}>
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button color="primary" onPress={submit} isLoading={isCreating || isUpdating}>
-                        {recipe ? "Save Estimate" : "Create Estimate"}
+                        {recipe ? tr("Save Estimate") : tr("Create Estimate")}
                     </Button>
                 </ModalFooter>
             </ModalContent>

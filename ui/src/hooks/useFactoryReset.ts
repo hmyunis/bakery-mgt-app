@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useMutation } from "@tanstack/react-query";
 import { authService } from "../services/authService";
 import type { ApiError } from "../types/api";
@@ -8,7 +9,7 @@ export function useFactoryReset() {
         mutationFn: (data: { confirmation: string }) => authService.factoryReset(data),
         onSuccess: () => {
             // ApiResponse<unknown> doesn't have errors property, assume success
-            toast.success("Factory reset completed successfully.");
+            toast.success(tr("Factory reset completed successfully."));
         },
         onError: (error: unknown) => {
             console.error("Factory reset failed:", error);

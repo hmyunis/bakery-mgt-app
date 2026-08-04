@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -29,7 +30,7 @@ export function useCreateEmployee() {
         mutationFn: (data: CreateEmployeeData) => employeeService.createEmployee(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["employees"] });
-            toast.success("Employee created successfully");
+            toast.success(tr("Employee created successfully"));
         },
         onError: (error: unknown) => {
             toast.error(employeeService.parseApiError(error));
@@ -46,7 +47,7 @@ export function useUpdateEmployee() {
         onSuccess: (updated) => {
             queryClient.invalidateQueries({ queryKey: ["employees"] });
             queryClient.invalidateQueries({ queryKey: ["employees", updated.id] });
-            toast.success("Employee updated successfully");
+            toast.success(tr("Employee updated successfully"));
         },
         onError: (error: unknown) => {
             toast.error(employeeService.parseApiError(error));
@@ -61,7 +62,7 @@ export function useDeleteEmployee() {
         mutationFn: (id: number) => employeeService.deleteEmployee(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["employees"] });
-            toast.success("Employee deleted successfully");
+            toast.success(tr("Employee deleted successfully"));
         },
         onError: (error: unknown) => {
             toast.error(employeeService.parseApiError(error));
@@ -110,7 +111,7 @@ export function useUpdatePayrollRecord() {
         onSuccess: (_updated, vars) => {
             queryClient.invalidateQueries({ queryKey: ["employees"] });
             queryClient.invalidateQueries({ queryKey: ["payroll-records", vars.id] });
-            toast.success("Payroll record updated");
+            toast.success(tr("Payroll record updated"));
         },
         onError: (error: unknown) => {
             toast.error(employeeService.parseApiError(error));

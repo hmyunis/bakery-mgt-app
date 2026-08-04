@@ -19,9 +19,10 @@ import { cn } from "../../lib/utils";
 import { useAppSelector } from "../../store";
 import { hasPagePermission, type PagePermission } from "../../constants/roles";
 import { useBakerySettings } from "../../hooks/useBakery";
+import { useTranslation, tr } from "../../locales";
 
 interface NavItem {
-    label: string;
+    localeKey: string;
     icon: React.ComponentType<{ className?: string }>;
     path: string;
     permission: PagePermission;
@@ -29,61 +30,61 @@ interface NavItem {
 
 const navItems: NavItem[] = [
     {
-        label: "Dashboard",
+        localeKey: "Dashboard",
         icon: LayoutDashboard,
         path: "/app/dashboard",
         permission: "dashboard",
     },
     {
-        label: "Sales",
+        localeKey: "Sales",
         icon: ShoppingCart,
         path: "/app/sales",
         permission: "sales",
     },
     {
-        label: "Treasury",
+        localeKey: "Treasury",
         icon: Landmark,
         path: "/app/treasury",
         permission: "treasury",
     },
     {
-        label: "Production",
+        localeKey: "Production",
         icon: ChefHat,
         path: "/app/production",
         permission: "production",
     },
     {
-        label: "Inventory",
+        localeKey: "Inventory",
         icon: Package,
         path: "/app/inventory",
         permission: "inventory",
     },
     {
-        label: "Users",
+        localeKey: "Users",
         icon: Users,
         path: "/app/users",
         permission: "users",
     },
     {
-        label: "Employees",
+        localeKey: "Employees",
         icon: UserRound,
         path: "/app/employees",
         permission: "employees",
     },
     {
-        label: "HR",
+        localeKey: "HR",
         icon: UsersRound,
         path: "/app/hr",
         permission: "hr",
     },
     {
-        label: "Audit Logs",
+        localeKey: "Audit Logs",
         icon: ScrollText,
         path: "/app/audit-logs",
         permission: "audit_logs",
     },
     {
-        label: "Settings",
+        localeKey: "Settings",
         icon: Settings,
         path: "/app/settings",
         permission: "settings",
@@ -95,12 +96,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed }: SidebarProps) {
+    const { t } = useTranslation();
     const location = useLocation();
     const { user } = useAppSelector((state) => state.auth);
     const { data: bakerySettings } = useBakerySettings();
     const [isMoreOpen, setIsMoreOpen] = useState(false);
 
-    const visibleItems = navItems.filter((item) =>
+    const translatedItems = navItems.map((item) => ({ ...item, label: t(item.localeKey) }));
+    const visibleItems = translatedItems.filter((item) =>
         hasPagePermission(user?.role, user?.permissions, item.permission)
     );
     const hasOverflow = visibleItems.length > 5;
@@ -178,7 +181,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                 onClick={() => setIsMoreOpen(false)}
                 className={cn(
                     "group flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl text-center font-medium transition-all duration-150 active:scale-95",
-                    inSheet ? "min-h-24 p-3 text-xs" : "min-h-16 px-1 py-2 text-[10px]",
+                    inSheet ? "min-h-20 p-2 text-xs" : "min-h-12 px-1 py-1 text-[9px]",
                     isActive
                         ? "bg-slate-200 text-slate-950 shadow-sm dark:bg-slate-700 dark:text-white"
                         : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
@@ -218,7 +221,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                                 {bakerySettings?.logoUrl ? (
                                     <img
                                         src={bakerySettings.logoUrl}
-                                        alt={bakerySettings.name || "Bakery"}
+                                        alt={bakerySettings.name || tr("Bakery")}
                                         className="size-14 rounded-lg object-contain"
                                     />
                                 ) : (
@@ -229,17 +232,17 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                             </div>
                             <div>
                                 <p className="text-nowrap text-lg font-bold text-gray-800 dark:text-gray-200">
-                                    {bakerySettings?.name || "Bakery"}
+                                    {bakerySettings?.name || tr("Bakery")}
                                 </p>
                                 <p className="text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                                    Management
+                                    {t("management")}
                                 </p>
                             </div>
                         </Link>
                     )}
                 </div>
 
-                <nav className="flex-1 p-3" aria-label="Desktop navigation">
+                <nav className="flex-1 p-3" aria-label={tr("Desktop navigation")}>
                     <ul className="space-y-2">
                         {visibleItems.map((item) => (
                             <li key={item.path}>
@@ -252,7 +255,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
 
             {visibleItems.length > 0 && (
                 <nav
-                    aria-label="Mobile navigation"
+                    aria-label={tr("Mobile navigation")}
                     className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200/90 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-700/90 dark:bg-slate-950/95 lg:hidden"
                 >
                     <div
@@ -268,18 +271,18 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                         {hasOverflow && (
                             <button
                                 type="button"
-                                aria-label="Show more navigation items"
+                                aria-label={tr("Show more navigation items")}
                                 aria-expanded={isMoreOpen}
                                 onClick={() => setIsMoreOpen(true)}
                                 className={cn(
-                                    "flex !min-h-16 !w-full !min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-[10px] font-medium transition-all duration-150 active:scale-95",
+                                    "flex !min-h-12 !w-full !min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[9px] font-medium transition-all duration-150 active:scale-95",
                                     isMoreActive
                                         ? "bg-slate-200 text-slate-950 shadow-sm dark:bg-slate-700 dark:text-white"
                                         : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                                 )}
                             >
                                 <MoreHorizontal className="size-[22px] shrink-0" />
-                                <span>More</span>
+                                <span>{tr("More")}</span>
                             </button>
                         )}
                     </div>
@@ -290,7 +293,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                 <div className="fixed inset-0 z-[60] lg:hidden">
                     <button
                         type="button"
-                        aria-label="Close more navigation"
+                        aria-label={tr("Close more navigation")}
                         onClick={() => setIsMoreOpen(false)}
                         className="absolute inset-0 !h-full !w-full !min-w-0 bg-slate-950/50 backdrop-blur-[2px]"
                     />
@@ -307,15 +310,15 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                                     id="more-navigation-title"
                                     className="text-base font-semibold text-slate-950 dark:text-white"
                                 >
-                                    More
+                                    {tr("More")}
                                 </h2>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    All remaining sections
+                                    {tr("All remaining sections")}
                                 </p>
                             </div>
                             <button
                                 type="button"
-                                aria-label="Close more navigation"
+                                aria-label={tr("Close more navigation")}
                                 onClick={() => setIsMoreOpen(false)}
                                 className="flex !size-11 !min-w-11 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                             >

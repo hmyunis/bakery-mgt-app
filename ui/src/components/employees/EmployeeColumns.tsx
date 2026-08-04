@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Button, Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
 import { Edit, MoreVertical, Trash2, Link2, Unlink2 } from "lucide-react";
@@ -18,7 +19,7 @@ export const getEmployeeColumns = ({
     },
     {
         accessorKey: "fullName",
-        header: "Employee",
+        header: tr("Employee"),
         cell: ({ row }) => {
             const e = row.original;
             return (
@@ -33,12 +34,12 @@ export const getEmployeeColumns = ({
     },
     {
         accessorKey: "position",
-        header: "Position",
+        header: tr("Position"),
         cell: ({ row }) => <span className="text-sm">{row.original.position || "-"}</span>,
     },
     {
         id: "linked",
-        header: "Account",
+        header: tr("Account"),
         cell: ({ row }) => {
             const linked = !!row.original.userId;
             return (
@@ -50,14 +51,14 @@ export const getEmployeeColumns = ({
                         linked ? <Link2 className="h-3 w-3" /> : <Unlink2 className="h-3 w-3" />
                     }
                 >
-                    {linked ? "Linked" : "Manual"}
+                    {linked ? tr("Linked") : tr("Manual")}
                 </Chip>
             );
         },
     },
     {
         accessorKey: "monthlyBaseSalary",
-        header: "Base Salary",
+        header: tr("Base Salary"),
         cell: ({ row }) => <span className="text-sm">{row.original.monthlyBaseSalary}</span>,
     },
     {
@@ -70,11 +71,11 @@ export const getEmployeeColumns = ({
                         <DropdownTrigger as={Button} variant="light">
                             <MoreVertical className="h-5 w-5 text-slate-700 dark:text-slate-300" />
                         </DropdownTrigger>
-                        <DropdownMenu aria-label="Employee Actions">
+                        <DropdownMenu aria-label={tr("Employee Actions")}>
                             <DropdownItem key="edit" onAction={() => onEdit(employee)}>
                                 <div className="flex items-center gap-2">
                                     <Edit className="h-4 w-4 mr-1" />
-                                    Edit Employee
+                                    {tr("Edit Employee")}
                                 </div>
                             </DropdownItem>
                             <DropdownItem
@@ -85,7 +86,7 @@ export const getEmployeeColumns = ({
                             >
                                 <div className="flex items-center gap-2">
                                     <Trash2 className="h-4 w-4 mr-1" />
-                                    Delete Employee
+                                    {tr("Delete Employee")}
                                 </div>
                             </DropdownItem>
                         </DropdownMenu>

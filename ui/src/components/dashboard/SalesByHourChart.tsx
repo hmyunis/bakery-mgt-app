@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "../../lib/utils";
 
@@ -25,7 +26,7 @@ export function SalesByHourChart({ data, className }: SalesByHourChartProps) {
                     className
                 )}
             >
-                No sales data available
+                {tr("No sales data available")}
             </div>
         );
     }
@@ -53,10 +54,12 @@ export function SalesByHourChart({ data, className }: SalesByHourChartProps) {
                         {item.hour}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Revenue: {formatMoney(item.revenue)} ETB
+                        {tr("Revenue:")}
+                        {formatMoney(item.revenue)} {tr("ETB")}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Sales: {item.count}
+                        {tr("Sales:")}
+                        {item.count}
                     </p>
                 </div>
             );

@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -92,13 +93,13 @@ function ShiftAssignmentFormContent({
     return (
         <>
             <ModalHeader>
-                {isEdit ? "Edit Shift Assignment" : "Create Shift Assignment"}
+                {isEdit ? tr("Edit Shift Assignment") : tr("Create Shift Assignment")}
             </ModalHeader>
             <ModalBody className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Select
-                        label="Employee"
-                        placeholder="Select employee"
+                        label={tr("Employee")}
+                        placeholder={tr("Select employee")}
                         selectedKeys={employeeKeys}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as string | undefined;
@@ -129,8 +130,8 @@ function ShiftAssignmentFormContent({
                     </Select>
 
                     <Select
-                        label="Shift"
-                        placeholder="Select shift"
+                        label={tr("Shift")}
+                        placeholder={tr("Select shift")}
                         selectedKeys={shiftKeys}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as string | undefined;
@@ -161,7 +162,7 @@ function ShiftAssignmentFormContent({
                     </Select>
 
                     <DatePicker
-                        label="Shift Date"
+                        label={tr("Shift Date")}
                         variant="bordered"
                         showMonthAndYearPickers
                         value={shiftDate}
@@ -176,10 +177,10 @@ function ShiftAssignmentFormContent({
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose} isDisabled={isLoading}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    {isEdit ? "Save Changes" : "Create"}
+                    {isEdit ? tr("Save Changes") : tr("Create")}
                 </Button>
             </ModalFooter>
         </>

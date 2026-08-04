@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button } from "@heroui/react";
 import { AlertTriangle } from "lucide-react";
 import type { Employee } from "../../types/employee";
@@ -32,21 +33,21 @@ export function DeleteEmployeeModal({
                 <ModalHeader className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="size-5 text-danger" />
-                        <span>Delete Employee</span>
+                        <span>{tr("Delete Employee")}</span>
                     </div>
                 </ModalHeader>
                 <ModalBody>
                     <p className="text-[var(--muted)]">
-                        Are you sure you want to delete the employee{" "}
+                        {tr("Are you sure you want to delete the employee")}{" "}
                         <span className="font-semibold text-[var(--fg)]">
-                            {employee?.fullName || "Unknown"}
+                            {employee?.fullName || tr("Unknown")}
                         </span>
-                        ? This action cannot be undone.
+                        {tr("? This action cannot be undone.")}
                     </p>
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="light" onPress={onClose} isDisabled={isLoading}>
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button
                         color="danger"

@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Product } from "../../types/production";
 import { Button, Chip, Avatar, Tooltip } from "@heroui/react";
@@ -32,7 +33,7 @@ export const getProductColumns = ({
     },
     {
         accessorKey: "name",
-        header: "Product",
+        header: tr("Product"),
         cell: ({ row }) => {
             const product = row.original;
             const imageUrl = product.image
@@ -64,45 +65,46 @@ export const getProductColumns = ({
     },
     {
         accessorKey: "selling_price",
-        header: "Selling Price",
+        header: tr("Selling Price"),
         cell: ({ row }) => (
             <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                ETB {parseFloat(row.original.selling_price.toString()).toFixed(2)}
+                {tr("ETB")}
+                {parseFloat(row.original.selling_price.toString()).toFixed(2)}
             </span>
         ),
     },
     {
         accessorKey: "stock_quantity",
-        header: "Stock",
+        header: tr("Stock"),
         cell: ({ row }) => {
             const stock = row.original.stock_quantity;
             const isLowStock = stock <= 0;
 
             return (
                 <Chip color={isLowStock ? "warning" : "success"} variant="flat" size="sm">
-                    {stock} pcs
+                    {stock} {tr("pcs")}
                 </Chip>
             );
         },
     },
     {
         accessorKey: "is_active",
-        header: "Status",
+        header: tr("Status"),
         cell: ({ row }) => (
             <Chip color={row.original.is_active ? "success" : "default"} variant="flat" size="sm">
-                {row.original.is_active ? "Active" : "Inactive"}
+                {row.original.is_active ? tr("Active") : tr("Inactive")}
             </Chip>
         ),
     },
     {
         id: "actions",
-        header: "Actions",
+        header: tr("Actions"),
         cell: ({ row }) => {
             const product = row.original;
             return (
                 <div className="relative flex items-center gap-2 p-2">
                     {onRecordProduction && product.hasRecipe && (
-                        <Tooltip content="Record Production">
+                        <Tooltip content={tr("Record Production")}>
                             <Button
                                 isIconOnly
                                 variant="light"
@@ -118,7 +120,9 @@ export const getProductColumns = ({
                     {onBuildRecipe && (
                         <Tooltip
                             content={
-                                product.hasRecipe ? "Edit batch estimate" : "Create batch estimate"
+                                product.hasRecipe
+                                    ? tr("Edit batch estimate")
+                                    : tr("Create batch estimate")
                             }
                         >
                             <Button
@@ -134,7 +138,7 @@ export const getProductColumns = ({
                         </Tooltip>
                     )}
                     {onEdit && (
-                        <Tooltip content="Edit product">
+                        <Tooltip content={tr("Edit product")}>
                             <Button
                                 isIconOnly
                                 variant="light"
@@ -147,7 +151,7 @@ export const getProductColumns = ({
                         </Tooltip>
                     )}
                     {onDelete && (
-                        <Tooltip content="Delete product" color="danger">
+                        <Tooltip content={tr("Delete product")} color="danger">
                             <Button
                                 isIconOnly
                                 variant="light"

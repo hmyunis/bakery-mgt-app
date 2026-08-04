@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import type { Expense } from "../../types/treasury";
 
@@ -17,21 +18,23 @@ export function DeleteExpenseModal({
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="md">
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1">Delete expense?</ModalHeader>
+                <ModalHeader className="flex flex-col gap-1">{tr("Delete expense?")}</ModalHeader>
                 <ModalBody>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
-                        This will permanently remove the expense record. This action cannot be
-                        undone.
+                        {tr(
+                            "This will permanently remove the expense record. This action cannot be undone."
+                        )}
                     </p>
                     {expense ? (
                         <p className="text-sm text-slate-500">
-                            {expense.title} • ETB {expense.amount.toLocaleString()}
+                            {expense.title} {tr("• ETB")}
+                            {expense.amount.toLocaleString()}
                         </p>
                     ) : null}
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="light" onPress={onClose}>
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button color="danger" onPress={onConfirm}>
                         Delete

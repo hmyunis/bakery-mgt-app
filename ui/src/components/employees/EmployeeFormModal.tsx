@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -117,13 +118,13 @@ function EmployeeFormContent({
     const validateForm = (): boolean => {
         const nextErrors: Record<string, string> = {};
 
-        if (!formData.position.trim()) nextErrors.position = "Position is required";
-        if (!formData.hireDate) nextErrors.hireDate = "Hire date is required";
+        if (!formData.position.trim()) nextErrors.position = tr("Position is required");
+        if (!formData.hireDate) nextErrors.hireDate = tr("Hire date is required");
         if (!formData.monthlyBaseSalary || Number(formData.monthlyBaseSalary) <= 0)
-            nextErrors.monthlyBaseSalary = "Monthly base salary must be greater than 0";
+            nextErrors.monthlyBaseSalary = tr("Monthly base salary must be greater than 0");
 
         if (!formData.fullName.trim() && !formData.userId)
-            nextErrors.fullName = "Full name is required";
+            nextErrors.fullName = tr("Full name is required");
 
         setErrors(nextErrors);
         return Object.keys(nextErrors).length === 0;
@@ -174,12 +175,12 @@ function EmployeeFormContent({
 
     return (
         <>
-            <ModalHeader>{isEdit ? "Edit Employee" : "Create New Employee"}</ModalHeader>
+            <ModalHeader>{isEdit ? tr("Edit Employee") : tr("Create New Employee")}</ModalHeader>
             <ModalBody className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Select
-                        label="Link User Account (optional)"
-                        placeholder="Select a user"
+                        label={tr("Link User Account (optional)")}
+                        placeholder={tr("Select a user")}
                         selectedKeys={userSelectedKeys}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as string | undefined;
@@ -219,7 +220,7 @@ function EmployeeFormContent({
                                                     : "h-4 w-4"
                                             }
                                         />
-                                        <span>Load more</span>
+                                        <span>{tr("Load more")}</span>
                                     </div>
                                 </SelectItem>
                             )}
@@ -234,12 +235,12 @@ function EmployeeFormContent({
                             className="w-full"
                             startContent={<RefreshCcw className="h-4 w-4" />}
                         >
-                            Autofill from User
+                            {tr("Autofill from User")}
                         </Button>
                     </div>
 
                     <Input
-                        label="Full Name"
+                        label={tr("Full Name")}
                         value={formData.fullName}
                         onValueChange={(v) => handleInputChange("fullName", v)}
                         isInvalid={!!errors.fullName}
@@ -250,7 +251,7 @@ function EmployeeFormContent({
                     />
 
                     <Input
-                        label="Position"
+                        label={tr("Position")}
                         value={formData.position}
                         onValueChange={(v) => handleInputChange("position", v)}
                         isRequired
@@ -262,7 +263,7 @@ function EmployeeFormContent({
                     />
 
                     <Input
-                        label="Phone Number"
+                        label={tr("Phone Number")}
                         value={formData.phoneNumber}
                         onValueChange={(v) => handleInputChange("phoneNumber", v)}
                         classNames={{
@@ -271,7 +272,7 @@ function EmployeeFormContent({
                     />
 
                     <DatePicker
-                        label="Hire Date"
+                        label={tr("Hire Date")}
                         variant="bordered"
                         showMonthAndYearPickers
                         value={hireDateValue}
@@ -285,7 +286,7 @@ function EmployeeFormContent({
                     />
 
                     <Input
-                        label="Monthly Base Salary"
+                        label={tr("Monthly Base Salary")}
                         type="number"
                         value={formData.monthlyBaseSalary}
                         onValueChange={(v) => handleInputChange("monthlyBaseSalary", v)}
@@ -298,7 +299,7 @@ function EmployeeFormContent({
                     />
 
                     <Input
-                        label="Address (optional)"
+                        label={tr("Address (optional)")}
                         value={formData.address}
                         onValueChange={(v) => handleInputChange("address", v)}
                         classNames={{
@@ -308,7 +309,7 @@ function EmployeeFormContent({
                 </div>
 
                 <Textarea
-                    label="Payment Detail (optional)"
+                    label={tr("Payment Detail (optional)")}
                     value={formData.paymentDetail}
                     onValueChange={(v) => handleInputChange("paymentDetail", v)}
                     classNames={{
@@ -318,10 +319,10 @@ function EmployeeFormContent({
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose} isDisabled={isLoading}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    {isEdit ? "Save Changes" : "Create Employee"}
+                    {isEdit ? tr("Save Changes") : tr("Create Employee")}
                 </Button>
             </ModalFooter>
         </>

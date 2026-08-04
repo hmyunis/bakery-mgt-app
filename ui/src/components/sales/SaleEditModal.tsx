@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -71,11 +72,14 @@ function SaleEditForm({
 
     return (
         <>
-            <ModalHeader>Edit Sale #{sale.id}</ModalHeader>
+            <ModalHeader>
+                {tr("Edit Sale #")}
+                {sale.id}
+            </ModalHeader>
             <ModalBody className="space-y-5">
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">Items</h3>
+                        <h3 className="font-semibold">{tr("Items")}</h3>
                         <Button
                             size="sm"
                             variant="flat"
@@ -90,13 +94,13 @@ function SaleEditForm({
                                     setItems([...items, { product_id: product.id, quantity: 1 }]);
                             }}
                         >
-                            Add Item
+                            {tr("Add Item")}
                         </Button>
                     </div>
                     {items.map((item, index) => (
                         <div key={index} className="grid grid-cols-[1fr_7rem_auto] gap-2">
                             <Select
-                                aria-label="Product"
+                                aria-label={tr("Product")}
                                 selectedKeys={new Set([String(item.product_id)])}
                                 onSelectionChange={(keys) => {
                                     const id = Number(Array.from(keys)[0]);
@@ -128,7 +132,7 @@ function SaleEditForm({
                                 ))}
                             </Select>
                             <Input
-                                aria-label="Quantity"
+                                aria-label={tr("Quantity")}
                                 type="number"
                                 min={1}
                                 value={String(item.quantity)}
@@ -149,7 +153,7 @@ function SaleEditForm({
                                 isIconOnly
                                 color="danger"
                                 variant="light"
-                                aria-label="Remove item"
+                                aria-label={tr("Remove item")}
                                 isDisabled={items.length === 1}
                                 onPress={() => setItems(items.filter((_, i) => i !== index))}
                             >
@@ -161,7 +165,7 @@ function SaleEditForm({
 
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">Payments</h3>
+                        <h3 className="font-semibold">{tr("Payments")}</h3>
                         <Button
                             size="sm"
                             variant="flat"
@@ -182,13 +186,13 @@ function SaleEditForm({
                                     ]);
                             }}
                         >
-                            Add Payment
+                            {tr("Add Payment")}
                         </Button>
                     </div>
                     {payments.map((payment, index) => (
                         <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2">
                             <Select
-                                aria-label="Payment method"
+                                aria-label={tr("Payment method")}
                                 selectedKeys={new Set([String(payment.method_id)])}
                                 onSelectionChange={(keys) => {
                                     const id = Number(Array.from(keys)[0]);
@@ -217,7 +221,7 @@ function SaleEditForm({
                                 ))}
                             </Select>
                             <Input
-                                aria-label="Payment amount"
+                                aria-label={tr("Payment amount")}
                                 type="number"
                                 min={0.01}
                                 step="0.01"
@@ -234,7 +238,7 @@ function SaleEditForm({
                                 isIconOnly
                                 color="danger"
                                 variant="light"
-                                aria-label="Remove payment"
+                                aria-label={tr("Remove payment")}
                                 onPress={() => setPayments(payments.filter((_, i) => i !== index))}
                             >
                                 <Trash2 className="h-4 w-4" />
@@ -243,15 +247,15 @@ function SaleEditForm({
                     ))}
                 </div>
                 <Switch isSelected={receiptIssued} onValueChange={setReceiptIssued}>
-                    Receipt issued
+                    {tr("Receipt issued")}
                 </Switch>
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" isLoading={isSaving} onPress={handleSave}>
-                    Save Changes
+                    {tr("Save Changes")}
                 </Button>
             </ModalFooter>
         </>

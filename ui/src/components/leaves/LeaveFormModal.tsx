@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -18,10 +19,10 @@ import type { LeaveRecord, LeaveType } from "../../types/leave";
 import type { CreateLeaveRecordData, UpdateLeaveRecordData } from "../../services/leaveService";
 
 const LEAVE_TYPES: Array<{ key: LeaveType; label: string }> = [
-    { key: "sick", label: "Sick" },
-    { key: "annual", label: "Annual" },
-    { key: "holiday", label: "Holiday" },
-    { key: "other", label: "Other" },
+    { key: "sick", label: tr("Sick") },
+    { key: "annual", label: tr("Annual") },
+    { key: "holiday", label: tr("Holiday") },
+    { key: "other", label: tr("Other") },
 ];
 
 interface LeaveFormModalProps {
@@ -98,12 +99,12 @@ function LeaveFormContent({
 
     return (
         <>
-            <ModalHeader>{isEdit ? "Edit Leave" : "Create Leave"}</ModalHeader>
+            <ModalHeader>{isEdit ? tr("Edit Leave") : tr("Create Leave")}</ModalHeader>
             <ModalBody className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Select
-                        label="Employee"
-                        placeholder="Select employee"
+                        label={tr("Employee")}
+                        placeholder={tr("Select employee")}
                         selectedKeys={employeeKeys}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as string | undefined;
@@ -134,7 +135,7 @@ function LeaveFormContent({
                     </Select>
 
                     <Select
-                        label="Leave Type"
+                        label={tr("Leave Type")}
                         selectedKeys={leaveTypeKeys}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as LeaveType | undefined;
@@ -155,7 +156,7 @@ function LeaveFormContent({
                     </Select>
 
                     <DatePicker
-                        label="Start Date"
+                        label={tr("Start Date")}
                         variant="bordered"
                         showMonthAndYearPickers
                         value={startDate}
@@ -168,7 +169,7 @@ function LeaveFormContent({
                     />
 
                     <DatePicker
-                        label="End Date"
+                        label={tr("End Date")}
                         variant="bordered"
                         showMonthAndYearPickers
                         value={endDate}
@@ -182,7 +183,7 @@ function LeaveFormContent({
                 </div>
 
                 <Textarea
-                    label="Notes (optional)"
+                    label={tr("Notes (optional)")}
                     value={notes}
                     onValueChange={setNotes}
                     classNames={{
@@ -192,10 +193,10 @@ function LeaveFormContent({
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose} isDisabled={isLoading}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    {isEdit ? "Save Changes" : "Create"}
+                    {isEdit ? tr("Save Changes") : tr("Create")}
                 </Button>
             </ModalFooter>
         </>

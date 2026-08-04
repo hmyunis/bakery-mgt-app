@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@heroui/react";
 import type { AttendanceRecord } from "../../types/attendance";
 
@@ -21,10 +22,10 @@ export function DeleteAttendanceRecordModal({
             <ModalContent>
                 {(close) => (
                     <>
-                        <ModalHeader>Delete Attendance Record</ModalHeader>
+                        <ModalHeader>{tr("Delete Attendance Record")}</ModalHeader>
                         <ModalBody className="space-y-2">
                             <p className="text-sm text-slate-700 dark:text-slate-300">
-                                This will permanently delete the attendance record.
+                                {tr("This will permanently delete the attendance record.")}
                             </p>
                             {record && (
                                 <div className="text-xs text-slate-500">
@@ -34,7 +35,7 @@ export function DeleteAttendanceRecordModal({
                         </ModalBody>
                         <ModalFooter>
                             <Button variant="flat" onPress={close} isDisabled={isLoading}>
-                                Cancel
+                                {tr("Cancel")}
                             </Button>
                             <Button
                                 color="danger"

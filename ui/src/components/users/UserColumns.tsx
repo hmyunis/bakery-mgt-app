@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { User } from "../../services/userService";
 import {
@@ -15,7 +16,7 @@ import { getRoleColor } from "../../constants/roles";
 
 // Helper function to format date with time
 const formatDateTime = (dateString?: string) => {
-    if (!dateString) return "Never";
+    if (!dateString) return tr("Never");
     const date = new Date(dateString);
     return date.toLocaleString("en-US", {
         year: "numeric",
@@ -41,7 +42,7 @@ export const getUserColumns = ({
     },
     {
         accessorKey: "fullName",
-        header: "User",
+        header: tr("User"),
         cell: ({ row }) => {
             const user = row.original;
             return (
@@ -55,7 +56,7 @@ export const getUserColumns = ({
                                     .map((n) => n[0])
                                     .join("") ||
                                 user.username?.[0] ||
-                                "U"
+                                tr("U")
                             }
                             className="h-10 w-10"
                         />
@@ -72,7 +73,7 @@ export const getUserColumns = ({
     },
     {
         accessorKey: "role",
-        header: "Role",
+        header: tr("Role"),
         cell: ({ row }) => {
             const role = row.original.role;
             return (
@@ -84,16 +85,19 @@ export const getUserColumns = ({
     },
     {
         accessorKey: "isActive",
-        header: "Status",
+        header: tr("Status"),
         cell: ({ row }) => {
             const isActive = row.original.isActive;
             return (
                 <div className="flex items-center gap-2">
                     <Chip color={isActive ? "success" : "warning"} variant="flat" size="sm">
-                        {isActive ? "Active" : "Inactive"}
+                        {isActive ? tr("Active") : tr("Inactive")}
                     </Chip>
                     {!isActive && (
-                        <Tooltip content="This user cannot log in until active" placement="top">
+                        <Tooltip
+                            content={tr("This user cannot log in until active")}
+                            placement="top"
+                        >
                             <Info className="h-4 w-4 text-warning" />
                         </Tooltip>
                     )}
@@ -103,7 +107,7 @@ export const getUserColumns = ({
     },
     {
         accessorKey: "lastLogin",
-        header: "Last Login",
+        header: tr("Last Login"),
         cell: ({ row }) => (
             <span className="text-sm min-w-28 inline-block">
                 {formatDateTime(row.original.lastLogin)}
@@ -120,11 +124,11 @@ export const getUserColumns = ({
                         <DropdownTrigger as={Button} variant="light">
                             <MoreVertical className="h-5 w-5 text-slate-700 dark:text-slate-300" />
                         </DropdownTrigger>
-                        <DropdownMenu aria-label="User Actions">
+                        <DropdownMenu aria-label={tr("User Actions")}>
                             <DropdownItem key="edit" onAction={() => onEdit(user)}>
                                 <div className="flex items-center gap-2">
                                     <Edit className="h-4 w-4 mr-1" />
-                                    Edit User
+                                    {tr("Edit User")}
                                 </div>
                             </DropdownItem>
                             <DropdownItem
@@ -135,7 +139,7 @@ export const getUserColumns = ({
                             >
                                 <div className="flex items-center gap-2">
                                     <Trash2 className="h-4 w-4 mr-1" />
-                                    Delete User
+                                    {tr("Delete User")}
                                 </div>
                             </DropdownItem>
                         </DropdownMenu>

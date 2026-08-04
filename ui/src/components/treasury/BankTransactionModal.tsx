@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Modal,
@@ -74,7 +75,7 @@ export function BankTransactionModal({
         const nextErrors: Record<string, string> = {};
 
         if (!amount.trim() || Number.isNaN(Number(amount))) {
-            nextErrors.amount = "Enter a valid amount";
+            nextErrors.amount = tr("Enter a valid amount");
         }
 
         if (Object.keys(nextErrors).length > 0) {
@@ -102,18 +103,18 @@ export function BankTransactionModal({
                     <div className="flex items-center gap-2">
                         <span>{title}</span>
                         <Chip size="sm" variant="flat" color={toneColor}>
-                            {mode === "deposit" ? "Deposit" : "Withdraw"}
+                            {mode === "deposit" ? tr("Deposit") : tr("Withdraw")}
                         </Chip>
                     </div>
                     <p className="text-sm text-slate-500">
                         {account
                             ? `Account: ${account.name} • ${account.bankName}`
-                            : "Select a bank account"}
+                            : tr("Select a bank account")}
                     </p>
                 </ModalHeader>
                 <ModalBody className="space-y-4">
                     <Input
-                        label="Amount (ETB)"
+                        label={tr("Amount (ETB)")}
                         type="number"
                         placeholder="0"
                         value={amount}
@@ -127,8 +128,8 @@ export function BankTransactionModal({
                         }}
                     />
                     <Textarea
-                        label="Notes (optional)"
-                        placeholder="Additional details"
+                        label={tr("Notes (optional)")}
+                        placeholder={tr("Additional details")}
                         value={notes}
                         onValueChange={(value) => setNotes(value)}
                         minRows={2}
@@ -141,10 +142,10 @@ export function BankTransactionModal({
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="light" onPress={handleClose}>
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button color="primary" onPress={handleSubmit} isDisabled={!canSubmit}>
-                        Save Transaction
+                        {tr("Save Transaction")}
                     </Button>
                 </ModalFooter>
             </ModalContent>

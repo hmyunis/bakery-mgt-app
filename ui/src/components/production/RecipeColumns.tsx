@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Recipe } from "../../types/production";
 import { Button, Tooltip } from "@heroui/react";
@@ -18,7 +19,7 @@ export const getRecipeColumns = ({
     },
     {
         accessorKey: "product",
-        header: "Product",
+        header: tr("Product"),
         cell: ({ row }) => {
             const recipe = row.original as Recipe & { productName?: string };
             return (
@@ -30,16 +31,16 @@ export const getRecipeColumns = ({
     },
     {
         accessorKey: "standard_yield",
-        header: "Full Batch Output",
+        header: tr("Full Batch Output"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
-                {parseFloat(row.original.standard_yield.toString()).toFixed(2)} pcs
+                {parseFloat(row.original.standard_yield.toString()).toFixed(2)} {tr("pcs")}
             </span>
         ),
     },
     {
         accessorKey: "items",
-        header: "Batch Ingredients",
+        header: tr("Batch Ingredients"),
         cell: ({ row }) => {
             const items = row.original.items || [];
             return (
@@ -49,20 +50,20 @@ export const getRecipeColumns = ({
                               .slice(0, 2)
                               .map((item) => item.ingredient_name)
                               .join(", ")}${items.length > 2 ? ` +${items.length - 2}` : ""}`
-                        : "Not configured"}
+                        : tr("Not configured")}
                 </span>
             );
         },
     },
     {
         id: "actions",
-        header: "Actions",
+        header: tr("Actions"),
         cell: ({ row }) => {
             const recipe = row.original;
             return (
                 <div className="relative flex items-center gap-2 p-2">
                     {onEdit && (
-                        <Tooltip content="Edit batch estimate">
+                        <Tooltip content={tr("Edit batch estimate")}>
                             <Button
                                 isIconOnly
                                 variant="light"
@@ -75,7 +76,7 @@ export const getRecipeColumns = ({
                         </Tooltip>
                     )}
                     {onDelete && (
-                        <Tooltip content="Delete batch estimate" color="danger">
+                        <Tooltip content={tr("Delete batch estimate")} color="danger">
                             <Button
                                 isIconOnly
                                 variant="light"

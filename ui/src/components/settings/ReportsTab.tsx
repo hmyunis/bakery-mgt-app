@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState } from "react";
 import { DatePicker, Button, Card, CardBody, Spinner } from "@heroui/react";
 import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
@@ -72,7 +73,7 @@ export function ReportsTab() {
             <div className="flex justify-end">
                 <div className="w-full max-w-xs">
                     <DatePicker
-                        label="View Reports For"
+                        label={tr("View Reports For")}
                         variant="bordered"
                         showMonthAndYearPickers
                         value={selectedDate}
@@ -87,13 +88,13 @@ export function ReportsTab() {
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex flex-col">
                             <span className="text-sm text-default-500 font-medium">
-                                Total Revenue
+                                {tr("Total Revenue")}
                             </span>
                             <span className="text-2xl font-bold">
                                 {hourlySales
                                     .reduce((acc: number, curr) => acc + curr.total, 0)
                                     .toFixed(2)}{" "}
-                                ETB
+                                {tr("ETB")}
                             </span>
                         </div>
                         <div className="p-2 bg-primary/10 rounded-full text-primary">
@@ -101,7 +102,7 @@ export function ReportsTab() {
                         </div>
                     </div>
                     <span className="text-xs text-default-400 mt-auto">
-                        Total earnings from sales today
+                        {tr("Total earnings from sales today")}
                     </span>
                 </Card>
 
@@ -109,7 +110,7 @@ export function ReportsTab() {
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex flex-col">
                             <span className="text-sm text-default-500 font-medium">
-                                Total Orders
+                                {tr("Total Orders")}
                             </span>
                             <span className="text-3xl font-bold">
                                 {cashierPerformance.reduce(
@@ -123,7 +124,7 @@ export function ReportsTab() {
                         </div>
                     </div>
                     <span className="text-xs text-default-400 mt-auto">
-                        Number of transactions processed
+                        {tr("Number of transactions processed")}
                     </span>
                 </Card>
 
@@ -131,7 +132,7 @@ export function ReportsTab() {
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex flex-col min-w-0">
                             <span className="text-sm text-default-500 font-medium">
-                                Top Product
+                                {tr("Top Product")}
                             </span>
                             <span
                                 className="text-lg font-bold truncate w-full"
@@ -144,13 +145,17 @@ export function ReportsTab() {
                             <TrendingUp className="w-5 h-5" />
                         </div>
                     </div>
-                    <span className="text-xs text-default-400 mt-auto">Most sold item today</span>
+                    <span className="text-xs text-default-400 mt-auto">
+                        {tr("Most sold item today")}
+                    </span>
                 </Card>
 
                 <Card className="p-6 border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between h-full">
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex flex-col">
-                            <span className="text-sm text-default-500 font-medium">In Stock</span>
+                            <span className="text-sm text-default-500 font-medium">
+                                {tr("In Stock")}
+                            </span>
                             <span className="text-3xl font-bold">{productsInStock}</span>
                         </div>
                         <div className="p-2 bg-warning/10 rounded-full text-warning">
@@ -158,7 +163,7 @@ export function ReportsTab() {
                         </div>
                     </div>
                     <span className="text-xs text-default-400 mt-auto">
-                        Products with available stock
+                        {tr("Products with available stock")}
                     </span>
                 </Card>
             </div>
@@ -167,7 +172,7 @@ export function ReportsTab() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 1. Hourly Sales (Area Chart with Gradient) */}
                 <Card className="p-4">
-                    <h3 className="text-lg font-semibold mb-4">Hourly Sales Trend</h3>
+                    <h3 className="text-lg font-semibold mb-4">{tr("Hourly Sales Trend")}</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={hourlySales}>
@@ -201,7 +206,7 @@ export function ReportsTab() {
 
                 {/* 2. Top Products (Bar Chart) */}
                 <Card className="p-4">
-                    <h3 className="text-lg font-semibold mb-4">Top 5 Selling Products</h3>
+                    <h3 className="text-lg font-semibold mb-4">{tr("Top 5 Selling Products")}</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={topProducts} layout="vertical" margin={{ left: 20 }}>
@@ -229,7 +234,7 @@ export function ReportsTab() {
 
                 {/* 3. Payment Methods (Donut Chart) */}
                 <Card className="p-4">
-                    <h3 className="text-lg font-semibold mb-4">Payment Methods</h3>
+                    <h3 className="text-lg font-semibold mb-4">{tr("Payment Methods")}</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -264,7 +269,7 @@ export function ReportsTab() {
 
                 {/* 4. Production vs Sales (Grouped Bar Chart) */}
                 <Card className="p-4">
-                    <h3 className="text-lg font-semibold mb-4">Production vs Sales</h3>
+                    <h3 className="text-lg font-semibold mb-4">{tr("Production vs Sales")}</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={productionVsSales}>
@@ -299,7 +304,7 @@ export function ReportsTab() {
 
                 {/* 5. Wastage (Bar Chart) */}
                 <Card className="p-4">
-                    <h3 className="text-lg font-semibold mb-4">Top Ingredient Wastage</h3>
+                    <h3 className="text-lg font-semibold mb-4">{tr("Top Ingredient Wastage")}</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={wastage}>
@@ -327,7 +332,7 @@ export function ReportsTab() {
 
                 {/* 6. Cashier Performance (Bar Chart) */}
                 <Card className="p-4">
-                    <h3 className="text-lg font-semibold mb-4">Cashier Performance</h3>
+                    <h3 className="text-lg font-semibold mb-4">{tr("Cashier Performance")}</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={cashierPerformance}>
@@ -363,17 +368,19 @@ export function ReportsTab() {
                                 <div className="p-2 bg-primary/10 rounded-lg text-primary">
                                     <FileSpreadsheet className="w-6 h-6" />
                                 </div>
-                                <h3 className="text-xl font-bold">Export Data</h3>
+                                <h3 className="text-xl font-bold">{tr("Export Data")}</h3>
                             </div>
                             <p className="text-default-500 text-sm">
-                                Download a comprehensive Excel report for the selected period.
+                                {tr(
+                                    "Download a comprehensive Excel report for the selected period."
+                                )}
                             </p>
                         </div>
 
                         <div className="flex flex-col md:flex-row items-end gap-4 w-full md:w-auto">
                             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                                 <DatePicker
-                                    label="Start Date"
+                                    label={tr("Start Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={startDate}
@@ -381,7 +388,7 @@ export function ReportsTab() {
                                     className="w-full sm:w-40"
                                 />
                                 <DatePicker
-                                    label="End Date"
+                                    label={tr("End Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={endDate}
@@ -397,7 +404,7 @@ export function ReportsTab() {
                                 className="w-full md:w-auto font-medium"
                                 size="lg"
                             >
-                                Download Report
+                                {tr("Download Report")}
                             </Button>
                         </div>
                     </div>

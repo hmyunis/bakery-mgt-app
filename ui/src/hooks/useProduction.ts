@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { productionService } from "../services/productionService";
@@ -55,7 +56,7 @@ export function useProduct(id: number | null) {
     return useQuery({
         queryKey: ["products", id],
         queryFn: async () => {
-            if (!id) throw new Error("Product ID is required");
+            if (!id) throw new Error(tr("Product ID is required"));
             return await productionService.getProduct(id);
         },
         enabled: !!id,
@@ -74,7 +75,7 @@ export function useCreateProduct() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["products"] });
-            toast.success("Product created successfully!");
+            toast.success(tr("Product created successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -100,7 +101,7 @@ export function useUpdateProduct() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["products"] });
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
-            toast.success("Product updated successfully!");
+            toast.success(tr("Product updated successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -126,7 +127,7 @@ export function useDeleteProduct() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["products"] });
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
-            toast.success("Product deleted successfully!");
+            toast.success(tr("Product deleted successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -161,7 +162,7 @@ export function useRecipe(id: number | null) {
     return useQuery({
         queryKey: ["recipes", id],
         queryFn: async () => {
-            if (!id) throw new Error("Recipe ID is required");
+            if (!id) throw new Error(tr("Recipe ID is required"));
             return await productionService.getRecipe(id);
         },
         enabled: !!id,
@@ -175,7 +176,7 @@ export function useRecipeByProduct(productId: number | null) {
     return useQuery({
         queryKey: ["recipes", "product", productId],
         queryFn: async () => {
-            if (!productId) throw new Error("Product ID is required");
+            if (!productId) throw new Error(tr("Product ID is required"));
             return await productionService.getRecipeByProduct(productId);
         },
         enabled: !!productId,
@@ -195,7 +196,7 @@ export function useCreateRecipe() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
             queryClient.invalidateQueries({ queryKey: ["productsWithRecipes"] });
-            toast.success("Batch estimate created successfully!");
+            toast.success(tr("Batch estimate created successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -225,7 +226,7 @@ export function useUpdateRecipe() {
             queryClient.invalidateQueries({
                 queryKey: ["recipes", updatedRecipe.id],
             });
-            toast.success("Batch estimate updated successfully!");
+            toast.success(tr("Batch estimate updated successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -251,7 +252,7 @@ export function useDeleteRecipe() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["recipes"] });
             queryClient.invalidateQueries({ queryKey: ["productsWithRecipes"] });
-            toast.success("Batch estimate deleted successfully!");
+            toast.success(tr("Batch estimate deleted successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -298,7 +299,7 @@ export function useProductionRun(id: number | null) {
     return useQuery({
         queryKey: ["production-runs", id],
         queryFn: async () => {
-            if (!id) throw new Error("Production run ID is required");
+            if (!id) throw new Error(tr("Production run ID is required"));
             return await productionService.getProductionRun(id);
         },
         enabled: !!id,
@@ -319,7 +320,7 @@ export function useCreateProductionRun() {
             queryClient.invalidateQueries({ queryKey: ["production-runs"] });
             queryClient.invalidateQueries({ queryKey: ["products"] }); // Update product stock
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update ingredient stock
-            toast.success("Production run recorded successfully!");
+            toast.success(tr("Production run recorded successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -346,7 +347,9 @@ export function useDeleteProductionRun() {
             queryClient.invalidateQueries({ queryKey: ["production-runs"] });
             queryClient.invalidateQueries({ queryKey: ["products"] }); // Update product stock
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update ingredient stock
-            toast.success("Production run deleted successfully. Stock changes have been reversed.");
+            toast.success(
+                tr("Production run deleted successfully. Stock changes have been reversed.")
+            );
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;

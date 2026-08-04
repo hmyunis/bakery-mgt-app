@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Button, Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
@@ -6,13 +7,13 @@ import type { LeaveRecord, LeaveType } from "../../types/leave";
 function getLeaveTypeLabel(t: LeaveType): string {
     switch (t) {
         case "sick":
-            return "Sick";
+            return tr("Sick");
         case "annual":
-            return "Annual";
+            return tr("Annual");
         case "holiday":
-            return "Holiday";
+            return tr("Holiday");
         case "other":
-            return "Other";
+            return tr("Other");
         default:
             return t;
     }
@@ -52,12 +53,12 @@ export function getLeaveColumns({
         },
         {
             accessorKey: "employeeName",
-            header: "Employee",
+            header: tr("Employee"),
             cell: ({ row }) => <span className="font-medium">{row.original.employeeName}</span>,
         },
         {
             accessorKey: "leaveType",
-            header: "Type",
+            header: tr("Type"),
             cell: ({ row }) => (
                 <Chip size="sm" variant="flat" color={getLeaveTypeColor(row.original.leaveType)}>
                     {getLeaveTypeLabel(row.original.leaveType)}
@@ -66,15 +67,15 @@ export function getLeaveColumns({
         },
         {
             accessorKey: "startDate",
-            header: "Start",
+            header: tr("Start"),
         },
         {
             accessorKey: "endDate",
-            header: "End",
+            header: tr("End"),
         },
         {
             accessorKey: "dayCount",
-            header: "Days",
+            header: tr("Days"),
         },
         {
             id: "actions",
@@ -89,13 +90,13 @@ export function getLeaveColumns({
                             </Button>
                         </DropdownTrigger>
                         <DropdownMenu
-                            aria-label="Actions"
+                            aria-label={tr("Actions")}
                             onAction={(key) => {
                                 if (key === "edit") onEdit(leave);
                                 if (key === "delete") onDelete(leave);
                             }}
                         >
-                            <DropdownItem key="edit">Edit</DropdownItem>
+                            <DropdownItem key="edit">{tr("Edit")}</DropdownItem>
                             <DropdownItem key="delete" className="text-danger" color="danger">
                                 Delete
                             </DropdownItem>

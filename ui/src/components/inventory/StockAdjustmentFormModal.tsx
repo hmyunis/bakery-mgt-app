@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState, useMemo } from "react";
 import {
     Modal,
@@ -28,9 +29,9 @@ interface StockAdjustmentFormModalProps {
 }
 
 const REASON_OPTIONS: { value: StockAdjustmentReason; label: string }[] = [
-    { value: "waste", label: "Accidental Waste" },
+    { value: "waste", label: tr("Accidental Waste") },
     { value: "theft", label: "Theft/Loss" },
-    { value: "audit", label: "Audit Correction" },
+    { value: "audit", label: tr("Audit Correction") },
 ];
 
 // Internal component handling form state and logic
@@ -99,15 +100,15 @@ function StockAdjustmentFormContent({
         const newErrors: Record<string, string> = {};
 
         if (!formData.ingredient) {
-            newErrors.ingredient = "Ingredient is required";
+            newErrors.ingredient = tr("Ingredient is required");
         }
 
         if (!formData.quantity_change || parseFloat(formData.quantity_change) <= 0) {
-            newErrors.quantity_change = "Quantity must be greater than 0";
+            newErrors.quantity_change = tr("Quantity must be greater than 0");
         }
 
         if (!formData.reason) {
-            newErrors.reason = "Reason is required";
+            newErrors.reason = tr("Reason is required");
         }
 
         setErrors(newErrors);
@@ -133,7 +134,7 @@ function StockAdjustmentFormContent({
             };
 
             await createAdjustment(createData);
-            toast.success("Stock adjustment recorded successfully");
+            toast.success(tr("Stock adjustment recorded successfully"));
             onClose();
         } catch {
             // Error handling is done in the hook
@@ -149,14 +150,14 @@ function StockAdjustmentFormContent({
             <ModalHeader>
                 {preselectedIngredient
                     ? `Adjust Stock for ${preselectedIngredient.name}`
-                    : "Record Stock Adjustment"}
+                    : tr("Record Stock Adjustment")}
             </ModalHeader>
             <ModalBody className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Show ingredient selector only when no preselected ingredient */}
                 {!preselectedIngredient ? (
                     <Select
-                        label="Ingredient"
-                        placeholder="Select an ingredient"
+                        label={tr("Ingredient")}
+                        placeholder={tr("Select an ingredient")}
                         selectionMode="single"
                         selectedKeys={ingredientSelectedKeys}
                         onSelectionChange={(keys) => {
@@ -182,14 +183,17 @@ function StockAdjustmentFormContent({
                     </Select>
                 ) : (
                     <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3">
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">Ingredient</p>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            {tr("Ingredient")}
+                        </p>
                         <p className="font-medium text-zinc-900 dark:text-zinc-100">
                             {preselectedIngredient.name}{" "}
                             <span className="text-zinc-500">({preselectedIngredient.unit})</span>
                         </p>
                         {selectedIngredient && (
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                                Current Stock: {selectedIngredient.current_stock.toFixed(3)}{" "}
+                                {tr("Current Stock:")}
+                                {selectedIngredient.current_stock.toFixed(3)}{" "}
                                 {selectedIngredient.unit}
                             </p>
                         )}
@@ -199,7 +203,7 @@ function StockAdjustmentFormContent({
                 {/* Adjustment type selector */}
                 <div className="space-y-3">
                     <RadioGroup
-                        label="Adjustment Type"
+                        label={tr("Adjustment Type")}
                         orientation="horizontal"
                         value={adjustmentType}
                         onValueChange={(v) => setAdjustmentType(v as "add" | "remove")}
@@ -208,8 +212,8 @@ function StockAdjustmentFormContent({
                             label: "text-sm text-zinc-600 dark:text-zinc-400",
                         }}
                     >
-                        <Radio value="add">Add Stock</Radio>
-                        <Radio value="remove">Remove Stock</Radio>
+                        <Radio value="add">{tr("Add Stock")}</Radio>
+                        <Radio value="remove">{tr("Remove Stock")}</Radio>
                     </RadioGroup>
 
                     {/* Quantity input */}
@@ -240,7 +244,7 @@ function StockAdjustmentFormContent({
                         parseFloat(formData.quantity_change) > 0 && (
                             <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3">
                                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                    New Stock Level
+                                    {tr("New Stock Level")}
                                 </p>
                                 <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                                     {(
@@ -257,8 +261,8 @@ function StockAdjustmentFormContent({
 
                 {/* Reason selector */}
                 <Select
-                    label="Reason"
-                    placeholder="Select a reason"
+                    label={tr("Reason")}
+                    placeholder={tr("Select a reason")}
                     selectionMode="single"
                     selectedKeys={reasonSelectedKeys}
                     onSelectionChange={(keys) => {
@@ -284,10 +288,10 @@ function StockAdjustmentFormContent({
                 </Select>
 
                 <Textarea
-                    label="Notes (Optional)"
+                    label={tr("Notes (Optional)")}
                     value={formData.notes}
                     onValueChange={(v) => handleInputChange("notes", v)}
-                    placeholder="Additional notes about this adjustment"
+                    placeholder={tr("Additional notes about this adjustment")}
                     classNames={{
                         input: "!text-slate-900 dark:!text-zinc-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
                     }}
@@ -300,10 +304,10 @@ function StockAdjustmentFormContent({
                     disabled={isLoading}
                     className="!text-zinc-700 dark:!text-zinc-300"
                 >
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    Record Adjustment
+                    {tr("Record Adjustment")}
                 </Button>
             </ModalFooter>
         </>

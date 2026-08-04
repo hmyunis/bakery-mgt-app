@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Button, Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
@@ -27,27 +28,27 @@ export function getShiftTemplateColumns({
         },
         {
             accessorKey: "name",
-            header: "Name",
+            header: tr("Name"),
             cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
         },
         {
             accessorKey: "startTime",
-            header: "Start",
+            header: tr("Start"),
         },
         {
             accessorKey: "endTime",
-            header: "End",
+            header: tr("End"),
         },
         {
             accessorKey: "isActive",
-            header: "Status",
+            header: tr("Status"),
             cell: ({ row }) => (
                 <Chip
                     size="sm"
                     variant="flat"
                     color={row.original.isActive ? "success" : "default"}
                 >
-                    {row.original.isActive ? "Active" : "Inactive"}
+                    {row.original.isActive ? tr("Active") : tr("Inactive")}
                 </Chip>
             ),
         },
@@ -64,13 +65,13 @@ export function getShiftTemplateColumns({
                             </Button>
                         </DropdownTrigger>
                         <DropdownMenu
-                            aria-label="Actions"
+                            aria-label={tr("Actions")}
                             onAction={(key) => {
                                 if (key === "edit") onEdit(shift);
                                 if (key === "delete") onDelete(shift);
                             }}
                         >
-                            <DropdownItem key="edit">Edit</DropdownItem>
+                            <DropdownItem key="edit">{tr("Edit")}</DropdownItem>
                             <DropdownItem key="delete" className="text-danger" color="danger">
                                 Delete
                             </DropdownItem>

@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState } from "react";
 import {
     Modal,
@@ -70,11 +71,11 @@ function IngredientFormContent({
         const newErrors: Record<string, string> = {};
 
         if (!formData.name.trim()) {
-            newErrors.name = "Name is required";
+            newErrors.name = tr("Name is required");
         }
 
         if (!formData.reorder_point || parseFloat(formData.reorder_point) < 0) {
-            newErrors.reorder_point = "Reorder point must be 0 or greater";
+            newErrors.reorder_point = tr("Reorder point must be 0 or greater");
         }
 
         setErrors(newErrors);
@@ -110,10 +111,12 @@ function IngredientFormContent({
 
     return (
         <>
-            <ModalHeader>{isEdit ? "Edit Ingredient" : "Create New Ingredient"}</ModalHeader>
+            <ModalHeader>
+                {isEdit ? tr("Edit Ingredient") : tr("Create New Ingredient")}
+            </ModalHeader>
             <ModalBody className="space-y-4">
                 <Input
-                    label="Name"
+                    label={tr("Name")}
                     value={formData.name}
                     onValueChange={(v) => handleInputChange("name", v)}
                     isRequired
@@ -125,7 +128,7 @@ function IngredientFormContent({
                 />
 
                 <Select
-                    label="Unit"
+                    label={tr("Unit")}
                     selectionMode="single"
                     selectedKeys={new Set([formData.unit])}
                     onSelectionChange={(keys) => {
@@ -145,7 +148,7 @@ function IngredientFormContent({
                     {UNITS.map((unit) => (
                         <SelectItem key={unit}>
                             {unit === "kg"
-                                ? "Kilogram (kg)"
+                                ? tr("Kilogram (kg)")
                                 : unit === "g"
                                   ? "Gram (g)"
                                   : unit === "l"
@@ -158,7 +161,7 @@ function IngredientFormContent({
                 </Select>
 
                 <Input
-                    label="Reorder Point"
+                    label={tr("Reorder Point")}
                     type="number"
                     value={formData.reorder_point}
                     onValueChange={(v) => handleInputChange("reorder_point", v)}
@@ -180,10 +183,10 @@ function IngredientFormContent({
                     disabled={isLoading}
                     className="!text-zinc-700 dark:!text-zinc-300"
                 >
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    {isEdit ? "Save Changes" : "Create Ingredient"}
+                    {isEdit ? tr("Save Changes") : tr("Create Ingredient")}
                 </Button>
             </ModalFooter>
         </>

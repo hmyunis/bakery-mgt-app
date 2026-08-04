@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Input, Button } from "@heroui/react";
 import { Search, Grid3X3, List, ShoppingCart } from "lucide-react";
@@ -158,7 +159,7 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
                     )}
                     <div className="flex items-center gap-3 max-w-2xl mx-auto w-full">
                         <Input
-                            placeholder="Search products..."
+                            placeholder={tr("Search products...")}
                             value={searchQuery}
                             onValueChange={setSearchQuery}
                             isClearable
@@ -216,7 +217,7 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
                 ) : products.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400">
                         <ShoppingCart className="h-12 w-12 mb-4 opacity-50" />
-                        <p>No products found</p>
+                        <p>{tr("No products found")}</p>
                     </div>
                 ) : viewMode === "grid" ? (
                     <>

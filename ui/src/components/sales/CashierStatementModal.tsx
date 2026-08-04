@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -73,7 +74,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
     });
 
     const cashierDetailLine = useMemo(() => {
-        if (!data?.cashier) return "Select a cashier";
+        if (!data?.cashier) return tr("Select a cashier");
 
         const parts = [
             data.cashier.fullName || data.cashier.username,
@@ -88,7 +89,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
         () => [
             {
                 accessorKey: "created_at",
-                header: "Time",
+                header: tr("Time"),
                 cell: ({ row }) => (
                     <span className="text-xs text-slate-600 dark:text-slate-300">
                         {formatDateTime(row.original.created_at)}
@@ -97,7 +98,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
             },
             {
                 accessorKey: "id",
-                header: "Sale #",
+                header: tr("Sale #"),
                 cell: ({ row }) => (
                     <span className="font-medium text-slate-900 dark:text-slate-100">
                         #{row.original.id}
@@ -106,7 +107,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
             },
             {
                 id: "products",
-                header: "Products",
+                header: tr("Products"),
                 cell: ({ row }) => {
                     const items = row.original.items ?? [];
                     if (!items.length) return <span className="text-xs text-slate-500">-</span>;
@@ -114,11 +115,12 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                     return (
                         <div className="flex flex-wrap items-center gap-1">
                             <Chip size="sm" variant="flat">
-                                {totalQty} items
+                                {totalQty} {tr("items")}
                             </Chip>
                             {items.slice(0, 2).map((item, index) => (
                                 <Chip key={`${item.product}-${index}`} size="sm" variant="flat">
-                                    {item.product_name} x {item.quantity}
+                                    {item.product_name} {tr("x")}
+                                    {item.quantity}
                                 </Chip>
                             ))}
                             {items.length > 2 && (
@@ -132,7 +134,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
             },
             {
                 id: "payment_methods",
-                header: "Payments",
+                header: tr("Payments"),
                 cell: ({ row }) => {
                     const payments = row.original.payments ?? [];
                     if (!payments.length) return <span className="text-xs text-slate-500">-</span>;
@@ -153,7 +155,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
             },
             {
                 accessorKey: "total_amount",
-                header: "Total",
+                header: tr("Total"),
                 cell: ({ row }) => (
                     <span className="font-semibold text-slate-900 dark:text-slate-100">
                         {formatMoney(row.original.total_amount)}
@@ -168,7 +170,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
         () => [
             {
                 accessorKey: "productName",
-                header: "Product",
+                header: tr("Product"),
                 cell: ({ row }) => (
                     <span className="font-medium text-slate-900 dark:text-slate-100">
                         {row.original.productName}
@@ -177,11 +179,11 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
             },
             {
                 accessorKey: "quantitySold",
-                header: "Qty Sold",
+                header: tr("Qty Sold"),
             },
             {
                 accessorKey: "amount",
-                header: "Amount",
+                header: tr("Amount"),
                 cell: ({ row }) => (
                     <span className="font-medium">{formatMoney(row.original.amount)}</span>
                 ),
@@ -196,7 +198,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                 <ModalHeader className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <ReceiptText className="h-5 w-5 text-primary" />
-                        <h2 className="text-lg font-semibold">Cashier Statement</h2>
+                        <h2 className="text-lg font-semibold">{tr("Cashier Statement")}</h2>
                         {isFetching && <Spinner size="sm" />}
                     </div>
                     <p className="text-xs text-slate-500">{cashierDetailLine}</p>
@@ -204,7 +206,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                 <ModalBody className="space-y-4">
                     {!cashierId ? (
                         <div className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
-                            Select a cashier from Sales History first.
+                            {tr("Select a cashier from Sales History first.")}
                         </div>
                     ) : (
                         <>
@@ -213,7 +215,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                     hideTimeZone
                                     showMonthAndYearPickers
                                     granularity="minute"
-                                    label="Start time"
+                                    label={tr("Start time")}
                                     variant="bordered"
                                     value={range.start}
                                     onChange={(value) =>
@@ -224,7 +226,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                     hideTimeZone
                                     showMonthAndYearPickers
                                     granularity="minute"
-                                    label="End time"
+                                    label={tr("End time")}
                                     variant="bordered"
                                     value={range.end}
                                     onChange={(value) =>
@@ -239,7 +241,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                 </div>
                             ) : isError || !data ? (
                                 <div className="rounded-lg border border-danger-200 bg-danger-50 p-4 text-sm text-danger-700">
-                                    Unable to load cashier statement for this filter range.
+                                    {tr("Unable to load cashier statement for this filter range.")}
                                 </div>
                             ) : (
                                 <>
@@ -247,7 +249,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                                             <p className="mb-1 flex items-center gap-2 text-xs text-slate-500">
                                                 <Wallet className="h-4 w-4" />
-                                                Total Collected
+                                                {tr("Total Collected")}
                                             </p>
                                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
                                                 {formatMoney(data.summary.totalMoneyCollected)}
@@ -256,7 +258,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                                             <p className="mb-1 flex items-center gap-2 text-xs text-slate-500">
                                                 <ReceiptText className="h-4 w-4" />
-                                                Sales Count
+                                                {tr("Sales Count")}
                                             </p>
                                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
                                                 {data.summary.saleCount}
@@ -265,7 +267,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                                             <p className="mb-1 flex items-center gap-2 text-xs text-slate-500">
                                                 <Wallet className="h-4 w-4" />
-                                                Unpaid Value
+                                                {tr("Unpaid Value")}
                                             </p>
                                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
                                                 {formatMoney(data.summary.unpaidTotal ?? 0)}
@@ -278,11 +280,11 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                     <div>
                                         <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                             <CreditCard className="h-4 w-4" />
-                                            Payment Method Breakdown
+                                            {tr("Payment Method Breakdown")}
                                         </h3>
                                         {data.paymentMethodTotals.length === 0 ? (
                                             <p className="text-sm text-slate-500">
-                                                No payments in this range.
+                                                {tr("No payments in this range.")}
                                             </p>
                                         ) : (
                                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -298,7 +300,8 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                                             {formatMoney(method.amount)}
                                                         </p>
                                                         <p className="text-xs text-slate-500">
-                                                            Used in {method.saleCount} sale(s)
+                                                            {tr("Used in")}
+                                                            {method.saleCount} {tr("sale(s)")}
                                                         </p>
                                                     </div>
                                                 ))}
@@ -311,11 +314,11 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                     <div>
                                         <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                             <PackageSearch className="h-4 w-4" />
-                                            Product Breakdown
+                                            {tr("Product Breakdown")}
                                         </h3>
                                         {data.productTotals.length === 0 ? (
                                             <p className="text-sm text-slate-500">
-                                                No products sold in this range.
+                                                {tr("No products sold in this range.")}
                                             </p>
                                         ) : (
                                             <DataTable
@@ -330,7 +333,8 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                                     <div>
                                         <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                             <ReceiptText className="h-4 w-4" />
-                                            All Sales ({data.sales.length})
+                                            {tr("All Sales (")}
+                                            {data.sales.length})
                                         </h3>
                                         <DataTable
                                             columns={saleColumns}
@@ -349,7 +353,7 @@ export function CashierStatementModal({ isOpen, onClose, cashierId }: CashierSta
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="flat" onPress={onClose}>
-                        Close
+                        {tr("Close")}
                     </Button>
                 </ModalFooter>
             </ModalContent>

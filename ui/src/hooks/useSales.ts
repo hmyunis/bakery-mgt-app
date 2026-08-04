@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { salesService } from "../services/salesService";
 import type {
@@ -67,7 +68,7 @@ export function useOpenShiftSession() {
             queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
             queryClient.invalidateQueries({ queryKey: ["sales"] });
             queryClient.invalidateQueries({ queryKey: ["products"] });
-            toast.success("Shift opened successfully.");
+            toast.success(tr("Shift opened successfully."));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -91,7 +92,7 @@ export function useCloseShiftSession() {
             queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
             queryClient.invalidateQueries({ queryKey: ["sales"] });
             queryClient.invalidateQueries({ queryKey: ["products"] });
-            toast.success("Shift closed and pending acceptance.");
+            toast.success(tr("Shift closed and pending acceptance."));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -114,7 +115,7 @@ export function useAcceptShiftSession() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
             queryClient.invalidateQueries({ queryKey: ["sales"] });
-            toast.success("Shift handover accepted.");
+            toast.success(tr("Shift handover accepted."));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -138,7 +139,7 @@ export function useReopenShiftSession() {
             queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
             queryClient.invalidateQueries({ queryKey: ["sales"] });
             queryClient.invalidateQueries({ queryKey: ["shift-session-reconciliation"] });
-            toast.success("Shift reopened successfully.");
+            toast.success(tr("Shift reopened successfully."));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -158,7 +159,7 @@ export function useShiftSessionReconciliation(
     return useQuery({
         queryKey: ["shift-session-reconciliation", id],
         queryFn: async () => {
-            if (!id) throw new Error("Shift session id is required.");
+            if (!id) throw new Error(tr("Shift session id is required."));
             return await salesService.getShiftSessionReconciliation(id);
         },
         enabled: !!id && (options?.enabled ?? true),
@@ -176,7 +177,7 @@ export function useUpdateShiftSessionReconciliation() {
                 queryKey: ["shift-session-reconciliation", variables.id],
             });
             queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
-            toast.success("Reconciliation report updated.");
+            toast.success(tr("Reconciliation report updated."));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -196,7 +197,7 @@ export function useSale(id: number | null) {
     return useQuery({
         queryKey: ["sales", id],
         queryFn: async () => {
-            if (!id) throw new Error("Sale ID is required");
+            if (!id) throw new Error(tr("Sale ID is required"));
             return await salesService.getSale(id);
         },
         enabled: !!id,
@@ -214,7 +215,7 @@ export function useCashierStatement(
         queryKey: ["cashier-statement", params],
         queryFn: async () => {
             if (!params) {
-                throw new Error("Cashier statement params are required");
+                throw new Error(tr("Cashier statement params are required"));
             }
             return await salesService.getCashierStatement(params);
         },
@@ -240,7 +241,7 @@ export function useCreateSale() {
             queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
             queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
             queryClient.invalidateQueries({ queryKey: ["expenses"] });
-            toast.success("Sale completed successfully!");
+            toast.success(tr("Sale completed successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -271,7 +272,7 @@ export function useDeleteSale() {
             queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
             queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
             queryClient.invalidateQueries({ queryKey: ["expenses"] });
-            toast.success("Sale deleted successfully. Stock changes were reversed.");
+            toast.success(tr("Sale deleted successfully. Stock changes were reversed."));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -295,7 +296,7 @@ export function useUpdateSale() {
             queryClient.invalidateQueries({ queryKey: ["shift-session-reconciliation"] });
             queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
             queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
-            toast.success("Sale updated successfully.");
+            toast.success(tr("Sale updated successfully."));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -319,7 +320,7 @@ export function useUpdateSalePaymentStatus() {
             queryClient.invalidateQueries({ queryKey: ["sales"] });
             queryClient.invalidateQueries({ queryKey: ["shift-sessions"] });
             queryClient.invalidateQueries({ queryKey: ["shift-session-reconciliation"] });
-            toast.success("Payment status updated.");
+            toast.success(tr("Payment status updated."));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;

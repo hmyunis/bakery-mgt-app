@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { inventoryService } from "../services/inventoryService";
@@ -58,7 +59,7 @@ export function useIngredient(id: number | null) {
     return useQuery({
         queryKey: ["ingredients", id],
         queryFn: async () => {
-            if (!id) throw new Error("Invalid ingredient ID");
+            if (!id) throw new Error(tr("Invalid ingredient ID"));
             return await inventoryService.getIngredient(id);
         },
         enabled: !!id,
@@ -77,7 +78,7 @@ export function useCreateIngredient() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["ingredients"] });
-            toast.success("Ingredient created successfully");
+            toast.success(tr("Ingredient created successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -109,7 +110,7 @@ export function useUpdateIngredient() {
         onSuccess: (updatedIngredient) => {
             queryClient.invalidateQueries({ queryKey: ["ingredients"] });
             queryClient.setQueryData(["ingredients", updatedIngredient.id], updatedIngredient);
-            toast.success("Ingredient updated successfully");
+            toast.success(tr("Ingredient updated successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -142,7 +143,7 @@ export function useDeleteIngredient() {
             queryClient.invalidateQueries({ queryKey: ["ingredients"] });
             queryClient.invalidateQueries({ queryKey: ["purchases"] });
             queryClient.removeQueries({ queryKey: ["ingredients", id] });
-            toast.success("Ingredient deleted successfully");
+            toast.success(tr("Ingredient deleted successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -191,7 +192,7 @@ export function usePurchase(id: number | null) {
     return useQuery({
         queryKey: ["purchases", id],
         queryFn: async () => {
-            if (!id) throw new Error("Invalid purchase ID");
+            if (!id) throw new Error(tr("Invalid purchase ID"));
             return await inventoryService.getPurchase(id);
         },
         enabled: !!id,
@@ -213,7 +214,7 @@ export function useCreatePurchase() {
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update stock levels
             queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
             queryClient.invalidateQueries({ queryKey: ["expenses"] });
-            toast.success("Purchase recorded successfully");
+            toast.success(tr("Purchase recorded successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -248,7 +249,7 @@ export function useUpdatePurchase() {
             queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
             queryClient.invalidateQueries({ queryKey: ["expenses"] });
             queryClient.setQueryData(["purchases", updatedPurchase.id], updatedPurchase);
-            toast.success("Purchase updated successfully");
+            toast.success(tr("Purchase updated successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -283,7 +284,7 @@ export function useDeletePurchase() {
             queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
             queryClient.invalidateQueries({ queryKey: ["expenses"] });
             queryClient.removeQueries({ queryKey: ["purchases", id] });
-            toast.success("Purchase deleted successfully");
+            toast.success(tr("Purchase deleted successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -320,7 +321,7 @@ export function useStockAdjustment(id: number | null) {
     return useQuery({
         queryKey: ["stock-adjustments", id],
         queryFn: async () => {
-            if (!id) throw new Error("Invalid stock adjustment ID");
+            if (!id) throw new Error(tr("Invalid stock adjustment ID"));
             return await inventoryService.getStockAdjustment(id);
         },
         enabled: !!id,
@@ -379,7 +380,7 @@ export function useDeleteStockAdjustment() {
             queryClient.invalidateQueries({ queryKey: ["stock-adjustments"] });
             queryClient.invalidateQueries({ queryKey: ["ingredients"] }); // Update stock levels
             queryClient.removeQueries({ queryKey: ["stock-adjustments", id] });
-            toast.success("Stock adjustment deleted successfully");
+            toast.success(tr("Stock adjustment deleted successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -410,7 +411,7 @@ export function useCreateKitchenTransfer() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["ingredients"] });
             queryClient.invalidateQueries({ queryKey: ["kitchen-transfers"] });
-            toast.success("Kitchen store restocked successfully.");
+            toast.success(tr("Kitchen store restocked successfully."));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;

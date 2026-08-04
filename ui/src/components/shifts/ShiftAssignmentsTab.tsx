@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@heroui/react";
 import { Plus } from "lucide-react";
@@ -164,14 +165,14 @@ export function ShiftAssignmentsTab() {
 
                 <div className="flex items-center gap-2">
                     <Button variant="flat" onPress={openBulkModal}>
-                        Bulk Create
+                        {tr("Bulk Create")}
                     </Button>
                     <Button
                         color="primary"
                         onPress={openCreateModal}
                         startContent={<Plus className="h-5 w-5" />}
                     >
-                        Add Assignment
+                        {tr("Add Assignment")}
                     </Button>
                 </div>
             </div>

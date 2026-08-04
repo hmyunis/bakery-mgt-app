@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@heroui/react";
 import { Plus } from "lucide-react";
@@ -115,7 +116,7 @@ export function LeavesTab() {
                     onPress={openCreateModal}
                     startContent={<Plus className="h-5 w-5" />}
                 >
-                    Add Leave
+                    {tr("Add Leave")}
                 </Button>
             </div>
 

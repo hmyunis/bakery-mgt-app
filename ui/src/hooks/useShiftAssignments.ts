@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -39,7 +40,7 @@ export function useCreateShiftAssignment() {
             shiftAssignmentService.createShiftAssignment(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["shift-assignments"] });
-            toast.success("Shift assignment created");
+            toast.success(tr("Shift assignment created"));
         },
         onError: (error: unknown) => {
             toast.error(shiftAssignmentService.parseApiError(error));
@@ -55,7 +56,7 @@ export function useUpdateShiftAssignment() {
             shiftAssignmentService.updateShiftAssignment(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["shift-assignments"] });
-            toast.success("Shift assignment updated");
+            toast.success(tr("Shift assignment updated"));
         },
         onError: (error: unknown) => {
             toast.error(shiftAssignmentService.parseApiError(error));
@@ -70,7 +71,7 @@ export function useDeleteShiftAssignment() {
         mutationFn: (id: number) => shiftAssignmentService.deleteShiftAssignment(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["shift-assignments"] });
-            toast.success("Shift assignment deleted");
+            toast.success(tr("Shift assignment deleted"));
         },
         onError: (error: unknown) => {
             toast.error(shiftAssignmentService.parseApiError(error));

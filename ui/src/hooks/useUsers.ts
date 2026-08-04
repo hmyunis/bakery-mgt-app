@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { userService } from "../services/userService";
@@ -38,7 +39,7 @@ export function useCreateUser() {
         mutationFn: (data: CreateUserData) => userService.createUser(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["users"] });
-            toast.success("User created successfully");
+            toast.success(tr("User created successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -74,7 +75,7 @@ export function useUpdateUser() {
                 setSession({ user: updatedUser });
             }
 
-            toast.success("User updated successfully");
+            toast.success(tr("User updated successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -101,7 +102,7 @@ export function useDeleteUser() {
         mutationFn: (id: number) => userService.deleteUser(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["users"] });
-            toast.success("User deleted successfully");
+            toast.success(tr("User deleted successfully"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;

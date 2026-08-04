@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState } from "react";
 import {
     Button,
@@ -88,11 +89,12 @@ export function FactoryResetForm() {
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-danger mb-1">
-                            Factory Reset Zone
+                            {tr("Factory Reset Zone")}
                         </h3>
                         <p className="text-sm text-danger-600 dark:text-danger-400">
-                            This area allows you to permanently delete data from the system. Please
-                            proceed with extreme caution. Deleted data cannot be recovered.
+                            {tr(
+                                "This area allows you to permanently delete data from the system. Please proceed with extreme caution. Deleted data cannot be recovered."
+                            )}
                         </p>
                     </div>
                 </CardBody>
@@ -100,14 +102,14 @@ export function FactoryResetForm() {
 
             <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                    <h4 className="text-md font-medium">Select Data to Wipe</h4>
+                    <h4 className="text-md font-medium">{tr("Select Data to Wipe")}</h4>
                     <Button
                         size="sm"
                         variant="flat"
                         color={hasSelectedOptions ? "default" : "primary"}
                         onPress={() => handleSelectAll(!hasSelectedOptions)}
                     >
-                        {hasSelectedOptions ? "Deselect All" : "Select All"}
+                        {hasSelectedOptions ? tr("Deselect All") : tr("Select All")}
                     </Button>
                 </div>
 
@@ -135,7 +137,7 @@ export function FactoryResetForm() {
                     isDisabled={!hasSelectedOptions}
                     onPress={onOpen}
                 >
-                    Proceed to Reset
+                    {tr("Proceed to Reset")}
                 </Button>
             </div>
 
@@ -155,18 +157,20 @@ export function FactoryResetForm() {
                             <ModalHeader className="flex flex-col gap-1 text-danger">
                                 <div className="flex items-center gap-2">
                                     <AlertTriangle className="h-5 w-5" />
-                                    Confirm Factory Reset
+                                    {tr("Confirm Factory Reset")}
                                 </div>
                             </ModalHeader>
                             <ModalBody className="py-6">
                                 <p className="text-sm text-default-500 mb-4">
-                                    You are about to permanently delete the selected data. This
-                                    action <strong>cannot be undone</strong>.
+                                    {tr(
+                                        "You are about to permanently delete the selected data. This action"
+                                    )}
+                                    <strong>{tr("cannot be undone")}</strong>.
                                 </p>
 
                                 <div className="bg-default-100 p-3 rounded-lg mb-4">
                                     <p className="text-xs font-semibold text-default-500 mb-2 uppercase">
-                                        Selected for deletion:
+                                        {tr("Selected for deletion:")}
                                     </p>
                                     <ul className="list-disc list-inside text-sm text-default-700 space-y-1">
                                         {Object.entries(selectedOptions)
@@ -178,14 +182,16 @@ export function FactoryResetForm() {
                                 </div>
 
                                 <Input
-                                    label="Admin Password"
-                                    placeholder="Enter your password to confirm"
+                                    label={tr("Admin Password")}
+                                    placeholder={tr("Enter your password to confirm")}
                                     type="password"
                                     variant="bordered"
                                     color="danger"
                                     value={password}
                                     onValueChange={setPassword}
-                                    description="Please enter your password to confirm this action."
+                                    description={tr(
+                                        "Please enter your password to confirm this action."
+                                    )}
                                     classNames={{
                                         input: "!text-default-900",
                                     }}
@@ -193,7 +199,7 @@ export function FactoryResetForm() {
                             </ModalBody>
                             <ModalFooter>
                                 <Button variant="light" onPress={onClose}>
-                                    Cancel
+                                    {tr("Cancel")}
                                 </Button>
                                 <Button
                                     color="danger"
@@ -201,7 +207,7 @@ export function FactoryResetForm() {
                                     isLoading={isPending}
                                     isDisabled={!password}
                                 >
-                                    Confirm Reset
+                                    {tr("Confirm Reset")}
                                 </Button>
                             </ModalFooter>
                         </>

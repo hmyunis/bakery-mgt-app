@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import React from "react";
 import { Input } from "@heroui/input";
 import { Search } from "lucide-react";
@@ -21,7 +22,7 @@ export const ShiftTemplateFilterCard: React.FC<ShiftTemplateFilterCardProps> = (
         `}
             >
                 <Input
-                    placeholder="Search shift templates..."
+                    placeholder={tr("Search shift templates...")}
                     value={searchQuery}
                     onValueChange={onSearchChange}
                     startContent={<Search className="h-5 w-5 text-slate-400" />}

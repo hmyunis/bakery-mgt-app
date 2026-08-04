@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { Spinner } from "@heroui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
@@ -47,24 +48,26 @@ type SalesPerformanceDay = OwnerDashboardResponse["salesPerformance"]["lastThree
 const salesPerformanceColumns: ColumnDef<SalesPerformanceDay>[] = [
     {
         accessorKey: "date",
-        header: "Day",
+        header: tr("Day"),
         cell: ({ row }) => (
-            <span className="font-medium text-[var(--fg)]">{formatDateShort(row.original.date)}</span>
+            <span className="font-medium text-[var(--fg)]">
+                {formatDateShort(row.original.date)}
+            </span>
         ),
     },
     {
         accessorKey: "salesTotal",
-        header: "Sales",
+        header: tr("Sales"),
         cell: ({ row }) => `${formatMoney(row.original.salesTotal)} ETB`,
     },
     {
         accessorKey: "productionCost",
-        header: "Production Cost",
+        header: tr("Production Cost"),
         cell: ({ row }) => `${formatMoney(row.original.productionCost)} ETB`,
     },
     {
         id: "net",
-        header: "Net",
+        header: tr("Net"),
         cell: ({ row }) => {
             const net = row.original.salesTotal - row.original.productionCost;
             return (
@@ -75,7 +78,7 @@ const salesPerformanceColumns: ColumnDef<SalesPerformanceDay>[] = [
                             : "font-medium text-red-600 dark:text-red-400"
                     }
                 >
-                    {formatMoney(net)} ETB
+                    {formatMoney(net)} {tr("ETB")}
                 </span>
             );
         },
@@ -91,10 +94,10 @@ export function DashboardPage() {
     if (!isAdmin) {
         return (
             <div className="space-y-6">
-                <PageTitle title="Dashboard" subtitle="High-level overview." />
+                <PageTitle title={tr("Dashboard")} subtitle={tr("High-level overview.")} />
                 <div className="rounded-xl border border-white/10 bg-[var(--panel)]/80 backdrop-blur-xl p-6">
                     <p className="text-sm text-[var(--muted)]">
-                        You do not have dashboard permission.
+                        {tr("You do not have dashboard permission.")}
                     </p>
                 </div>
             </div>
@@ -112,10 +115,10 @@ export function DashboardPage() {
     if (isError || !data) {
         return (
             <div className="space-y-6">
-                <PageTitle title="Dashboard" subtitle="High-level oversight." />
+                <PageTitle title={tr("Dashboard")} subtitle={tr("High-level oversight.")} />
                 <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
                     <p className="text-sm text-red-600 dark:text-red-400">
-                        Failed to load dashboard data. Please refresh.
+                        {tr("Failed to load dashboard data. Please refresh.")}
                     </p>
                 </div>
             </div>
@@ -135,7 +138,10 @@ export function DashboardPage() {
 
     return (
         <div className="space-y-6">
-            <PageTitle title="Dashboard" subtitle="High-level oversight and analytics." />
+            <PageTitle
+                title={tr("Dashboard")}
+                subtitle={tr("High-level oversight and analytics.")}
+            />
 
             {/* Key Metrics Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -143,18 +149,21 @@ export function DashboardPage() {
                 <div className="sm:col-span-2 rounded-xl p-6 border border-slate-300 dark:border-slate-700 bg-gradient-to-br from-indigo-600/90 via-purple-600/90 to-fuchsia-600/90 text-white shadow-lg">
                     <div className="flex items-center justify-between mb-3">
                         <ShoppingCart className="h-6 w-6 text-white/90" />
-                        <span className="text-sm text-white/80">Today</span>
+                        <span className="text-sm text-white/80">{tr("Today")}</span>
                     </div>
                     <div className="text-4xl font-bold mb-2">
-                        {formatMoney(data.salesToday.total)} ETB
+                        {formatMoney(data.salesToday.total)} {tr("ETB")}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-white/80">
                         <span>
-                            {data.salesToday.count} sale
+                            {data.salesToday.count} {tr("sale")}
                             {data.salesToday.count !== 1 ? "s" : ""}
                         </span>
                         {data.salesToday.count > 0 && (
-                            <span>Avg: {formatMoney(data.salesToday.average)} ETB</span>
+                            <span>
+                                {tr("Avg:")}
+                                {formatMoney(data.salesToday.average)} {tr("ETB")}
+                            </span>
                         )}
                     </div>
                 </div>
@@ -163,13 +172,13 @@ export function DashboardPage() {
                 <div className="rounded-xl p-5 border border-slate-300 dark:border-slate-700 bg-[var(--panel)]/80 backdrop-blur-xl">
                     <div className="flex items-center justify-between mb-2">
                         <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
-                        <span className="text-xs text-[var(--muted)]">Inventory</span>
+                        <span className="text-xs text-[var(--muted)]">{tr("Inventory")}</span>
                     </div>
                     <div className="text-2xl font-bold text-[var(--fg)]">
-                        {formatMoney(data.inventoryStats.totalValue)} ETB
+                        {formatMoney(data.inventoryStats.totalValue)} {tr("ETB")}
                     </div>
                     <div className="text-sm text-[var(--muted)] mt-1">
-                        {data.inventoryStats.totalItems} items
+                        {data.inventoryStats.totalItems} {tr("items")}
                     </div>
                 </div>
 
@@ -177,12 +186,12 @@ export function DashboardPage() {
                 <div className="rounded-xl p-5 border border-slate-300 dark:border-slate-700 bg-[var(--panel)]/80 backdrop-blur-xl">
                     <div className="flex items-center justify-between mb-2">
                         <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                        <span className="text-xs text-[var(--muted)]">Alerts</span>
+                        <span className="text-xs text-[var(--muted)]">{tr("Alerts")}</span>
                     </div>
                     <div className="text-2xl font-bold text-[var(--fg)]">
                         {data.inventoryStats.lowStockCount}
                     </div>
-                    <div className="text-sm text-[var(--muted)] mt-1">Low stock items</div>
+                    <div className="text-sm text-[var(--muted)] mt-1">{tr("Low stock items")}</div>
                 </div>
             </div>
 
@@ -194,10 +203,12 @@ export function DashboardPage() {
                         <div className="flex items-center gap-2 mb-1">
                             <BarChart3 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                             <div className="text-base font-medium text-[var(--fg)]">
-                                Sales by Hour
+                                {tr("Sales by Hour")}
                             </div>
                         </div>
-                        <div className="text-sm text-[var(--muted)]">Last 12 hours revenue</div>
+                        <div className="text-sm text-[var(--muted)]">
+                            {tr("Last 12 hours revenue")}
+                        </div>
                     </div>
                     <SalesByHourChart data={data.salesByHour} />
                 </div>
@@ -208,10 +219,12 @@ export function DashboardPage() {
                         <div className="flex items-center gap-2 mb-1">
                             <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                             <div className="text-base font-medium text-[var(--fg)]">
-                                Top Products Today
+                                {tr("Top Products Today")}
                             </div>
                         </div>
-                        <div className="text-sm text-[var(--muted)]">Best sellers by revenue</div>
+                        <div className="text-sm text-[var(--muted)]">
+                            {tr("Best sellers by revenue")}
+                        </div>
                     </div>
                     <TopProductsChart data={data.topProductsToday} />
                 </div>
@@ -225,17 +238,17 @@ export function DashboardPage() {
                         <div className="flex items-center gap-2 mb-1">
                             <ChefHat className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                             <div className="text-base font-medium text-[var(--fg)]">
-                                Recent Production Runs
+                                {tr("Recent Production Runs")}
                             </div>
                         </div>
                         <div className="text-sm text-[var(--muted)]">
-                            Today's production activity
+                            {tr("Today's production activity")}
                         </div>
                     </div>
 
                     {data.recentProductionRuns.length === 0 ? (
                         <div className="text-sm text-[var(--muted)] py-4">
-                            No production runs today.
+                            {tr("No production runs today.")}
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -247,15 +260,15 @@ export function DashboardPage() {
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="min-w-0 flex-1">
                                             <div className="font-medium text-[var(--fg)] truncate">
-                                                {run.itemName ?? "Production"}
+                                                {run.itemName ?? tr("Production")}
                                             </div>
                                             <div className="text-xs text-[var(--muted)] truncate">
-                                                {run.chefName ? `By ${run.chefName}` : "System"} ·{" "}
-                                                {formatDateTime(run.producedAt)}
+                                                {run.chefName ? `By ${run.chefName}` : tr("System")}{" "}
+                                                · {formatDateTime(run.producedAt)}
                                             </div>
                                         </div>
                                         <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 text-nowrap">
-                                            {formatMoney(run.quantityProduced)} units
+                                            {formatMoney(run.quantityProduced)} {tr("units")}
                                         </div>
                                     </div>
                                 </div>
@@ -270,29 +283,31 @@ export function DashboardPage() {
                         <div className="flex items-center gap-2 mb-1">
                             <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                             <div className="text-base font-medium text-[var(--fg)]">
-                                Sales Performance
+                                {tr("Sales Performance")}
                             </div>
                         </div>
                         <div className="text-sm text-[var(--muted)]">
-                            Compared to the previous 3 days
+                            {tr("Compared to the previous 3 days")}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
-                            <div className="text-xs text-[var(--muted)]">Today</div>
+                            <div className="text-xs text-[var(--muted)]">{tr("Today")}</div>
                             <div className="text-lg font-bold text-[var(--fg)]">
-                                {formatMoney(salesPerformance.todayTotal)} ETB
+                                {formatMoney(salesPerformance.todayTotal)} {tr("ETB")}
                             </div>
                         </div>
                         <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
-                            <div className="text-xs text-[var(--muted)]">Avg (last 3 days)</div>
+                            <div className="text-xs text-[var(--muted)]">
+                                {tr("Avg (last 3 days)")}
+                            </div>
                             <div className="text-lg font-bold text-[var(--fg)]">
-                                {formatMoney(salesPerformance.lastThreeDaysAverage)} ETB
+                                {formatMoney(salesPerformance.lastThreeDaysAverage)} {tr("ETB")}
                             </div>
                         </div>
                         <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
-                            <div className="text-xs text-[var(--muted)]">Change</div>
+                            <div className="text-xs text-[var(--muted)]">{tr("Change")}</div>
                             {salesPerformance.changePercent === null ? (
                                 <div className="text-lg font-bold text-[var(--muted)]">—</div>
                             ) : (
@@ -328,9 +343,9 @@ export function DashboardPage() {
                 <div className="lg:col-span-2 overflow-auto rounded-xl border border-slate-300 dark:border-slate-700 bg-[var(--panel)]/80 backdrop-blur-xl p-4 sm:p-6">
                     <div className="mb-4">
                         <div className="text-base font-medium text-[var(--fg)]">
-                            Payment Methods
+                            {tr("Payment Methods")}
                         </div>
-                        <div className="text-sm text-[var(--muted)]">Today's split</div>
+                        <div className="text-sm text-[var(--muted)]">{tr("Today's split")}</div>
                     </div>
                     <CashVsDigitalPie
                         cash={data.cashVsDigitalSplit.cash}
@@ -344,16 +359,18 @@ export function DashboardPage() {
                         <div className="flex items-center gap-2">
                             <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                             <div className="text-base font-medium text-[var(--fg)]">
-                                Critical Stock Alerts
+                                {tr("Critical Stock Alerts")}
                             </div>
                         </div>
                         <div className="text-sm text-[var(--muted)]">
-                            Ingredients below reorder point
+                            {tr("Ingredients below reorder point")}
                         </div>
                     </div>
 
                     {data.criticalStockAlerts.length === 0 ? (
-                        <div className="text-sm text-[var(--muted)] py-4">No critical items.</div>
+                        <div className="text-sm text-[var(--muted)] py-4">
+                            {tr("No critical items.")}
+                        </div>
                     ) : (
                         <div className="space-y-3">
                             {data.criticalStockAlerts.map((i) => (
@@ -366,15 +383,19 @@ export function DashboardPage() {
                                             {i.name}
                                         </div>
                                         <div className="text-xs text-[var(--muted)]">
-                                            Stock: {formatMoney(i.currentStock)} {i.unit} / Reorder:{" "}
-                                            {formatMoney(i.reorderPoint)} {i.unit}
+                                            {tr("Stock:")}
+                                            {formatMoney(i.currentStock)} {i.unit}{" "}
+                                            {tr("/ Reorder:")} {formatMoney(i.reorderPoint)}{" "}
+                                            {i.unit}
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <div className="text-sm font-semibold text-red-600 dark:text-red-400">
                                             -{formatMoney(i.shortfall)} {i.unit}
                                         </div>
-                                        <div className="text-xs text-[var(--muted)]">shortfall</div>
+                                        <div className="text-xs text-[var(--muted)]">
+                                            {tr("shortfall")}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -389,15 +410,17 @@ export function DashboardPage() {
                 <div className="lg:col-span-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-[var(--panel)]/80 backdrop-blur-xl p-6">
                     <div className="mb-4">
                         <div className="text-base font-medium text-[var(--fg)]">
-                            Recent Production Wastage
+                            {tr("Recent Production Wastage")}
                         </div>
                         <div className="text-sm text-[var(--muted)]">
-                            Latest positive wastage entries
+                            {tr("Latest positive wastage entries")}
                         </div>
                     </div>
 
                     {data.recentProductionWastage.length === 0 ? (
-                        <div className="text-sm text-[var(--muted)] py-4">No wastage recorded.</div>
+                        <div className="text-sm text-[var(--muted)] py-4">
+                            {tr("No wastage recorded.")}
+                        </div>
                     ) : (
                         <div className="space-y-3">
                             {data.recentProductionWastage.map((w) => (
@@ -411,8 +434,9 @@ export function DashboardPage() {
                                                 {w.ingredientName}
                                             </div>
                                             <div className="text-xs text-[var(--muted)] truncate">
-                                                Run #{w.productionRunId} ·{" "}
-                                                {w.producedItemName ?? "Production"} ·{" "}
+                                                {tr("Run #")}
+                                                {w.productionRunId} ·{" "}
+                                                {w.producedItemName ?? tr("Production")} ·{" "}
                                                 {formatDateTime(w.producedAt)}
                                             </div>
                                         </div>
@@ -432,10 +456,12 @@ export function DashboardPage() {
                         <div className="flex items-center gap-2 mb-1">
                             <ShieldAlert className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                             <div className="text-base font-medium text-[var(--fg)]">
-                                Audit Insights
+                                {tr("Audit Insights")}
                             </div>
                         </div>
-                        <div className="text-sm text-[var(--muted)]">Last 24 hours activity</div>
+                        <div className="text-sm text-[var(--muted)]">
+                            {tr("Last 24 hours activity")}
+                        </div>
                     </div>
 
                     <div className="space-y-4">
@@ -444,26 +470,26 @@ export function DashboardPage() {
                                 <div className="text-lg font-bold text-red-600 dark:text-red-400">
                                     {data.auditInsights.deleteCount}
                                 </div>
-                                <div className="text-xs text-[var(--muted)]">Deletes</div>
+                                <div className="text-xs text-[var(--muted)]">{tr("Deletes")}</div>
                             </div>
                             <div className="text-center p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
                                 <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
                                     {data.auditInsights.updateCount}
                                 </div>
-                                <div className="text-xs text-[var(--muted)]">Updates</div>
+                                <div className="text-xs text-[var(--muted)]">{tr("Updates")}</div>
                             </div>
                             <div className="text-center p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
                                 <div className="text-lg font-bold text-green-600 dark:text-green-400">
                                     {data.auditInsights.createCount}
                                 </div>
-                                <div className="text-xs text-[var(--muted)]">Creates</div>
+                                <div className="text-xs text-[var(--muted)]">{tr("Creates")}</div>
                             </div>
                         </div>
 
                         {data.auditInsights.recentDeletes.length > 0 && (
                             <div>
                                 <div className="text-xs font-medium text-[var(--muted)] mb-2">
-                                    Recent Delete Actions
+                                    {tr("Recent Delete Actions")}
                                 </div>
                                 <div className="space-y-2">
                                     {data.auditInsights.recentDeletes.map((del) => (

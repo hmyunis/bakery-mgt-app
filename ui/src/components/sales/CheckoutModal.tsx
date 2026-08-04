@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState, useMemo } from "react";
 import {
     Modal,
@@ -130,17 +131,17 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
 
     const handleSubmit = async () => {
         if (cartItems.length === 0) {
-            toast.error("Cart is empty");
+            toast.error(tr("Cart is empty"));
             return;
         }
 
         if (!isFullyPaid) {
-            toast.error("Payment amount must cover the total bill");
+            toast.error(tr("Payment amount must cover the total bill"));
             return;
         }
 
         if (payments.length === 0) {
-            toast.error("Please add at least one payment method");
+            toast.error(tr("Please add at least one payment method"));
             return;
         }
 
@@ -149,7 +150,9 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
         const inactivePayments = payments.filter((p) => !activePaymentMethodIds.has(p.method.id));
         if (inactivePayments.length > 0) {
             toast.error(
-                "One or more selected payment methods are no longer active. Please select different payment methods."
+                tr(
+                    "One or more selected payment methods are no longer active. Please select different payment methods."
+                )
             );
             return;
         }
@@ -157,7 +160,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
         // Validate all payment amounts are positive
         const invalidPayments = payments.filter((p) => p.amount <= 0);
         if (invalidPayments.length > 0) {
-            toast.error("All payment amounts must be greater than zero");
+            toast.error(tr("All payment amounts must be greater than zero"));
             return;
         }
 
@@ -192,7 +195,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                 <ModalHeader className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <CreditCard className="h-5 w-5" />
-                        <span>Checkout</span>
+                        <span>{tr("Checkout")}</span>
                     </div>
                 </ModalHeader>
                 <ModalBody>
@@ -200,7 +203,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                         {/* Order Summary */}
                         <div>
                             <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                                Order Summary
+                                {tr("Order Summary")}
                             </h4>
                             <div className="space-y-2">
                                 {cartItems.map((item) => (
@@ -212,7 +215,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                             {item.product.name} × {item.quantity}
                                         </span>
                                         <span className="text-zinc-900 dark:text-zinc-100 font-medium">
-                                            ETB{" "}
+                                            {tr("ETB")}{" "}
                                             {(item.product.selling_price * item.quantity).toFixed(
                                                 2
                                             )}
@@ -223,10 +226,11 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                             <Divider className="my-3" />
                             <div className="flex justify-between items-center">
                                 <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                                    Total:
+                                    {tr("Total:")}
                                 </span>
                                 <span className="text-xl font-bold text-primary">
-                                    ETB {totalAmount.toFixed(2)}
+                                    {tr("ETB")}
+                                    {totalAmount.toFixed(2)}
                                 </span>
                             </div>
                         </div>
@@ -235,7 +239,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                         <div>
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                                    Payment Methods
+                                    {tr("Payment Methods")}
                                 </h4>
                                 {payments.length < paymentMethods.length && (
                                     <Button
@@ -244,7 +248,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                         onPress={addPaymentMethod}
                                         startContent={<Plus className="h-4 w-4" />}
                                     >
-                                        Add Payment
+                                        {tr("Add Payment")}
                                     </Button>
                                 )}
                             </div>
@@ -282,14 +286,16 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                                         );
                                                     }
                                                 }}
-                                                placeholder="Select payment method"
-                                                aria-label="Select payment method"
+                                                placeholder={tr("Select payment method")}
+                                                aria-label={tr("Select payment method")}
                                                 classNames={{
                                                     base: "flex-1 !w-full !text-left",
                                                     trigger:
                                                         "dark:!bg-zinc-800 !w-full !text-left !text-slate-900 dark:!text-slate-100",
                                                     value: "!text-slate-900 dark:!text-slate-100",
-                                                    label: "!w-full !text-left !text-slate-700 dark:!text-slate-300",
+                                                    label: tr(
+                                                        "!w-full !text-left !text-slate-700 dark:!text-slate-300"
+                                                    ),
                                                     selectorIcon:
                                                         "text-slate-500 dark:text-slate-400",
                                                 }}
@@ -313,7 +319,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                                     min="0"
                                                     startContent={
                                                         <span className="text-zinc-500 text-sm">
-                                                            ETB
+                                                            {tr("ETB")}
                                                         </span>
                                                     }
                                                     classNames={{
@@ -329,7 +335,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                                                 setRemainingAsAmount(index)
                                                             }
                                                         >
-                                                            Use Remaining
+                                                            {tr("Use Remaining")}
                                                         </Button>
                                                     )}
                                             </div>
@@ -351,7 +357,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
 
                             {payments.length === 0 && (
                                 <Alert color="warning" variant="flat" className="mt-2">
-                                    Please add a payment method
+                                    {tr("Please add a payment method")}
                                 </Alert>
                             )}
                         </div>
@@ -360,14 +366,17 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-zinc-600 dark:text-zinc-400">
-                                    Paid Amount:
+                                    {tr("Paid Amount:")}
                                 </span>
                                 <span className="text-zinc-900 dark:text-zinc-100 font-medium">
-                                    ETB {paidAmount.toFixed(2)}
+                                    {tr("ETB")}
+                                    {paidAmount.toFixed(2)}
                                 </span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-600 dark:text-zinc-400">Remaining:</span>
+                                <span className="text-zinc-600 dark:text-zinc-400">
+                                    {tr("Remaining:")}
+                                </span>
                                 <span
                                     className={`font-medium ${
                                         remainingAmount > 0
@@ -375,12 +384,14 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                             : "text-success-600 dark:text-success-400"
                                     }`}
                                 >
-                                    ETB {remainingAmount.toFixed(2)}
+                                    {tr("ETB")}
+                                    {remainingAmount.toFixed(2)}
                                 </span>
                             </div>
                             {remainingAmount < 0 && (
                                 <Alert color="warning" variant="flat" className="mt-2">
-                                    Change: ETB {Math.abs(remainingAmount).toFixed(2)}
+                                    {tr("Change: ETB")}
+                                    {Math.abs(remainingAmount).toFixed(2)}
                                 </Alert>
                             )}
                         </div>
@@ -393,7 +404,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                         isDisabled={isCreating}
                         className="!text-zinc-700 dark:!text-zinc-300"
                     >
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button
                         color="primary"
@@ -402,7 +413,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                         isDisabled={!isFullyPaid || payments.length === 0}
                         startContent={<CreditCard className="h-4 w-4" />}
                     >
-                        Complete Sale
+                        {tr("Complete Sale")}
                     </Button>
                 </ModalFooter>
             </ModalContent>

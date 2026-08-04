@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -58,9 +59,9 @@ function ShiftTemplateFormContent({
 
     const validateForm = () => {
         const nextErrors: Record<string, string> = {};
-        if (!formData.name.trim()) nextErrors.name = "Name is required";
-        if (!formData.startTime) nextErrors.startTime = "Start time is required";
-        if (!formData.endTime) nextErrors.endTime = "End time is required";
+        if (!formData.name.trim()) nextErrors.name = tr("Name is required");
+        if (!formData.startTime) nextErrors.startTime = tr("Start time is required");
+        if (!formData.endTime) nextErrors.endTime = tr("End time is required");
         setErrors(nextErrors);
         return Object.keys(nextErrors).length === 0;
     };
@@ -103,10 +104,12 @@ function ShiftTemplateFormContent({
 
     return (
         <>
-            <ModalHeader>{isEdit ? "Edit Shift Template" : "Create Shift Template"}</ModalHeader>
+            <ModalHeader>
+                {isEdit ? tr("Edit Shift Template") : tr("Create Shift Template")}
+            </ModalHeader>
             <ModalBody className="space-y-4">
                 <Input
-                    label="Name"
+                    label={tr("Name")}
                     value={formData.name}
                     onValueChange={(v) => handleInputChange("name", v)}
                     isRequired
@@ -119,7 +122,7 @@ function ShiftTemplateFormContent({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <TimeInput
-                        label="Start Time"
+                        label={tr("Start Time")}
                         value={startTimeValue}
                         onChange={(t) =>
                             handleInputChange(
@@ -134,7 +137,7 @@ function ShiftTemplateFormContent({
                     />
 
                     <TimeInput
-                        label="End Time"
+                        label={tr("End Time")}
                         value={endTimeValue}
                         onChange={(t) =>
                             handleInputChange("endTime", t ? String(t.toString()).slice(0, 5) : "")
@@ -150,15 +153,15 @@ function ShiftTemplateFormContent({
                     isSelected={formData.isActive}
                     onValueChange={(v) => handleInputChange("isActive", v)}
                 >
-                    Active
+                    {tr("Active")}
                 </Switch>
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose} isDisabled={isLoading}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    {isEdit ? "Save Changes" : "Create"}
+                    {isEdit ? tr("Save Changes") : tr("Create")}
                 </Button>
             </ModalFooter>
         </>

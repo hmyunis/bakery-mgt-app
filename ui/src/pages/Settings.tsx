@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import React, { useState } from "react";
 import { Tabs, Tab, Spinner } from "@heroui/react";
 import { Store, Trash2 } from "lucide-react";
@@ -104,14 +105,14 @@ const SettingsPage: React.FC = () => {
             // Success
             setIsEditing(false);
             setPasswordForm({ oldPassword: "", newPassword: "" });
-            toast.success("Profile updated successfully!");
+            toast.success(tr("Profile updated successfully!"));
         } catch (error: unknown) {
             console.error("Error saving profile:", error);
             const apiError = error as ApiError;
 
             // Extract error message from response
             const errorData = apiError.response?.data as ApiErrorResponse;
-            let errorMessage = "Failed to update profile. Please try again.";
+            let errorMessage = tr("Failed to update profile. Please try again.");
 
             if (errorData) {
                 // Handle specific field errors
@@ -162,13 +163,13 @@ const SettingsPage: React.FC = () => {
     return (
         <div className="space-y-6">
             <PageTitle
-                title="Settings"
-                subtitle="Manage your profile information and account settings"
+                title={tr("Settings")}
+                subtitle={tr("Manage your profile information and account settings")}
             />
 
             {/* Settings Content */}
             <Tabs
-                aria-label="Settings"
+                aria-label={tr("Settings")}
                 color="primary"
                 variant="underlined"
                 classNames={{
@@ -176,7 +177,7 @@ const SettingsPage: React.FC = () => {
                     tab: "whitespace-nowrap",
                 }}
             >
-                <Tab key="profile" title="Profile">
+                <Tab key="profile" title={tr("Profile")}>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <ProfileSummaryCard profile={user} />
                         <ProfileForm
@@ -202,7 +203,7 @@ const SettingsPage: React.FC = () => {
                         title={
                             <div className="flex items-center gap-2">
                                 <BarChart3 className="h-4 w-4" />
-                                <span>Reports</span>
+                                <span>{tr("Reports")}</span>
                             </div>
                         }
                     >
@@ -218,7 +219,7 @@ const SettingsPage: React.FC = () => {
                         title={
                             <div className="flex items-center gap-2">
                                 <Store className="h-4 w-4" />
-                                <span>Bakery Information</span>
+                                <span>{tr("Bakery Information")}</span>
                             </div>
                         }
                     >
@@ -234,7 +235,7 @@ const SettingsPage: React.FC = () => {
                         title={
                             <div className="flex items-center gap-2 text-danger">
                                 <Trash2 className="h-4 w-4" />
-                                <span>Factory Reset</span>
+                                <span>{tr("Factory Reset")}</span>
                             </div>
                         }
                     >

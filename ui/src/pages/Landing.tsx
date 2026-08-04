@@ -28,6 +28,8 @@ import { useThemeInit } from "../hooks/useThemeInit";
 import { useThemeColor } from "../hooks/useThemeColor";
 import { useAppDispatch, useAppSelector } from "../store";
 import { toggleMode } from "../store/settingsSlice";
+import { LanguageToggle } from "../components/ui/LanguageToggle";
+import { useTranslation, tr } from "../locales";
 
 function scrollToSection(id: string) {
     const el = document.getElementById(id);
@@ -41,6 +43,7 @@ export function LandingPage() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const dispatch = useAppDispatch();
     const { mode } = useAppSelector((s) => s.settings);
+    const { t } = useTranslation();
 
     useThemeInit();
     useThemeColor(bakerySettings?.themeColor);
@@ -53,11 +56,11 @@ export function LandingPage() {
     const mapOpenUrl = `https://www.google.com/maps?q=${mapQuery}`;
 
     const navLinks = [
-        { id: "home", label: "Home" },
-        { id: "about", label: "About" },
-        { id: "services", label: "Services" },
-        { id: "cta", label: "Order" },
-        { id: "contact", label: "Contact" },
+        { id: "home", label: tr("Home") },
+        { id: "about", label: tr("About") },
+        { id: "services", label: tr("Services") },
+        { id: "cta", label: tr("Order") },
+        { id: "contact", label: tr("Contact") },
     ];
 
     const socialLinks = useMemo(() => {
@@ -67,42 +70,42 @@ export function LandingPage() {
                 enabled: bakerySettings?.facebookEnabled && !!bakerySettings?.facebookUrl?.trim(),
                 url: bakerySettings?.facebookUrl?.trim() || "",
                 Icon: Facebook,
-                label: "Facebook",
+                label: tr("Facebook"),
             },
             {
                 key: "instagram",
                 enabled: bakerySettings?.instagramEnabled && !!bakerySettings?.instagramUrl?.trim(),
                 url: bakerySettings?.instagramUrl?.trim() || "",
                 Icon: Instagram,
-                label: "Instagram",
+                label: tr("Instagram"),
             },
             {
                 key: "telegram",
                 enabled: bakerySettings?.telegramEnabled && !!bakerySettings?.telegramUrl?.trim(),
                 url: bakerySettings?.telegramUrl?.trim() || "",
                 Icon: Send,
-                label: "Telegram",
+                label: tr("Telegram"),
             },
             {
                 key: "tiktok",
                 enabled: bakerySettings?.tiktokEnabled && !!bakerySettings?.tiktokUrl?.trim(),
                 url: bakerySettings?.tiktokUrl?.trim() || "",
                 Icon: Music2,
-                label: "TikTok",
+                label: tr("TikTok"),
             },
             {
                 key: "youtube",
                 enabled: bakerySettings?.youtubeEnabled && !!bakerySettings?.youtubeUrl?.trim(),
                 url: bakerySettings?.youtubeUrl?.trim() || "",
                 Icon: Youtube,
-                label: "YouTube",
+                label: tr("YouTube"),
             },
             {
                 key: "x",
                 enabled: bakerySettings?.xEnabled && !!bakerySettings?.xUrl?.trim(),
                 url: bakerySettings?.xUrl?.trim() || "",
                 Icon: Twitter,
-                label: "X",
+                label: tr("X"),
             },
         ];
 
@@ -141,7 +144,7 @@ export function LandingPage() {
                         <div className="text-left leading-tight">
                             <div className="font-bold text-base sm:text-lg">{bakeryName}</div>
                             <div className="text-[11px] text-[var(--muted)]">
-                                Freshly baked, every day
+                                {tr("Freshly baked, every day")}
                             </div>
                         </div>
                     </button>
@@ -160,9 +163,10 @@ export function LandingPage() {
                     </nav>
 
                     <div className="flex items-center gap-2">
-                        <Tooltip content={mode === "dark" ? "Light mode" : "Dark mode"}>
+                        <LanguageToggle />
+                        <Tooltip content={mode === "dark" ? tr("Light mode") : tr("Dark mode")}>
                             <Switch
-                                aria-label="toggle theme"
+                                aria-label={tr("toggle theme")}
                                 isSelected={mode === "dark"}
                                 onValueChange={() => dispatch(toggleMode())}
                                 thumbIcon={
@@ -181,7 +185,7 @@ export function LandingPage() {
                             endContent={<ArrowRight className="size-4" />}
                             onPress={() => navigate("/login")}
                         >
-                            Login
+                            {t("signIn")}
                         </Button>
                         <Button
                             isIconOnly
@@ -217,7 +221,7 @@ export function LandingPage() {
                                 endContent={<ArrowRight className="size-4" />}
                                 onPress={() => navigate("/login")}
                             >
-                                Login
+                                {t("signIn")}
                             </Button>
                         </div>
                     </div>
@@ -239,19 +243,19 @@ export function LandingPage() {
                                     className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
                                 >
                                     <Sparkles className="size-4 mr-1" />
-                                    Freshly baked daily
+                                    {tr("Freshly baked daily")}
                                 </Chip>
                                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">
-                                    Artisan breads, cakes & pastries — made with love at{" "}
+                                    {tr("Artisan breads, cakes & pastries — made with love at")}{" "}
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500">
                                         {bakeryName}
                                     </span>
                                     .
                                 </h1>
                                 <p className="text-base sm:text-lg text-[var(--muted)] max-w-xl">
-                                    From warm sourdough to celebration cakes, we bring you the
-                                    comfort of fresh-baked goodness — perfect for mornings, events,
-                                    and everything in between.
+                                    {tr(
+                                        "From warm sourdough to celebration cakes, we bring you the comfort of fresh-baked goodness — perfect for mornings, events, and everything in between."
+                                    )}
                                 </p>
 
                                 <div className="flex flex-col sm:flex-row gap-3">
@@ -261,7 +265,7 @@ export function LandingPage() {
                                         startContent={<ShoppingBag className="size-4" />}
                                         onPress={() => scrollToSection("cta")}
                                     >
-                                        Order / Request a Quote
+                                        {tr("Order / Request a Quote")}
                                     </Button>
                                     <Button
                                         variant="bordered"
@@ -269,22 +273,22 @@ export function LandingPage() {
                                         startContent={<MapPin className="size-4" />}
                                         onPress={() => scrollToSection("contact")}
                                     >
-                                        Find Us
+                                        {tr("Find Us")}
                                     </Button>
                                 </div>
 
                                 <div className="flex flex-wrap gap-4 pt-2 text-sm text-[var(--muted)]">
                                     <div className="flex items-center gap-2">
                                         <Clock className="size-4" />
-                                        <span>Daily fresh batches</span>
+                                        <span>{tr("Daily fresh batches")}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Wheat className="size-4" />
-                                        <span>Premium ingredients</span>
+                                        <span>{tr("Premium ingredients")}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Coffee className="size-4" />
-                                        <span>Perfect with coffee</span>
+                                        <span>{tr("Perfect with coffee")}</span>
                                     </div>
                                 </div>
                             </div>
@@ -293,37 +297,47 @@ export function LandingPage() {
                                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)]/70 backdrop-blur-xl p-6 shadow-xl">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="rounded-2xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 p-4 border border-amber-500/10">
-                                            <div className="text-sm font-semibold">Breads</div>
+                                            <div className="text-sm font-semibold">
+                                                {tr("Breads")}
+                                            </div>
                                             <div className="text-xs text-[var(--muted)] mt-1">
-                                                Sourdough, baguettes, rolls
+                                                {tr("Sourdough, baguettes, rolls")}
                                             </div>
                                         </div>
                                         <div className="rounded-2xl bg-gradient-to-br from-rose-500/15 to-pink-500/10 p-4 border border-rose-500/10">
-                                            <div className="text-sm font-semibold">Cakes</div>
+                                            <div className="text-sm font-semibold">
+                                                {tr("Cakes")}
+                                            </div>
                                             <div className="text-xs text-[var(--muted)] mt-1">
-                                                Birthdays & weddings
+                                                {tr("Birthdays & weddings")}
                                             </div>
                                         </div>
                                         <div className="rounded-2xl bg-gradient-to-br from-indigo-500/15 to-purple-500/10 p-4 border border-indigo-500/10">
-                                            <div className="text-sm font-semibold">Pastries</div>
+                                            <div className="text-sm font-semibold">
+                                                {tr("Pastries")}
+                                            </div>
                                             <div className="text-xs text-[var(--muted)] mt-1">
-                                                Croissants & seasonal treats
+                                                {tr("Croissants & seasonal treats")}
                                             </div>
                                         </div>
                                         <div className="rounded-2xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 p-4 border border-emerald-500/10">
-                                            <div className="text-sm font-semibold">Custom</div>
+                                            <div className="text-sm font-semibold">
+                                                {tr("Custom")}
+                                            </div>
                                             <div className="text-xs text-[var(--muted)] mt-1">
-                                                Bulk orders & catering
+                                                {tr("Bulk orders & catering")}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="mt-5 rounded-2xl bg-[var(--bg)]/60 p-4 border border-[var(--border)]">
                                         <div className="flex items-center justify-between">
-                                            <div className="font-semibold">Today’s highlight</div>
+                                            <div className="font-semibold">
+                                                {tr("Today’s highlight")}
+                                            </div>
                                             <CakeSlice className="size-5 text-rose-500" />
                                         </div>
                                         <div className="text-sm text-[var(--muted)] mt-1">
-                                            Ask for our fresh-baked specials when you visit{" "}
+                                            {tr("Ask for our fresh-baked specials when you visit")}{" "}
                                             {bakeryName}.
                                         </div>
                                     </div>
@@ -340,59 +354,65 @@ export function LandingPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
                         <div className="space-y-4">
                             <div className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                                About {bakeryName}
+                                {tr("About")}
+                                {bakeryName}
                             </div>
                             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                                A neighborhood bakery with a big heart.
+                                {tr("A neighborhood bakery with a big heart.")}
                             </h2>
                             <p className="text-[var(--muted)]">
-                                At {bakeryName}, we bake in small batches so every loaf and pastry
-                                feels freshly made for you. We focus on quality, consistency, and
-                                beautiful presentation for your family table or your biggest
-                                celebration.
+                                {tr("At")}
+                                {bakeryName}
+                                {tr(
+                                    ", we bake in small batches so every loaf and pastry feels freshly made for you. We focus on quality, consistency, and beautiful presentation for your family table or your biggest celebration."
+                                )}
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)]/60 p-4">
-                                    <div className="text-lg font-bold">Fresh</div>
+                                    <div className="text-lg font-bold">{tr("Fresh")}</div>
                                     <div className="text-xs text-[var(--muted)] mt-1">
-                                        Baked daily
+                                        {tr("Baked daily")}
                                     </div>
                                 </div>
                                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)]/60 p-4">
-                                    <div className="text-lg font-bold">Local</div>
+                                    <div className="text-lg font-bold">{tr("Local")}</div>
                                     <div className="text-xs text-[var(--muted)] mt-1">
-                                        Community-first
+                                        {tr("Community-first")}
                                     </div>
                                 </div>
                                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)]/60 p-4">
-                                    <div className="text-lg font-bold">Custom</div>
+                                    <div className="text-lg font-bold">{tr("Custom")}</div>
                                     <div className="text-xs text-[var(--muted)] mt-1">
-                                        Made to order
+                                        {tr("Made to order")}
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)]/60 p-6">
-                            <div className="text-sm font-semibold mb-3">What we believe</div>
+                            <div className="text-sm font-semibold mb-3">
+                                {tr("What we believe")}
+                            </div>
                             <ul className="space-y-3 text-sm text-[var(--muted)]">
                                 <li className="flex gap-2">
                                     <span className="mt-0.5 text-amber-500">•</span>
-                                    <span>Great bread starts with great ingredients.</span>
+                                    <span>{tr("Great bread starts with great ingredients.")}</span>
                                 </li>
                                 <li className="flex gap-2">
                                     <span className="mt-0.5 text-amber-500">•</span>
-                                    <span>Warm hospitality matters as much as taste.</span>
+                                    <span>{tr("Warm hospitality matters as much as taste.")}</span>
                                 </li>
                                 <li className="flex gap-2">
                                     <span className="mt-0.5 text-amber-500">•</span>
-                                    <span>Beautiful cakes should taste as good as they look.</span>
+                                    <span>
+                                        {tr("Beautiful cakes should taste as good as they look.")}
+                                    </span>
                                 </li>
                             </ul>
                             <div className="mt-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-rose-500/10 p-4 border border-amber-500/10">
-                                <div className="text-sm font-semibold">Visit us</div>
+                                <div className="text-sm font-semibold">{tr("Visit us")}</div>
                                 <div className="text-sm text-[var(--muted)] mt-1">
-                                    Come say hi — we’ll help you pick the perfect treat.
+                                    {tr("Come say hi — we’ll help you pick the perfect treat.")}
                                 </div>
                             </div>
                         </div>
@@ -406,10 +426,10 @@ export function LandingPage() {
                     <div className="flex items-end justify-between gap-6 flex-wrap">
                         <div className="space-y-2">
                             <div className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                                Services
+                                {tr("Services")}
                             </div>
                             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                                Everything you need — from daily bread to event catering.
+                                {tr("Everything you need — from daily bread to event catering.")}
                             </h2>
                         </div>
                         <Button
@@ -418,29 +438,29 @@ export function LandingPage() {
                             endContent={<ArrowRight className="size-4" />}
                             onPress={() => scrollToSection("contact")}
                         >
-                            Contact us
+                            {tr("Contact us")}
                         </Button>
                     </div>
 
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
                             {
-                                title: "Daily Fresh Bread",
+                                title: tr("Daily Fresh Bread"),
                                 desc: "Sourdough, rolls, sandwich loaves and more.",
                                 Icon: Wheat,
                             },
                             {
-                                title: "Cakes & Events",
+                                title: tr("Cakes & Events"),
                                 desc: "Birthdays, weddings, corporate events.",
                                 Icon: CakeSlice,
                             },
                             {
-                                title: "Pastries & Snacks",
+                                title: tr("Pastries & Snacks"),
                                 desc: "Croissants, cookies, seasonal favorites.",
                                 Icon: Sparkles,
                             },
                             {
-                                title: "Bulk / Catering",
+                                title: tr("Bulk / Catering"),
                                 desc: "Large orders for offices and parties.",
                                 Icon: ShoppingBag,
                             },
@@ -470,15 +490,16 @@ export function LandingPage() {
                         <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                             <div className="space-y-3">
                                 <div className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                                    Ready to order?
+                                    {tr("Ready to order?")}
                                 </div>
                                 <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                                    Let {bakeryName} bake for your next moment.
+                                    {tr("Let")}
+                                    {bakeryName} {tr("bake for your next moment.")}
                                 </h3>
                                 <p className="text-[var(--muted)]">
-                                    Need a custom cake, a bulk bread order, or a weekly office
-                                    delivery? Reach out and we’ll get back quickly with options and
-                                    pricing.
+                                    {tr(
+                                        "Need a custom cake, a bulk bread order, or a weekly office delivery? Reach out and we’ll get back quickly with options and pricing."
+                                    )}
                                 </p>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 justify-start lg:justify-end">
@@ -488,7 +509,7 @@ export function LandingPage() {
                                     startContent={<Phone className="size-4" />}
                                     onPress={() => scrollToSection("contact")}
                                 >
-                                    Contact details
+                                    {tr("Contact details")}
                                 </Button>
                                 <Button
                                     variant="bordered"
@@ -502,7 +523,7 @@ export function LandingPage() {
                                         }
                                     }}
                                 >
-                                    Email us
+                                    {tr("Email us")}
                                 </Button>
                             </div>
                         </div>
@@ -516,20 +537,23 @@ export function LandingPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                         <div className="space-y-4">
                             <div className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                                Contact
+                                {tr("Contact")}
                             </div>
                             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                                Visit {bakeryName} or reach out anytime.
+                                {tr("Visit")}
+                                {bakeryName} {tr("or reach out anytime.")}
                             </h2>
                             <p className="text-[var(--muted)]">
-                                We’d love to hear from you. Call, email, or visit our location.
+                                {tr(
+                                    "We’d love to hear from you. Call, email, or visit our location."
+                                )}
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)]/60 p-5">
                                     <div className="flex items-center gap-2 font-semibold">
                                         <Phone className="size-4 text-amber-600 dark:text-amber-400" />
-                                        Phone
+                                        {tr("Phone")}
                                     </div>
                                     <div className="text-sm text-[var(--muted)] mt-2">
                                         {bakerySettings?.phoneNumber?.trim() || "—"}
@@ -538,7 +562,7 @@ export function LandingPage() {
                                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)]/60 p-5">
                                     <div className="flex items-center gap-2 font-semibold">
                                         <Mail className="size-4 text-amber-600 dark:text-amber-400" />
-                                        Email
+                                        {tr("Email")}
                                     </div>
                                     <div className="text-sm text-[var(--muted)] mt-2">
                                         {bakerySettings?.email?.trim() || "—"}
@@ -547,7 +571,7 @@ export function LandingPage() {
                                 <div className="sm:col-span-2 rounded-3xl border border-[var(--border)] bg-[var(--panel)]/60 p-5">
                                     <div className="flex items-center gap-2 font-semibold">
                                         <MapPin className="size-4 text-amber-600 dark:text-amber-400" />
-                                        Address
+                                        {tr("Address")}
                                     </div>
                                     <div className="text-sm text-[var(--muted)] mt-2">
                                         {bakerySettings?.address?.trim() || "—"}
@@ -558,14 +582,14 @@ export function LandingPage() {
 
                         <div className="rounded-3xl border border-[var(--border)] overflow-hidden bg-[var(--panel)]/60">
                             <div className="p-4 flex items-center justify-between gap-3">
-                                <div className="font-semibold">Map</div>
+                                <div className="font-semibold">{tr("Map")}</div>
                                 <Button
                                     size="sm"
                                     variant="bordered"
                                     className="border-[var(--border)]"
                                     onPress={() => window.open(mapOpenUrl, "_blank", "noreferrer")}
                                 >
-                                    Open in Google Maps
+                                    {tr("Open in Google Maps")}
                                 </Button>
                             </div>
                             <div className="aspect-[16/11] w-full">
@@ -602,18 +626,20 @@ export function LandingPage() {
                                 <div>
                                     <div className="font-bold">{bakeryName}</div>
                                     <div className="text-xs text-[var(--muted)]">
-                                        Freshly baked, every day
+                                        {tr("Freshly baked, every day")}
                                     </div>
                                 </div>
                             </div>
                             <p className="text-sm text-[var(--muted)]">
-                                {bakeryName} is your neighborhood bakery for artisan breads,
-                                pastries, and custom cakes.
+                                {bakeryName}{" "}
+                                {tr(
+                                    "is your neighborhood bakery for artisan breads, pastries, and custom cakes."
+                                )}
                             </p>
                         </div>
 
                         <div className="space-y-3">
-                            <div className="font-semibold">Quick links</div>
+                            <div className="font-semibold">{tr("Quick links")}</div>
                             <div className="flex flex-col gap-2 text-sm">
                                 {navLinks.map((l) => (
                                     <button
@@ -629,7 +655,7 @@ export function LandingPage() {
                         </div>
 
                         <div className="space-y-3">
-                            <div className="font-semibold">Contact</div>
+                            <div className="font-semibold">{tr("Contact")}</div>
                             <div className="space-y-2 text-sm text-[var(--muted)]">
                                 <div className="flex items-center gap-2">
                                     <Phone className="size-4" />
@@ -647,10 +673,10 @@ export function LandingPage() {
                         </div>
 
                         <div className="space-y-3">
-                            <div className="font-semibold">Social</div>
+                            <div className="font-semibold">{tr("Social")}</div>
                             {socialLinks.length === 0 ? (
                                 <div className="text-sm text-[var(--muted)]">
-                                    No social links configured.
+                                    {tr("No social links configured.")}
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -674,14 +700,15 @@ export function LandingPage() {
 
                     <div className="mt-10 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-[var(--muted)]">
                         <div>
-                            © {new Date().getFullYear()} {bakeryName}. All rights reserved.
+                            © {new Date().getFullYear()} {bakeryName}
+                            {tr(". All rights reserved.")}
                         </div>
                         <button
                             type="button"
                             className="hover:text-[var(--fg)]"
                             onClick={() => scrollToSection("home")}
                         >
-                            Back to top
+                            {tr("Back to top")}
                         </button>
                     </div>
                 </div>

@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import {
     Modal,
     ModalContent,
@@ -41,7 +42,8 @@ export function SaleDetailModal({
                         <div>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-                                    Sale #{sale.id}
+                                    {tr("Sale #")}
+                                    {sale.id}
                                 </h2>
                                 {sale.receipt_issued && (
                                     <Chip
@@ -49,12 +51,12 @@ export function SaleDetailModal({
                                         variant="flat"
                                         className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
                                     >
-                                        Receipt issued
+                                        {tr("Receipt issued")}
                                     </Chip>
                                 )}
                             </div>
                             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                Receipt Details
+                                {tr("Receipt Details")}
                             </p>
                         </div>
                     </div>
@@ -67,7 +69,7 @@ export function SaleDetailModal({
                                 <div className="flex items-center gap-2 mb-2">
                                     <Calendar className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                                     <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                                        Date & Time
+                                        {tr("Date & Time")}
                                     </p>
                                 </div>
                                 <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -79,7 +81,7 @@ export function SaleDetailModal({
                                 <div className="flex items-center gap-2 mb-2">
                                     <User className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                                     <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                                        Cashier
+                                        {tr("Cashier")}
                                     </p>
                                 </div>
                                 <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -93,7 +95,8 @@ export function SaleDetailModal({
                             <div className="flex items-center gap-2 mb-3">
                                 <Package className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                                 <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                                    Items ({sale.items.length})
+                                    {tr("Items (")}
+                                    {sale.items.length})
                                 </p>
                             </div>
                             <div className="space-y-2">
@@ -107,11 +110,13 @@ export function SaleDetailModal({
                                                 {item.product_name}
                                             </p>
                                             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                                ETB {item.unit_price.toFixed(2)} × {item.quantity}
+                                                {tr("ETB")}
+                                                {item.unit_price.toFixed(2)} × {item.quantity}
                                             </p>
                                         </div>
                                         <p className="font-semibold text-zinc-900 dark:text-zinc-100">
-                                            ETB {item.subtotal.toFixed(2)}
+                                            {tr("ETB")}
+                                            {item.subtotal.toFixed(2)}
                                         </p>
                                     </div>
                                 ))}
@@ -125,7 +130,8 @@ export function SaleDetailModal({
                             <div className="flex items-center gap-2 mb-3">
                                 <CreditCard className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                                 <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                                    Payment Methods ({sale.payments.length})
+                                    {tr("Payment Methods (")}
+                                    {sale.payments.length})
                                 </p>
                             </div>
                             <div className="space-y-2">
@@ -138,7 +144,8 @@ export function SaleDetailModal({
                                             {payment.method__name}
                                         </Chip>
                                         <p className="font-semibold text-zinc-900 dark:text-zinc-100">
-                                            ETB {payment.amount.toFixed(2)}
+                                            {tr("ETB")}
+                                            {payment.amount.toFixed(2)}
                                         </p>
                                     </div>
                                 ))}
@@ -149,10 +156,11 @@ export function SaleDetailModal({
                         <div className="p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg">
                             <div className="flex justify-between items-center">
                                 <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                                    Total Amount:
+                                    {tr("Total Amount:")}
                                 </span>
                                 <span className="text-2xl font-bold text-primary">
-                                    ETB {sale.total_amount.toFixed(2)}
+                                    {tr("ETB")}
+                                    {sale.total_amount.toFixed(2)}
                                 </span>
                             </div>
                         </div>
@@ -166,7 +174,7 @@ export function SaleDetailModal({
                             onPress={() => onEdit(sale)}
                             startContent={<Pencil className="h-4 w-4" />}
                         >
-                            Edit
+                            {tr("Edit")}
                         </Button>
                     )}
                     {canDelete && onDelete && (
@@ -184,7 +192,7 @@ export function SaleDetailModal({
                         onPress={onClose}
                         className="!text-zinc-700 dark:!text-zinc-300"
                     >
-                        Close
+                        {tr("Close")}
                     </Button>
                 </ModalFooter>
             </ModalContent>

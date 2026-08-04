@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useState, useMemo } from "react";
 import { Tabs, Tab, Button, Spinner, Input, DatePicker } from "@heroui/react";
 import { Package, Gauge, Plus, Search, History, ChefHat, Warehouse } from "lucide-react";
@@ -192,7 +193,7 @@ export function ProductionPage() {
         ) {
             // All products have recipes, show message
             toast.error(
-                "All products already have batch estimates. Edit an existing estimate instead."
+                tr("All products already have batch estimates. Edit an existing estimate instead.")
             );
             return;
         }
@@ -253,12 +254,14 @@ export function ProductionPage() {
     return (
         <div className="space-y-6 lg:space-y-8">
             <PageTitle
-                title="Production"
-                subtitle="Track kitchen stock, practical batch estimates, and baking performance."
+                title={tr("Production")}
+                subtitle={tr(
+                    "Track kitchen stock, practical batch estimates, and baking performance."
+                )}
             />
 
             <Tabs
-                aria-label="Production"
+                aria-label={tr("Production")}
                 selectedKey={activeTab}
                 onSelectionChange={(key) => setActiveTab(String(key))}
                 color="primary"
@@ -273,7 +276,7 @@ export function ProductionPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <Package className="h-4 w-4" />
-                            <span>Products</span>
+                            <span>{tr("Products")}</span>
                         </div>
                     }
                 >
@@ -287,7 +290,7 @@ export function ProductionPage() {
                                 `}
                             >
                                 <Input
-                                    placeholder="Search products by name..."
+                                    placeholder={tr("Search products by name...")}
                                     startContent={<Search className="h-4 w-4 text-zinc-400" />}
                                     value={productSearch}
                                     onValueChange={setProductSearch}
@@ -305,7 +308,7 @@ export function ProductionPage() {
                                     startContent={<Plus className="h-4 w-4" />}
                                     onPress={handleAddProduct}
                                 >
-                                    Add Product
+                                    {tr("Add Product")}
                                 </Button>
                             )}
                         </div>
@@ -357,7 +360,7 @@ export function ProductionPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <Gauge className="h-4 w-4" />
-                            <span>Batch Estimates</span>
+                            <span>{tr("Batch Estimates")}</span>
                         </div>
                     }
                 >
@@ -371,7 +374,7 @@ export function ProductionPage() {
                                 `}
                             >
                                 <Input
-                                    placeholder="Search batch estimates by product..."
+                                    placeholder={tr("Search batch estimates by product...")}
                                     startContent={<Search className="h-4 w-4 text-zinc-400" />}
                                     value={recipeSearch}
                                     onValueChange={setRecipeSearch}
@@ -388,7 +391,7 @@ export function ProductionPage() {
                                 startContent={<Plus className="h-4 w-4" />}
                                 onPress={() => handleOpenRecipeBuilder()}
                             >
-                                Create Batch Estimate
+                                {tr("Create Batch Estimate")}
                             </Button>
                         </div>
 
@@ -439,7 +442,7 @@ export function ProductionPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <Warehouse className="h-4 w-4" />
-                            <span>Kitchen Store</span>
+                            <span>{tr("Kitchen Store")}</span>
                         </div>
                     }
                 >
@@ -451,7 +454,7 @@ export function ProductionPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <History className="h-4 w-4" />
-                            <span>Production History</span>
+                            <span>{tr("Production History")}</span>
                         </div>
                     }
                 >
@@ -459,7 +462,7 @@ export function ProductionPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 <DatePicker
-                                    label="Filter from Date"
+                                    label={tr("Filter from Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={historyStartDate}
@@ -475,7 +478,7 @@ export function ProductionPage() {
                                 }}
                                 startContent={<ChefHat className="h-4 w-4" />}
                             >
-                                Record Baking Session
+                                {tr("Record Baking Session")}
                             </Button>
                         </div>
                         {isLoadingHistory ? (

@@ -13,6 +13,8 @@ import { useAppDispatch, useAppSelector } from "../../store";
 import { toggleMode } from "../../store/settingsSlice";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { LanguageToggle } from "../ui/LanguageToggle";
+import { useTranslation, tr } from "../../locales";
 
 interface HeaderProps {
     isCollapsed: boolean;
@@ -26,6 +28,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
     const { logout, isLoggingOut } = useAuth();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const handleLogout = async () => {
         setIsProfileOpen(false);
@@ -52,7 +55,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
                         size="sm"
                         className="hidden lg:flex hover:bg-white/10 transition-colors px-2"
                         onPress={onToggleSidebar}
-                        title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                        title={isCollapsed ? tr("Expand sidebar") : tr("Collapse sidebar")}
                     >
                         {isCollapsed ? (
                             <PanelLeft className="size-5 text-[var(--fg)]" />
@@ -64,6 +67,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
 
                 {/* Right side controls */}
                 <div className="flex items-center gap-1 sm:gap-2">
+                    <LanguageToggle />
                     {/* Dark Mode Toggle */}
                     <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-white/5 border border-white/5">
                         <Sun className="size-4 text-amber-400" />
@@ -71,7 +75,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
                             isSelected={mode === "dark"}
                             onValueChange={() => dispatch(toggleMode())}
                             size="sm"
-                            aria-label="Toggle dark mode"
+                            aria-label={t("toggleDarkMode")}
                             classNames={{
                                 wrapper: "group-data-[selected=true]:bg-[var(--accent)]",
                             }}
@@ -93,7 +97,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
                                 <div className="relative">
                                     <Avatar
                                         src={user?.avatar}
-                                        name={user?.name || "User"}
+                                        name={user?.name || tr("User")}
                                         size="sm"
                                         className="bg-gradient-to-br from-[var(--accent)] to-purple-500 text-white ring-2 ring-white/20"
                                         fallback={<User className="size-4 text-white" />}
@@ -103,7 +107,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
                                 </div>
                                 <div className="hidden sm:flex flex-col items-start">
                                     <span className="text-sm font-semibold text-[var(--fg)]">
-                                        {user?.name || "User"}
+                                        {user?.name || tr("User")}
                                     </span>
                                     <span className="text-[10px] text-slate-500 dark:text-slate-400 capitalize">
                                         {user?.role || "N/A"}
@@ -112,7 +116,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
                             </Button>
                         </DropdownTrigger>
                         <DropdownMenu
-                            aria-label="Profile menu"
+                            aria-label={t("profile")}
                             variant="solid"
                             classNames={{
                                 base: "bg-[var(--panel)] min-w-[200px]",
@@ -124,7 +128,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
                                 onPress={handleProfileNavigate}
                                 className="py-2.5"
                             >
-                                Profile
+                                {t("profile")}
                             </DropdownItem>
                             <DropdownItem
                                 key="logout"
@@ -133,7 +137,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
                                 startContent={<LogOut className="size-4" />}
                                 onPress={handleLogout}
                             >
-                                {isLoggingOut ? "Logging out..." : "Logout"}
+                                {isLoggingOut ? t("loggingOut") : t("logout")}
                             </DropdownItem>
                         </DropdownMenu>
                     </Dropdown>

@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -21,7 +22,7 @@ export function useCreateShiftTemplate() {
         mutationFn: (data: CreateShiftTemplateData) => shiftService.createShiftTemplate(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["shift-templates"] });
-            toast.success("Shift template created");
+            toast.success(tr("Shift template created"));
         },
         onError: (error: unknown) => {
             toast.error(shiftService.parseApiError(error));
@@ -37,7 +38,7 @@ export function useUpdateShiftTemplate() {
             shiftService.updateShiftTemplate(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["shift-templates"] });
-            toast.success("Shift template updated");
+            toast.success(tr("Shift template updated"));
         },
         onError: (error: unknown) => {
             toast.error(shiftService.parseApiError(error));
@@ -52,7 +53,7 @@ export function useDeleteShiftTemplate() {
         mutationFn: (id: number) => shiftService.deleteShiftTemplate(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["shift-templates"] });
-            toast.success("Shift template deleted");
+            toast.success(tr("Shift template deleted"));
         },
         onError: (error: unknown) => {
             toast.error(shiftService.parseApiError(error));

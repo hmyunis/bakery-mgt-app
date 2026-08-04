@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState } from "react";
 import {
     Alert,
@@ -49,17 +50,17 @@ function ProductionRunFormContent({
 
     const submit = async () => {
         const nextErrors: Record<string, string> = {};
-        if (!product) nextErrors.product = "Product is required";
+        if (!product) nextErrors.product = tr("Product is required");
         if (!estimate || !batchItems.length)
-            nextErrors.product = "Configure a batch estimate first";
+            nextErrors.product = tr("Configure a batch estimate first");
         if (!quantityProduced || Number(quantityProduced) <= 0) {
-            nextErrors.quantityProduced = "Output must be greater than 0";
+            nextErrors.quantityProduced = tr("Output must be greater than 0");
         }
         batchItems.forEach((item) => {
             const actual = Number(amountsUsed[item.ingredient]);
             const ingredient = ingredientsById.get(item.ingredient);
             if (!amountsUsed[item.ingredient] || actual <= 0) {
-                nextErrors[`ingredient-${item.ingredient}`] = "Enter the amount actually used";
+                nextErrors[`ingredient-${item.ingredient}`] = tr("Enter the amount actually used");
             } else if (ingredient && actual > ingredient.kitchen_stock) {
                 nextErrors[`ingredient-${item.ingredient}`] =
                     `Only ${ingredient.kitchen_stock.toFixed(3)} ${ingredient.unit} is in the kitchen store`;
@@ -86,12 +87,12 @@ function ProductionRunFormContent({
             <ModalHeader>
                 {preselectedProduct
                     ? `Record Production: ${preselectedProduct.name}`
-                    : "Record Baking Session"}
+                    : tr("Record Baking Session")}
             </ModalHeader>
             <ModalBody className="space-y-5">
                 {!preselectedProduct ? (
                     <Select
-                        label="Product"
+                        label={tr("Product")}
                         selectedKeys={product ? [product] : []}
                         onSelectionChange={(keys) => {
                             setProduct(String(Array.from(keys)[0] || ""));
@@ -112,7 +113,7 @@ function ProductionRunFormContent({
                     </Select>
                 ) : (
                     <div className="rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800">
-                        <p className="text-xs text-zinc-500">Product</p>
+                        <p className="text-xs text-zinc-500">{tr("Product")}</p>
                         <p className="font-medium">{preselectedProduct.name}</p>
                     </div>
                 )}
@@ -120,7 +121,8 @@ function ProductionRunFormContent({
                 {estimate && batchItems.length ? (
                     <Alert color="primary" variant="flat" icon={<Info className="h-4 w-4" />}>
                         <p className="font-medium">
-                            Full batch estimate: {estimate.standard_yield.toFixed(2)} pcs
+                            {tr("Full batch estimate:")}
+                            {estimate.standard_yield.toFixed(2)} {tr("pcs")}
                         </p>
                         <p className="text-sm">
                             {batchItems
@@ -133,18 +135,20 @@ function ProductionRunFormContent({
                     </Alert>
                 ) : product ? (
                     <Alert color="warning" variant="flat">
-                        This product needs a batch estimate before production can be recorded.
+                        {tr(
+                            "This product needs a batch estimate before production can be recorded."
+                        )}
                     </Alert>
                 ) : null}
 
                 <Input
-                    label="Actual output from this baking session"
+                    label={tr("Actual output from this baking session")}
                     type="number"
                     min="0.01"
                     step="0.01"
                     value={quantityProduced}
                     onValueChange={setQuantityProduced}
-                    endContent={<span className="text-sm text-zinc-500">pcs</span>}
+                    endContent={<span className="text-sm text-zinc-500">{tr("pcs")}</span>}
                     isInvalid={!!errors.quantityProduced}
                     errorMessage={errors.quantityProduced}
                 />
@@ -152,9 +156,13 @@ function ProductionRunFormContent({
                 {!!batchItems.length && (
                     <div className="space-y-3">
                         <div>
-                            <p className="font-medium">What was actually taken from the kitchen</p>
+                            <p className="font-medium">
+                                {tr("What was actually taken from the kitchen")}
+                            </p>
                             <p className="text-sm text-zinc-500">
-                                Enter the bulk amount used for each ingredient—no per-piece math.
+                                {tr(
+                                    "Enter the bulk amount used for each ingredient—no per-piece math."
+                                )}
                             </p>
                         </div>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -197,15 +205,15 @@ function ProductionRunFormContent({
                 )}
 
                 <Textarea
-                    label="Notes (optional)"
+                    label={tr("Notes (optional)")}
                     value={notes}
                     onValueChange={setNotes}
-                    placeholder="Anything unusual about this run"
+                    placeholder={tr("Anything unusual about this run")}
                 />
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button
                     color="primary"
@@ -213,7 +221,7 @@ function ProductionRunFormContent({
                     isLoading={isPending}
                     isDisabled={!batchItems.length}
                 >
-                    Record Production
+                    {tr("Record Production")}
                 </Button>
             </ModalFooter>
         </>

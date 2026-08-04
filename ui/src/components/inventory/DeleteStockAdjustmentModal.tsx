@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import { AlertTriangle } from "lucide-react";
 import type { StockAdjustment } from "../../types/inventory";
@@ -32,20 +33,21 @@ export function DeleteStockAdjustmentModal({
                 <ModalHeader className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="size-5 text-danger" />
-                        <span>Delete Stock Adjustment</span>
+                        <span>{tr("Delete Stock Adjustment")}</span>
                     </div>
                 </ModalHeader>
                 <ModalBody>
                     <p className="text-zinc-600 dark:text-zinc-400">
-                        Are you sure you want to delete the stock adjustment for{" "}
+                        {tr("Are you sure you want to delete the stock adjustment for")}{" "}
                         <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                            {adjustment?.ingredient_name || "Unknown"}
+                            {adjustment?.ingredient_name || tr("Unknown")}
                         </span>
-                        ? This action will reverse the stock change.
+                        {tr("? This action will reverse the stock change.")}
                     </p>
                     {adjustment && (
                         <p className="text-sm text-zinc-500 dark:text-zinc-500">
-                            Adjustment: {adjustment.quantity_change > 0 ? "+" : ""}
+                            {tr("Adjustment:")}
+                            {adjustment.quantity_change > 0 ? "+" : ""}
                             {adjustment.quantity_change.toFixed(3)}
                         </p>
                     )}
@@ -57,7 +59,7 @@ export function DeleteStockAdjustmentModal({
                         isDisabled={isLoading}
                         className="!text-zinc-700 dark:!text-zinc-300"
                     >
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button
                         color="danger"

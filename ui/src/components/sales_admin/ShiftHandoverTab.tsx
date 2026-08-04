@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import { Button, Input, Select, SelectItem, Spinner } from "@heroui/react";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -34,11 +35,11 @@ const toWholeNumber = (value: string | undefined, fallback = 0) => {
 };
 
 const reconciliationColumns: ColumnDef<ShiftSessionReconciliationProduct>[] = [
-    { accessorKey: "productName", header: "Product" },
-    { accessorKey: "openingCount", header: "Open" },
+    { accessorKey: "productName", header: tr("Product") },
+    { accessorKey: "openingCount", header: tr("Open") },
     {
         accessorKey: "openingStockBeforeOverride",
-        header: "Open Audit",
+        header: tr("Open Audit"),
         cell: ({ row }) => (
             <span
                 className={
@@ -51,18 +52,18 @@ const reconciliationColumns: ColumnDef<ShiftSessionReconciliationProduct>[] = [
             </span>
         ),
     },
-    { accessorKey: "producedInShift", header: "Produced" },
-    { accessorKey: "paidSoldQty", header: "Paid Sold" },
-    { accessorKey: "unpaidQty", header: "Unpaid" },
-    { accessorKey: "expectedClosingCount", header: "Expected" },
+    { accessorKey: "producedInShift", header: tr("Produced") },
+    { accessorKey: "paidSoldQty", header: tr("Paid Sold") },
+    { accessorKey: "unpaidQty", header: tr("Unpaid") },
+    { accessorKey: "expectedClosingCount", header: tr("Expected") },
     {
         accessorKey: "countedClosingCount",
-        header: "Counted",
+        header: tr("Counted"),
         cell: ({ row }) => row.original.countedClosingCount ?? "-",
     },
     {
         accessorKey: "closingStockBeforeOverride",
-        header: "Close Audit",
+        header: tr("Close Audit"),
         cell: ({ row }) => (
             <span
                 className={
@@ -77,7 +78,7 @@ const reconciliationColumns: ColumnDef<ShiftSessionReconciliationProduct>[] = [
     },
     {
         accessorKey: "varianceQty",
-        header: "Variance",
+        header: tr("Variance"),
         cell: ({ row }) => row.original.varianceQty ?? "-",
     },
 ];
@@ -406,12 +407,12 @@ export function ShiftHandoverTab() {
     };
 
     const openingColumns: ColumnDef<Product>[] = [
-        { accessorKey: "name", header: "Product" },
+        { accessorKey: "name", header: tr("Product") },
         ...(isAdmin && openingComparisonSource
             ? [
                   {
                       id: "lastClose",
-                      header: "Last Close",
+                      header: tr("Last Close"),
                       cell: ({ row }: { row: { original: Product } }) =>
                           openingComparisonRows.find(
                               (comparison) => comparison.productId === row.original.id
@@ -421,7 +422,7 @@ export function ShiftHandoverTab() {
             : []),
         {
             id: "openingCount",
-            header: "Opening Count",
+            header: tr("Opening Count"),
             cell: ({ row }) => {
                 const comparison = openingComparisonRows.find(
                     (item) => item.productId === row.original.id
@@ -451,7 +452,7 @@ export function ShiftHandoverTab() {
             ? [
                   {
                       id: "mismatch",
-                      header: "Mismatch",
+                      header: tr("Mismatch"),
                       cell: ({ row }: { row: { original: Product } }) => {
                           const comparison = openingComparisonRows.find(
                               (item) => item.productId === row.original.id
@@ -475,10 +476,10 @@ export function ShiftHandoverTab() {
     ];
 
     const closingColumns: ColumnDef<Product>[] = [
-        { accessorKey: "name", header: "Product" },
+        { accessorKey: "name", header: tr("Product") },
         {
             id: "closingCount",
-            header: "Closing Count",
+            header: tr("Closing Count"),
             cell: ({ row }) => (
                 <Input
                     type="number"
@@ -507,7 +508,7 @@ export function ShiftHandoverTab() {
     ];
 
     const reconciliationEditColumns: ColumnDef<ShiftSessionReconciliationProduct>[] = [
-        { accessorKey: "productName", header: "Product" },
+        { accessorKey: "productName", header: tr("Product") },
         ...(["opening", "closing"] as const).map(
             (field): ColumnDef<ShiftSessionReconciliationProduct> => ({
                 id: field,
@@ -552,23 +553,26 @@ export function ShiftHandoverTab() {
         <div className="space-y-4">
             <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Shift State
+                    {tr("Shift State")}
                 </h3>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    Opened: {openedSession ? `#${openedSession.id}` : "None"} | Pending Acceptance:{" "}
-                    {pendingSession ? `#${pendingSession.id}` : "None"}
+                    {tr("Opened:")}
+                    {openedSession ? `#${openedSession.id}` : tr("None")}{" "}
+                    {tr("| Pending Acceptance:")}{" "}
+                    {pendingSession ? `#${pendingSession.id}` : tr("None")}
                 </p>
             </div>
 
             {!openedSession && (user?.role === "staff" || isAdmin) && (
                 <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        Open Shift
+                        {tr("Open Shift")}
                     </h3>
                     {pendingSessionCount >= 3 && (
                         <p className="text-sm text-danger-600 dark:text-danger-400">
-                            You cannot open a new shift while 3 sessions are pending handover
-                            acceptance.
+                            {tr(
+                                "You cannot open a new shift while 3 sessions are pending handover acceptance."
+                            )}
                         </p>
                     )}
                     {isAdmin && openingComparisonSource && (
@@ -580,32 +584,33 @@ export function ShiftHandoverTab() {
                             }`}
                         >
                             <p className="font-semibold">
-                                Opening handover check against session #{openingComparisonSource.id}{" "}
-                                (
+                                {tr("Opening handover check against session #")}
+                                {openingComparisonSource.id} (
                                 {openingComparisonSource.status === "pending_handover_acceptance"
-                                    ? "pending acceptance"
+                                    ? tr("pending acceptance")
                                     : "closed"}
                                 )
                             </p>
                             {openingMismatchSummary.mismatchCount > 0 ? (
                                 <p className="mt-1">
-                                    {openingMismatchSummary.mismatchCount} product
-                                    {openingMismatchSummary.mismatchCount === 1 ? "" : "s"} do not
-                                    match the previous closing count. Missing units:{" "}
-                                    {openingMismatchSummary.shortageUnits}. Extra units:{" "}
-                                    {openingMismatchSummary.excessUnits}.
+                                    {openingMismatchSummary.mismatchCount} {tr("product")}
+                                    {openingMismatchSummary.mismatchCount === 1 ? "" : "s"}{" "}
+                                    {tr("do not match the previous closing count. Missing units:")}{" "}
+                                    {openingMismatchSummary.shortageUnits}
+                                    {tr(". Extra units:")} {openingMismatchSummary.excessUnits}.
                                 </p>
                             ) : (
                                 <p className="mt-1">
-                                    Every opening count matches the previous cashier&apos;s closing
-                                    count.
+                                    {tr(
+                                        "Every opening count matches the previous cashier's closing count."
+                                    )}
                                 </p>
                             )}
                         </div>
                     )}
                     {isAdmin && (
                         <Select
-                            label="Assign Cashier"
+                            label={tr("Assign Cashier")}
                             selectedKeys={
                                 resolvedCashierId ? new Set([String(resolvedCashierId)]) : new Set()
                             }
@@ -630,10 +635,10 @@ export function ShiftHandoverTab() {
                         </Select>
                     )}
                     <Input
-                        label="Open Notes"
+                        label={tr("Open Notes")}
                         value={openNotes}
                         onValueChange={setOpenNotes}
-                        placeholder="Optional notes"
+                        placeholder={tr("Optional notes")}
                         classNames={visibleInputClassNames}
                     />
                     <div className="max-h-96 overflow-y-auto">
@@ -658,7 +663,7 @@ export function ShiftHandoverTab() {
                             pendingSessionCount >= 3
                         }
                     >
-                        Open Shift Session
+                        {tr("Open Shift Session")}
                     </Button>
                 </div>
             )}
@@ -666,14 +671,15 @@ export function ShiftHandoverTab() {
             {openedSession && canCloseOpenedSession && (
                 <div className="space-y-3 rounded-lg border border-warning-300/60 p-4">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        Close Shift #{openedSession.id}
+                        {tr("Close Shift #")}
+                        {openedSession.id}
                     </h3>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <Input
                             type="number"
                             min={0}
                             step="0.01"
-                            label="Cash Declared"
+                            label={tr("Cash Declared")}
                             value={resolvedCashDeclared}
                             onValueChange={(value) => {
                                 if (!openedSession) return;
@@ -685,14 +691,16 @@ export function ShiftHandoverTab() {
                             isRequired
                             placeholder="0.00"
                             isInvalid={cashDeclaredInvalid}
-                            errorMessage={cashDeclaredInvalid ? "Enter a valid amount." : undefined}
+                            errorMessage={
+                                cashDeclaredInvalid ? tr("Enter a valid amount.") : undefined
+                            }
                             classNames={visibleInputClassNames}
                         />
                         <Input
                             type="number"
                             min={0}
                             step="0.01"
-                            label="Digital Declared"
+                            label={tr("Digital Declared")}
                             value={resolvedDigitalDeclared}
                             onValueChange={(value) => {
                                 if (!openedSession) return;
@@ -705,13 +713,13 @@ export function ShiftHandoverTab() {
                             placeholder="0.00"
                             isInvalid={digitalDeclaredInvalid}
                             errorMessage={
-                                digitalDeclaredInvalid ? "Enter a valid amount." : undefined
+                                digitalDeclaredInvalid ? tr("Enter a valid amount.") : undefined
                             }
                             classNames={visibleInputClassNames}
                         />
                     </div>
                     <Input
-                        label="Close Notes"
+                        label={tr("Close Notes")}
                         value={resolvedCloseNotes}
                         onValueChange={(value) => {
                             if (!openedSession) return;
@@ -720,7 +728,7 @@ export function ShiftHandoverTab() {
                                 [openedSession.id]: value,
                             }));
                         }}
-                        placeholder="Optional notes"
+                        placeholder={tr("Optional notes")}
                         classNames={visibleInputClassNames}
                     />
                     <div className="max-h-96 overflow-y-auto">
@@ -732,7 +740,7 @@ export function ShiftHandoverTab() {
                         isLoading={closeShiftMutation.isPending}
                         isDisabled={!canSubmitCloseShift}
                     >
-                        Close & Send for Acceptance
+                        {tr("Close & Send for Acceptance")}
                     </Button>
                 </div>
             )}
@@ -740,13 +748,14 @@ export function ShiftHandoverTab() {
             {pendingSession && isAdmin && (
                 <div className="space-y-3 rounded-lg border border-primary-300/60 p-4">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        Pending Handover Acceptance #{pendingSession.id}
+                        {tr("Pending Handover Acceptance #")}
+                        {pendingSession.id}
                     </h3>
                     <Input
-                        label="Acceptance Notes"
+                        label={tr("Acceptance Notes")}
                         value={acceptanceNotes}
                         onValueChange={setAcceptanceNotes}
-                        placeholder="Optional notes"
+                        placeholder={tr("Optional notes")}
                         classNames={visibleInputClassNames}
                     />
                     <Button
@@ -755,7 +764,7 @@ export function ShiftHandoverTab() {
                         isLoading={acceptShiftMutation.isPending}
                         isDisabled={reopenShiftMutation.isPending}
                     >
-                        Accept Handover
+                        {tr("Accept Handover")}
                     </Button>
                     <Button
                         variant="flat"
@@ -764,7 +773,7 @@ export function ShiftHandoverTab() {
                         isLoading={reopenShiftMutation.isPending}
                         isDisabled={acceptShiftMutation.isPending}
                     >
-                        Re-open Shift
+                        {tr("Re-open Shift")}
                     </Button>
                 </div>
             )}
@@ -772,7 +781,7 @@ export function ShiftHandoverTab() {
             <div className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                 <div className="flex items-center justify-between gap-2">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        Reconciliation Report
+                        {tr("Reconciliation Report")}
                     </h3>
                     {isAdmin && reconciliationData && (
                         <Button
@@ -794,12 +803,12 @@ export function ShiftHandoverTab() {
                                 }
                             }}
                         >
-                            {isEditingReconciliation ? "Cancel Edit" : "Edit Report"}
+                            {isEditingReconciliation ? tr("Cancel Edit") : tr("Edit Report")}
                         </Button>
                     )}
                 </div>
                 <Select
-                    label="Session"
+                    label={tr("Session")}
                     selectedKeys={
                         selectedSessionId ? new Set([String(selectedSessionId)]) : new Set()
                     }
@@ -832,7 +841,7 @@ export function ShiftHandoverTab() {
                     </div>
                 ) : !reconciliationData ? (
                     <p className="text-sm text-slate-500">
-                        Select a session to view reconciliation.
+                        {tr("Select a session to view reconciliation.")}
                     </p>
                 ) : (
                     <div className="space-y-3 [&_th]:!text-slate-700 dark:[&_th]:!text-slate-300 [&_td]:!text-slate-900 dark:[&_td]:!text-slate-100">
@@ -840,7 +849,7 @@ export function ShiftHandoverTab() {
                             <div className="space-y-3 rounded-md border border-primary-300 p-3 dark:border-primary-800">
                                 <div className="grid gap-3 md:grid-cols-2">
                                     <Input
-                                        label="Cash Declared"
+                                        label={tr("Cash Declared")}
                                         type="number"
                                         min={0}
                                         value={reconciliationDraft.cashDeclared}
@@ -852,7 +861,7 @@ export function ShiftHandoverTab() {
                                         }
                                     />
                                     <Input
-                                        label="Digital Declared"
+                                        label={tr("Digital Declared")}
                                         type="number"
                                         min={0}
                                         value={reconciliationDraft.digitalDeclared}
@@ -864,7 +873,7 @@ export function ShiftHandoverTab() {
                                         }
                                     />
                                     <Input
-                                        label="Opening Notes"
+                                        label={tr("Opening Notes")}
                                         value={reconciliationDraft.openNotes}
                                         onValueChange={(openNotes) =>
                                             setReconciliationDraft({
@@ -874,7 +883,7 @@ export function ShiftHandoverTab() {
                                         }
                                     />
                                     <Input
-                                        label="Closing Notes"
+                                        label={tr("Closing Notes")}
                                         value={reconciliationDraft.closeNotes}
                                         onValueChange={(closeNotes) =>
                                             setReconciliationDraft({
@@ -893,14 +902,14 @@ export function ShiftHandoverTab() {
                                     onPress={saveReconciliation}
                                     isLoading={updateReconciliationMutation.isPending}
                                 >
-                                    Save Report
+                                    {tr("Save Report")}
                                 </Button>
                             </div>
                         )}
                         <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
                             <p className="flex items-center gap-1 text-xs text-slate-500">
                                 <UserRound className="h-3.5 w-3.5" />
-                                Cashier
+                                {tr("Cashier")}
                             </p>
                             <p className="text-sm font-semibold !text-slate-900 dark:!text-slate-100">
                                 {reconciliationCashierLabel}
@@ -910,7 +919,7 @@ export function ShiftHandoverTab() {
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
                                 <p className="flex items-center gap-1 text-xs text-slate-500">
                                     <Wallet className="h-3.5 w-3.5" />
-                                    Collected Total
+                                    {tr("Collected Total")}
                                 </p>
                                 <p
                                     className={`text-lg font-semibold ${
@@ -919,25 +928,28 @@ export function ShiftHandoverTab() {
                                             : "!text-slate-900 dark:!text-slate-100"
                                     }`}
                                 >
-                                    ETB {reconciliationData.money.collectedTotal.toFixed(2)}
+                                    {tr("ETB")}
+                                    {reconciliationData.money.collectedTotal.toFixed(2)}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
                                 <p className="flex items-center gap-1 text-xs text-slate-500">
                                     <HandCoins className="h-3.5 w-3.5" />
-                                    Unpaid Value
+                                    {tr("Unpaid Value")}
                                 </p>
                                 <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
-                                    ETB {reconciliationData.money.unpaidValue.toFixed(2)}
+                                    {tr("ETB")}
+                                    {reconciliationData.money.unpaidValue.toFixed(2)}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
                                 <p className="flex items-center gap-1 text-xs text-slate-500">
                                     <CircleAlert className="h-3.5 w-3.5" />
-                                    Variance Value
+                                    {tr("Variance Value")}
                                 </p>
                                 <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
-                                    ETB {reconciliationData.totals.varianceTotalValue.toFixed(2)}
+                                    {tr("ETB")}
+                                    {reconciliationData.totals.varianceTotalValue.toFixed(2)}
                                 </p>
                             </div>
                         </div>
@@ -945,7 +957,7 @@ export function ShiftHandoverTab() {
                             <div className="rounded-md border border-slate-200 px-3 py-2 dark:border-slate-800">
                                 <p className="flex items-center gap-1 text-xs text-slate-500">
                                     <Banknote className="h-3.5 w-3.5" />
-                                    Cash Declared
+                                    {tr("Cash Declared")}
                                 </p>
                                 <p
                                     className={`text-sm font-semibold ${
@@ -954,13 +966,14 @@ export function ShiftHandoverTab() {
                                             : "!text-slate-900 dark:!text-slate-100"
                                     }`}
                                 >
-                                    ETB {reconciliationData.money.cashDeclared.toFixed(2)}
+                                    {tr("ETB")}
+                                    {reconciliationData.money.cashDeclared.toFixed(2)}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 px-3 py-2 dark:border-slate-800">
                                 <p className="flex items-center gap-1 text-xs text-slate-500">
                                     <Smartphone className="h-3.5 w-3.5" />
-                                    Digital Declared
+                                    {tr("Digital Declared")}
                                 </p>
                                 <p
                                     className={`text-sm font-semibold ${
@@ -969,7 +982,8 @@ export function ShiftHandoverTab() {
                                             : "!text-slate-900 dark:!text-slate-100"
                                     }`}
                                 >
-                                    ETB {reconciliationData.money.digitalDeclared.toFixed(2)}
+                                    {tr("ETB")}
+                                    {reconciliationData.money.digitalDeclared.toFixed(2)}
                                 </p>
                             </div>
                         </div>

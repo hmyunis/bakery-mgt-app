@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import { AlertTriangle } from "lucide-react";
 import type { Purchase } from "../../types/inventory";
@@ -32,20 +33,21 @@ export function DeletePurchaseModal({
                 <ModalHeader className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="size-5 text-danger" />
-                        <span>Delete Purchase</span>
+                        <span>{tr("Delete Purchase")}</span>
                     </div>
                 </ModalHeader>
                 <ModalBody>
                     <p className="text-zinc-600 dark:text-zinc-400">
-                        Are you sure you want to delete the purchase for{" "}
+                        {tr("Are you sure you want to delete the purchase for")}{" "}
                         <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                            {purchase?.ingredient_name || "Unknown"}
+                            {purchase?.ingredient_name || tr("Unknown")}
                         </span>
-                        ? This action will reverse the stock addition.
+                        {tr("? This action will reverse the stock addition.")}
                     </p>
                     {purchase && (
                         <p className="text-sm text-zinc-500 dark:text-zinc-500">
-                            Quantity: {purchase.quantity.toFixed(3)}
+                            {tr("Quantity:")}
+                            {purchase.quantity.toFixed(3)}
                         </p>
                     )}
                 </ModalBody>
@@ -56,7 +58,7 @@ export function DeletePurchaseModal({
                         isDisabled={isLoading}
                         className="!text-zinc-700 dark:!text-zinc-300"
                     >
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button
                         color="danger"

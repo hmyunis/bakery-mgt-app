@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { useBakerySettings } from "../hooks/useBakery";
 import type { ApiError, ApiErrorResponse } from "../types/api";
 import { getDefaultAppPath, isValidRole, type PagePermission } from "../constants/roles";
+import { LanguageToggle } from "../components/ui/LanguageToggle";
+import { useTranslation, tr } from "../locales";
 
 export function Login() {
     const navigate = useNavigate();
@@ -22,6 +24,7 @@ export function Login() {
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const { t } = useTranslation();
 
     // Redirect if already authenticated
     useEffect(() => {
@@ -72,7 +75,7 @@ export function Login() {
         e.preventDefault();
 
         if (!identifier.trim() || !password.trim()) {
-            toast.error("Please fill in all fields");
+            toast.error(tr("Please fill in all fields"));
             return;
         }
 
@@ -121,7 +124,7 @@ export function Login() {
                 onPress={handleBack}
             >
                 <ArrowLeft className="size-4 mr-2" />
-                Back
+                {t("back")}
             </Button>
 
             <div className="relative w-full max-w-md">
@@ -132,7 +135,7 @@ export function Login() {
                             {bakerySettings?.logoUrl ? (
                                 <img
                                     src={bakerySettings.logoUrl}
-                                    alt={bakerySettings?.name || "Bakery"}
+                                    alt={bakerySettings?.name || tr("Bakery")}
                                     className="size-14 rounded-2xl object-contain bg-white/70 dark:bg-black/10 border border-[var(--border)]"
                                 />
                             ) : (
@@ -142,11 +145,9 @@ export function Login() {
                             )}
                             <div className="min-w-0">
                                 <div className="text-lg font-bold text-[var(--fg)] truncate">
-                                    {bakerySettings?.name || "Bakery"}
+                                    {bakerySettings?.name || tr("Bakery")}
                                 </div>
-                                <div className="text-sm text-[var(--muted)]">
-                                    Sign in to manage your bakery
-                                </div>
+                                <div className="text-sm text-[var(--muted)]">{t("management")}</div>
                             </div>
                         </div>
 
@@ -157,11 +158,11 @@ export function Login() {
                             {/* Username / Phone Number Input */}
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--fg)]">
-                                    Username / Phone Number
+                                    {tr("Username / Phone Number")}
                                 </label>
                                 <Input
                                     type="text"
-                                    placeholder="admin or +251911234567"
+                                    placeholder={tr("admin or +251911234567")}
                                     value={identifier}
                                     onChange={(e) => setIdentifier(e.target.value)}
                                     required
@@ -183,7 +184,7 @@ export function Login() {
                             <div className="space-y-2">
                                 <Input
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="Enter your password"
+                                    placeholder={tr("Enter your password")}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
@@ -216,7 +217,7 @@ export function Login() {
                                 isLoading={isLoggingIn}
                                 disabled={isLoggingIn}
                             >
-                                {isLoggingIn ? "Signing In..." : "Sign In"}
+                                {isLoggingIn ? t("signingIn") : t("signIn")}
                             </Button>
                         </form>
                     </CardBody>
@@ -225,10 +226,13 @@ export function Login() {
                 {/* Footer */}
                 <footer className="mt-6 text-center">
                     <p className="text-xs text-[var(--muted)]">
-                        © {new Date().getFullYear()} {bakerySettings?.name || "Bakery"}. All rights
-                        reserved.
+                        © {new Date().getFullYear()} {bakerySettings?.name || tr("Bakery")}
+                        {tr(". All rights reserved.")}
                     </p>
                 </footer>
+            </div>
+            <div className="absolute top-6 right-6">
+                <LanguageToggle />
             </div>
         </div>
     );

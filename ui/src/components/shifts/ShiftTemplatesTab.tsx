@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@heroui/react";
 import { Plus } from "lucide-react";
@@ -105,7 +106,7 @@ export function ShiftTemplatesTab() {
                     onPress={openCreateModal}
                     startContent={<Plus className="h-5 w-5" />}
                 >
-                    Add Shift Template
+                    {tr("Add Shift Template")}
                 </Button>
             </div>
 

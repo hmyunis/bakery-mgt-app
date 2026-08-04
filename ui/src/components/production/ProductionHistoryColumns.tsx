@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Chip } from "@heroui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ProductionRun } from "../../types/production";
@@ -11,16 +12,18 @@ const formatDateTime = (value?: string) =>
         : "-";
 
 const statusPresentation = (status: ProductionRun["performance"]["status"]) => {
-    if (status === "underproducing") return { label: "Underproducing", color: "danger" as const };
-    if (status === "overproducing") return { label: "Overproducing", color: "primary" as const };
-    if (status === "normal") return { label: "Within average", color: "success" as const };
-    return { label: "Building average", color: "default" as const };
+    if (status === "underproducing")
+        return { label: tr("Underproducing"), color: "danger" as const };
+    if (status === "overproducing")
+        return { label: tr("Overproducing"), color: "primary" as const };
+    if (status === "normal") return { label: tr("Within average"), color: "success" as const };
+    return { label: tr("Building average"), color: "default" as const };
 };
 
 export const getProductionHistoryColumns = (): ColumnDef<ProductionRun>[] => [
     {
         accessorKey: "date_produced",
-        header: "Date",
+        header: tr("Date"),
         cell: ({ row }) => (
             <span className="text-sm text-zinc-500">
                 {formatDateTime(row.original.date_produced)}
@@ -29,7 +32,7 @@ export const getProductionHistoryColumns = (): ColumnDef<ProductionRun>[] => [
     },
     {
         accessorKey: "product_name",
-        header: "Product",
+        header: tr("Product"),
         cell: ({ row }) => (
             <span className="font-medium">
                 {row.original.product_name || row.original.composite_name || "-"}
@@ -38,18 +41,23 @@ export const getProductionHistoryColumns = (): ColumnDef<ProductionRun>[] => [
     },
     {
         accessorKey: "quantity_produced",
-        header: "Output",
-        cell: ({ row }) => <span>{row.original.quantity_produced.toFixed(2)} pcs</span>,
+        header: tr("Output"),
+        cell: ({ row }) => (
+            <span>
+                {row.original.quantity_produced.toFixed(2)} {tr("pcs")}
+            </span>
+        ),
     },
     {
         id: "ingredient_used",
-        header: "Ingredients Used",
+        header: tr("Ingredients Used"),
         cell: ({ row }) => {
             const usages = row.original.usages;
             return usages.length ? (
                 <div>
                     <span className="font-medium">
-                        {usages.length} ingredient{usages.length === 1 ? "" : "s"}
+                        {usages.length} {tr("ingredient")}
+                        {usages.length === 1 ? "" : "s"}
                     </span>
                     <p className="max-w-56 truncate text-xs text-zinc-500">
                         {usages.map((usage) => usage.ingredient__name).join(", ")}
@@ -62,7 +70,7 @@ export const getProductionHistoryColumns = (): ColumnDef<ProductionRun>[] => [
     },
     {
         id: "performance",
-        header: "Performance",
+        header: tr("Performance"),
         cell: ({ row }) => {
             const performance = row.original.performance;
             const display = statusPresentation(performance.status);
@@ -91,7 +99,7 @@ export const getProductionHistoryColumns = (): ColumnDef<ProductionRun>[] => [
     },
     {
         accessorKey: "chef_name",
-        header: "Chef",
+        header: tr("Chef"),
         cell: ({ row }) => <span>{row.original.chef_name || "-"}</span>,
     },
 ];

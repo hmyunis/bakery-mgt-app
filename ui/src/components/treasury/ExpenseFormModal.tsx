@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Modal,
@@ -87,10 +88,10 @@ export function ExpenseFormModal({
 
     const validateForm = () => {
         const nextErrors: Record<string, string> = {};
-        if (!formData.title.trim()) nextErrors.title = "Required";
-        if (!dateValue) nextErrors.createdAt = "Required";
+        if (!formData.title.trim()) nextErrors.title = tr("Required");
+        if (!dateValue) nextErrors.createdAt = tr("Required");
         if (!formData.amount || Number.isNaN(Number(formData.amount))) {
-            nextErrors.amount = "Enter a valid amount";
+            nextErrors.amount = tr("Enter a valid amount");
         }
 
         setErrors(nextErrors);
@@ -117,17 +118,17 @@ export function ExpenseFormModal({
             <ModalContent>
                 <ModalHeader className="flex flex-col gap-1">
                     <span className="text-lg font-semibold">
-                        {isEdit ? "Edit Expense" : "Add Expense"}
+                        {isEdit ? tr("Edit Expense") : tr("Add Expense")}
                     </span>
                     <span className="text-sm text-slate-500">
-                        Record operating costs, vendor payments, or miscellaneous expenses.
+                        {tr("Record operating costs, vendor payments, or miscellaneous expenses.")}
                     </span>
                 </ModalHeader>
                 <ModalBody className="space-y-4">
                     <Input
                         autoFocus
-                        label="Expense Title"
-                        placeholder="e.g. Flour purchase"
+                        label={tr("Expense Title")}
+                        placeholder={tr("e.g. Flour purchase")}
                         value={formData.title}
                         onValueChange={(value) => handleChange("title", value)}
                         isInvalid={!!errors.title}
@@ -137,7 +138,7 @@ export function ExpenseFormModal({
                         }}
                     />
                     <DatePicker
-                        label="Expense Date"
+                        label={tr("Expense Date")}
                         variant="bordered"
                         showMonthAndYearPickers
                         value={dateValue}
@@ -156,7 +157,7 @@ export function ExpenseFormModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
                             type="number"
-                            label="Amount (ETB)"
+                            label={tr("Amount (ETB)")}
                             placeholder="0.00"
                             value={formData.amount ? String(formData.amount) : ""}
                             onValueChange={(value) =>
@@ -169,7 +170,7 @@ export function ExpenseFormModal({
                             }}
                         />
                         <Select
-                            label="Status"
+                            label={tr("Status")}
                             selectedKeys={new Set([formData.status])}
                             onSelectionChange={(keys) => {
                                 if (keys === "all") return;
@@ -185,12 +186,12 @@ export function ExpenseFormModal({
                                 value: "!text-slate-900 dark:!text-slate-100",
                             }}
                         >
-                            <SelectItem key="pending">Pending</SelectItem>
-                            <SelectItem key="paid">Paid</SelectItem>
+                            <SelectItem key="pending">{tr("Pending")}</SelectItem>
+                            <SelectItem key="paid">{tr("Paid")}</SelectItem>
                         </Select>
                     </div>
                     <Select
-                        label="Bank Account (optional)"
+                        label={tr("Bank Account (optional)")}
                         selectedKeys={selectedAccountKeys}
                         onSelectionChange={(keys) => {
                             if (keys === "all") return;
@@ -211,7 +212,7 @@ export function ExpenseFormModal({
                         }}
                     >
                         <>
-                            <SelectItem key="none">No bank account</SelectItem>
+                            <SelectItem key="none">{tr("No bank account")}</SelectItem>
                             {accounts.map((account) => (
                                 <SelectItem
                                     key={account.id}
@@ -223,8 +224,8 @@ export function ExpenseFormModal({
                         </>
                     </Select>
                     <Textarea
-                        label="Notes (optional)"
-                        placeholder="Additional details"
+                        label={tr("Notes (optional)")}
+                        placeholder={tr("Additional details")}
                         value={formData.notes || ""}
                         onValueChange={(value) => handleChange("notes", value)}
                         minRows={2}
@@ -235,10 +236,10 @@ export function ExpenseFormModal({
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="flat" color="default" onPress={onClose}>
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button color="primary" onPress={handleSubmit}>
-                        {isEdit ? "Save Expense" : "Add Expense"}
+                        {isEdit ? tr("Save Expense") : tr("Add Expense")}
                     </Button>
                 </ModalFooter>
             </ModalContent>

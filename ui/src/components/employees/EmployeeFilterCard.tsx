@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import React from "react";
 import { Input } from "@heroui/input";
 import { Search } from "lucide-react";
@@ -23,7 +24,7 @@ export const EmployeeFilterCard: React.FC<EmployeeFilterCardProps> = ({
         `}
             >
                 <Input
-                    placeholder="Search by name, position or phone..."
+                    placeholder={tr("Search by name, position or phone...")}
                     value={searchQuery}
                     onValueChange={onSearchChange}
                     startContent={<Search className="h-5 w-5 text-slate-400" />}

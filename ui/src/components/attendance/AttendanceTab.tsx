@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
@@ -31,10 +32,10 @@ import { DeleteAttendanceRecordModal } from "./DeleteAttendanceRecordModal";
 const PAGE_SIZE = 10;
 
 const STATUS_OPTIONS: Array<{ key: AttendanceStatus; label: string }> = [
-    { key: "present", label: "Present" },
-    { key: "late", label: "Late" },
-    { key: "absent", label: "Absent" },
-    { key: "overtime", label: "Overtime" },
+    { key: "present", label: tr("Present") },
+    { key: "late", label: tr("Late") },
+    { key: "absent", label: tr("Absent") },
+    { key: "overtime", label: tr("Overtime") },
 ];
 
 export function AttendanceTab() {
@@ -154,7 +155,7 @@ export function AttendanceTab() {
                     <CardBody className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <DatePicker
-                                label="Date"
+                                label={tr("Date")}
                                 variant="bordered"
                                 showMonthAndYearPickers
                                 value={dateValue}
@@ -167,7 +168,7 @@ export function AttendanceTab() {
                             />
 
                             <Select
-                                label="Status"
+                                label={tr("Status")}
                                 classNames={{
                                     trigger: "!w-full !text-left",
                                     label: "!w-full !text-left",
@@ -191,8 +192,8 @@ export function AttendanceTab() {
                             </Select>
 
                             <Select
-                                label="Employee"
-                                placeholder="Select employee"
+                                label={tr("Employee")}
+                                placeholder={tr("Select employee")}
                                 selectedKeys={selectedEmployeeKeys}
                                 onSelectionChange={(keys) => {
                                     const selected = Array.from(keys)[0] as string | undefined;
@@ -213,8 +214,8 @@ export function AttendanceTab() {
                             </Select>
 
                             <Select
-                                label="Shift"
-                                placeholder="Select shift"
+                                label={tr("Shift")}
+                                placeholder={tr("Select shift")}
                                 selectedKeys={selectedShiftKeys}
                                 onSelectionChange={(keys) => {
                                     const selected = Array.from(keys)[0] as string | undefined;
@@ -237,7 +238,7 @@ export function AttendanceTab() {
 
                             {status === "late" && (
                                 <Input
-                                    label="Late Minutes"
+                                    label={tr("Late Minutes")}
                                     isRequired
                                     type="number"
                                     min={0}
@@ -252,7 +253,7 @@ export function AttendanceTab() {
 
                             {status === "overtime" && (
                                 <Input
-                                    label="Overtime Minutes"
+                                    label={tr("Overtime Minutes")}
                                     isRequired
                                     type="number"
                                     min={0}
@@ -267,7 +268,7 @@ export function AttendanceTab() {
                         </div>
 
                         <Textarea
-                            label="Notes (optional)"
+                            label={tr("Notes (optional)")}
                             value={notes}
                             onValueChange={setNotes}
                             classNames={{
@@ -290,7 +291,7 @@ export function AttendanceTab() {
                             isLoading={upsert.isPending}
                             startContent={<Save className="h-4 w-4" />}
                         >
-                            Save Attendance
+                            {tr("Save Attendance")}
                         </Button>
                     </CardBody>
                 </Card>
@@ -298,32 +299,34 @@ export function AttendanceTab() {
                 <Card>
                     <CardBody className="space-y-3">
                         <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                            Daily Summary
+                            {tr("Daily Summary")}
                         </div>
 
                         {dailySummary.isLoading ? (
-                            <div className="text-sm text-slate-500">Loading summary...</div>
+                            <div className="text-sm text-slate-500">{tr("Loading summary...")}</div>
                         ) : summary ? (
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500">Total records</span>
+                                    <span className="text-slate-500">{tr("Total records")}</span>
                                     <span className="font-medium">{summary.totalRecords}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500">Scheduled (min)</span>
+                                    <span className="text-slate-500">{tr("Scheduled (min)")}</span>
                                     <span className="font-medium">
                                         {summary.totalScheduledMinutes}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500">Worked (min)</span>
+                                    <span className="text-slate-500">{tr("Worked (min)")}</span>
                                     <span className="font-medium">
                                         {summary.totalWorkedMinutes}
                                     </span>
                                 </div>
 
                                 <div className="pt-2">
-                                    <div className="text-xs text-slate-500 mb-1">Breakdown</div>
+                                    <div className="text-xs text-slate-500 mb-1">
+                                        {tr("Breakdown")}
+                                    </div>
                                     <div className="space-y-1">
                                         {summary.statusBreakdown.map((b) => (
                                             <div key={b.status} className="flex justify-between">
@@ -335,7 +338,9 @@ export function AttendanceTab() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="text-sm text-slate-500">No summary available.</div>
+                            <div className="text-sm text-slate-500">
+                                {tr("No summary available.")}
+                            </div>
                         )}
                     </CardBody>
                 </Card>
@@ -343,7 +348,7 @@ export function AttendanceTab() {
 
             <div className="space-y-3">
                 <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                    Recent Records
+                    {tr("Recent Records")}
                 </div>
 
                 <DataTable

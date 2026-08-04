@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button, Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
 import { MoreVertical } from "lucide-react";
@@ -40,19 +41,19 @@ export function getAttendanceColumns(params?: {
         },
         {
             accessorKey: "employeeName",
-            header: "Employee",
+            header: tr("Employee"),
         },
         {
             accessorKey: "shiftName",
-            header: "Shift",
+            header: tr("Shift"),
         },
         {
             accessorKey: "shiftDate",
-            header: "Date",
+            header: tr("Date"),
         },
         {
             accessorKey: "status",
-            header: "Status",
+            header: tr("Status"),
             cell: ({ row }) => {
                 const status = row.original.status;
                 return (
@@ -69,11 +70,11 @@ export function getAttendanceColumns(params?: {
         },
         {
             accessorKey: "lateMinutes",
-            header: "Late (min)",
+            header: tr("Late (min)"),
         },
         {
             accessorKey: "overtimeMinutes",
-            header: "OT (min)",
+            header: tr("OT (min)"),
         },
         ...(onEdit || onDelete
             ? ([
@@ -88,13 +89,13 @@ export function getAttendanceColumns(params?: {
                                       <DropdownTrigger as={Button} variant="light">
                                           <MoreVertical className="h-5 w-5 text-slate-700 dark:text-slate-300" />
                                       </DropdownTrigger>
-                                      <DropdownMenu aria-label="Attendance Actions">
+                                      <DropdownMenu aria-label={tr("Attendance Actions")}>
                                           {onEdit && (
                                               <DropdownItem
                                                   key="edit"
                                                   onAction={() => onEdit(record)}
                                               >
-                                                  Edit
+                                                  {tr("Edit")}
                                               </DropdownItem>
                                           )}
                                           {onDelete && (

@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import type { PaymentMethod } from "../../types/payment";
 import { useDeletePaymentMethod } from "../../hooks/usePayment";
@@ -29,11 +30,14 @@ export function DeletePaymentMethodModal({
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1">Delete Payment Method</ModalHeader>
+                <ModalHeader className="flex flex-col gap-1">
+                    {tr("Delete Payment Method")}
+                </ModalHeader>
                 <ModalBody>
                     <p>
-                        Are you sure you want to delete <strong>{paymentMethod?.name}</strong>? This
-                        action cannot be undone.
+                        {tr("Are you sure you want to delete")}
+                        <strong>{paymentMethod?.name}</strong>
+                        {tr("? This action cannot be undone.")}
                     </p>
                 </ModalBody>
                 <ModalFooter>
@@ -42,7 +46,7 @@ export function DeletePaymentMethodModal({
                         onPress={onClose}
                         className="!text-zinc-700 dark:!text-zinc-300"
                     >
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button color="danger" onPress={handleDelete} isLoading={isDeleting}>
                         Delete

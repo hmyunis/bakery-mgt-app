@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState } from "react";
 import { Button, Card, CardBody, CardHeader, Chip, Spinner, Alert } from "@heroui/react";
 import { ShoppingCart, Copy, Share2, AlertTriangle, Check } from "lucide-react";
@@ -11,7 +12,7 @@ export function ShoppingList() {
     const handleCopyToClipboard = async () => {
         const textToCopy = data?.share_text || "";
         if (!textToCopy) {
-            toast.error("No shopping list data to copy");
+            toast.error(tr("No shopping list data to copy"));
             return;
         }
 
@@ -20,7 +21,7 @@ export function ShoppingList() {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 await navigator.clipboard.writeText(textToCopy);
                 setCopied(true);
-                toast.success("Shopping list copied to clipboard!");
+                toast.success(tr("Shopping list copied to clipboard!"));
                 setTimeout(() => setCopied(false), 2000);
             } else {
                 // Fallback for older browsers
@@ -35,23 +36,23 @@ export function ShoppingList() {
                 try {
                     document.execCommand("copy");
                     setCopied(true);
-                    toast.success("Shopping list copied to clipboard!");
+                    toast.success(tr("Shopping list copied to clipboard!"));
                     setTimeout(() => setCopied(false), 2000);
                 } catch {
-                    toast.error("Failed to copy to clipboard");
+                    toast.error(tr("Failed to copy to clipboard"));
                 }
                 document.body.removeChild(textArea);
             }
         } catch (err) {
             console.error("Copy error:", err);
-            toast.error("Failed to copy to clipboard. Please copy manually.");
+            toast.error(tr("Failed to copy to clipboard. Please copy manually."));
         }
     };
 
     const handleShareTelegram = () => {
         const textToShare = data?.share_text || "";
         if (!textToShare) {
-            toast.error("No shopping list data to share");
+            toast.error(tr("No shopping list data to share"));
             return;
         }
 
@@ -63,7 +64,7 @@ export function ShoppingList() {
             window.open(telegramUrl, "_blank", "noopener,noreferrer");
         } catch (err) {
             console.error("Telegram share error:", err);
-            toast.error("Failed to open Telegram. Please copy the list manually.");
+            toast.error(tr("Failed to open Telegram. Please copy the list manually."));
         }
     };
 
@@ -81,8 +82,10 @@ export function ShoppingList() {
         return (
             <Card>
                 <CardBody>
-                    <Alert color="danger" title="Error loading shopping list">
-                        {error instanceof Error ? error.message : "Failed to load shopping list"}
+                    <Alert color="danger" title={tr("Error loading shopping list")}>
+                        {error instanceof Error
+                            ? error.message
+                            : tr("Failed to load shopping list")}
                     </Alert>
                 </CardBody>
             </Card>
@@ -99,10 +102,10 @@ export function ShoppingList() {
                     <div className="flex flex-col items-center justify-center text-center">
                         <ShoppingCart className="h-12 w-12 text-zinc-400 mb-4" />
                         <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                            All Stock Levels Good
+                            {tr("All Stock Levels Good")}
                         </h3>
                         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                            No items need to be reordered at this time.
+                            {tr("No items need to be reordered at this time.")}
                         </p>
                     </div>
                 </CardBody>
@@ -116,10 +119,10 @@ export function ShoppingList() {
                 <div className="flex items-center gap-2">
                     <ShoppingCart className="h-5 w-5 text-primary" />
                     <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                        Smart Shopping List
+                        {tr("Smart Shopping List")}
                     </h3>
                     <Chip color="warning" variant="flat" size="sm">
-                        {items.length} {items.length === 1 ? "item" : "items"}
+                        {items.length} {items.length === 1 ? tr("item") : tr("items")}
                     </Chip>
                 </div>
                 <div className="flex gap-2">
@@ -132,7 +135,7 @@ export function ShoppingList() {
                         onPress={handleCopyToClipboard}
                         isDisabled={!shareText || isLoading}
                     >
-                        {copied ? "Copied!" : "Copy"}
+                        {copied ? tr("Copied!") : tr("Copy")}
                     </Button>
                     <Button
                         color="primary"
@@ -141,7 +144,7 @@ export function ShoppingList() {
                         onPress={handleShareTelegram}
                         isDisabled={!shareText || isLoading}
                     >
-                        Share to Telegram
+                        {tr("Share to Telegram")}
                     </Button>
                 </div>
             </CardHeader>
@@ -163,13 +166,13 @@ export function ShoppingList() {
                                             {item.name}
                                         </h4>
                                         <Chip color="warning" variant="flat" size="sm">
-                                            Low Stock
+                                            {tr("Low Stock")}
                                         </Chip>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                                         <div>
                                             <span className="text-zinc-600 dark:text-zinc-400">
-                                                Current Stock:{" "}
+                                                {tr("Current Stock:")}{" "}
                                             </span>
                                             <span className="font-medium text-zinc-900 dark:text-zinc-100">
                                                 {item.current_stock.toFixed(3)} {item.unit}
@@ -177,7 +180,7 @@ export function ShoppingList() {
                                         </div>
                                         <div>
                                             <span className="text-zinc-600 dark:text-zinc-400">
-                                                Reorder Point:{" "}
+                                                {tr("Reorder Point:")}{" "}
                                             </span>
                                             <span className="font-medium text-zinc-900 dark:text-zinc-100">
                                                 {item.reorder_point.toFixed(3)} {item.unit}
@@ -185,7 +188,7 @@ export function ShoppingList() {
                                         </div>
                                         <div className="sm:col-span-2">
                                             <span className="text-zinc-600 dark:text-zinc-400">
-                                                Shortfall:{" "}
+                                                {tr("Shortfall:")}{" "}
                                             </span>
                                             <span className="font-medium text-warning-600 dark:text-warning-400">
                                                 {shortfall.toFixed(3)} {item.unit}
@@ -193,7 +196,7 @@ export function ShoppingList() {
                                         </div>
                                         <div className="sm:col-span-2">
                                             <span className="text-zinc-600 dark:text-zinc-400">
-                                                Suggested to buy:{" "}
+                                                {tr("Suggested to buy:")}{" "}
                                             </span>
                                             <span className="font-semibold text-primary">
                                                 ~{suggestedQty.toFixed(0)} {item.unit}

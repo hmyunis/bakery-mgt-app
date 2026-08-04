@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState } from "react";
 import { Button, Input, Textarea, Spinner, Switch, Divider } from "@heroui/react";
 import { Save, Upload, X, Facebook, Instagram, Send, Youtube, Twitter, Music2 } from "lucide-react";
@@ -67,12 +68,12 @@ export function BakerySettingsForm() {
         if (file) {
             // Validate file type
             if (!file.type.startsWith("image/")) {
-                toast.error("Please select an image file");
+                toast.error(tr("Please select an image file"));
                 return;
             }
             // Validate file size (5MB)
             if (file.size > 5 * 1024 * 1024) {
-                toast.error("Image size must be less than 5MB");
+                toast.error(tr("Image size must be less than 5MB"));
                 return;
             }
             setLogoFile(file);
@@ -131,13 +132,15 @@ export function BakerySettingsForm() {
             <div className="space-y-4">
                 {/* Logo Upload */}
                 <div>
-                    <label className="block text-sm font-medium text-[var(--fg)] mb-2">Logo</label>
+                    <label className="block text-sm font-medium text-[var(--fg)] mb-2">
+                        {tr("Logo")}
+                    </label>
                     <div className="flex items-center gap-4">
                         {logoPreview && (
                             <div className="relative">
                                 <img
                                     src={logoPreview}
-                                    alt="Logo preview"
+                                    alt={tr("Logo preview")}
                                     className="w-24 h-24 object-contain rounded-lg border border-slate-200 dark:border-slate-700"
                                 />
                                 {logoFile && (
@@ -165,11 +168,11 @@ export function BakerySettingsForm() {
                                     startContent={<Upload className="h-4 w-4" />}
                                     as="span"
                                 >
-                                    {logoPreview ? "Change Logo" : "Upload Logo"}
+                                    {logoPreview ? tr("Change Logo") : tr("Upload Logo")}
                                 </Button>
                             </label>
                             <p className="text-xs text-[var(--muted)] mt-1">
-                                JPEG, PNG, GIF, or WebP. Max 5MB.
+                                {tr("JPEG, PNG, GIF, or WebP. Max 5MB.")}
                             </p>
                         </div>
                     </div>
@@ -177,8 +180,8 @@ export function BakerySettingsForm() {
 
                 {/* Name */}
                 <Input
-                    label="Bakery Name"
-                    placeholder="Enter bakery name"
+                    label={tr("Bakery Name")}
+                    placeholder={tr("Enter bakery name")}
                     value={formData.name}
                     onValueChange={(value) => handleInputChange("name", value)}
                     classNames={{
@@ -189,8 +192,8 @@ export function BakerySettingsForm() {
 
                 {/* Phone Number */}
                 <Input
-                    label="Phone Number"
-                    placeholder="Enter phone number"
+                    label={tr("Phone Number")}
+                    placeholder={tr("Enter phone number")}
                     value={formData.phoneNumber}
                     onValueChange={(value) => handleInputChange("phoneNumber", value)}
                     classNames={{
@@ -201,9 +204,9 @@ export function BakerySettingsForm() {
 
                 {/* Email */}
                 <Input
-                    label="Email"
+                    label={tr("Email")}
                     type="email"
-                    placeholder="Enter email address"
+                    placeholder={tr("Enter email address")}
                     value={formData.email}
                     onValueChange={(value) => handleInputChange("email", value)}
                     classNames={{
@@ -214,8 +217,8 @@ export function BakerySettingsForm() {
 
                 {/* Address */}
                 <Textarea
-                    label="Address"
-                    placeholder="Enter bakery address"
+                    label={tr("Address")}
+                    placeholder={tr("Enter bakery address")}
                     value={formData.address}
                     onValueChange={(value) => handleInputChange("address", value)}
                     minRows={3}
@@ -228,7 +231,7 @@ export function BakerySettingsForm() {
                 {/* Theme Color */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-[var(--fg)]">
-                        Theme Color
+                        {tr("Theme Color")}
                     </label>
                     <div className="flex items-center gap-3">
                         <input
@@ -250,27 +253,29 @@ export function BakerySettingsForm() {
                         <div
                             className="h-10 w-10 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0"
                             style={{ backgroundColor: formData.themeColor }}
-                            title="Preview"
+                            title={tr("Preview")}
                         />
                     </div>
                     <p className="text-xs text-[var(--muted)]">
-                        Choose the accent color for the public landing page.
+                        {tr("Choose the accent color for the public landing page.")}
                     </p>
                 </div>
 
                 <Divider className="my-2" />
 
                 <div className="space-y-3">
-                    <div className="text-sm font-medium text-[var(--fg)]">Social Media</div>
+                    <div className="text-sm font-medium text-[var(--fg)]">{tr("Social Media")}</div>
                     <p className="text-xs text-[var(--muted)]">
-                        To show a social icon on the website footer, provide a URL then enable it.
+                        {tr(
+                            "To show a social icon on the website footer, provide a URL then enable it."
+                        )}
                     </p>
 
                     {/* Facebook */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
                         <Input
-                            label="Facebook URL"
-                            placeholder="https://facebook.com/yourpage"
+                            label={tr("Facebook URL")}
+                            placeholder={tr("https://facebook.com/yourpage")}
                             value={formData.facebookUrl}
                             onValueChange={(value) => handleInputChange("facebookUrl", value)}
                             startContent={<Facebook className="h-4 w-4 text-default-400" />}
@@ -280,20 +285,20 @@ export function BakerySettingsForm() {
                             }}
                         />
                         <Switch
-                            aria-label="Enable Facebook"
+                            aria-label={tr("Enable Facebook")}
                             isSelected={formData.facebookEnabled}
                             isDisabled={!formData.facebookUrl.trim()}
                             onValueChange={(v) => handleInputChange("facebookEnabled", v)}
                         >
-                            Enabled
+                            {tr("Enabled")}
                         </Switch>
                     </div>
 
                     {/* Instagram */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
                         <Input
-                            label="Instagram URL"
-                            placeholder="https://instagram.com/yourhandle"
+                            label={tr("Instagram URL")}
+                            placeholder={tr("https://instagram.com/yourhandle")}
                             value={formData.instagramUrl}
                             onValueChange={(value) => handleInputChange("instagramUrl", value)}
                             startContent={<Instagram className="h-4 w-4 text-default-400" />}
@@ -303,20 +308,20 @@ export function BakerySettingsForm() {
                             }}
                         />
                         <Switch
-                            aria-label="Enable Instagram"
+                            aria-label={tr("Enable Instagram")}
                             isSelected={formData.instagramEnabled}
                             isDisabled={!formData.instagramUrl.trim()}
                             onValueChange={(v) => handleInputChange("instagramEnabled", v)}
                         >
-                            Enabled
+                            {tr("Enabled")}
                         </Switch>
                     </div>
 
                     {/* Telegram */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
                         <Input
-                            label="Telegram URL"
-                            placeholder="https://t.me/yourchannel"
+                            label={tr("Telegram URL")}
+                            placeholder={tr("https://t.me/yourchannel")}
                             value={formData.telegramUrl}
                             onValueChange={(value) => handleInputChange("telegramUrl", value)}
                             startContent={<Send className="h-4 w-4 text-default-400" />}
@@ -326,20 +331,20 @@ export function BakerySettingsForm() {
                             }}
                         />
                         <Switch
-                            aria-label="Enable Telegram"
+                            aria-label={tr("Enable Telegram")}
                             isSelected={formData.telegramEnabled}
                             isDisabled={!formData.telegramUrl.trim()}
                             onValueChange={(v) => handleInputChange("telegramEnabled", v)}
                         >
-                            Enabled
+                            {tr("Enabled")}
                         </Switch>
                     </div>
 
                     {/* TikTok */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
                         <Input
-                            label="TikTok URL"
-                            placeholder="https://tiktok.com/@yourhandle"
+                            label={tr("TikTok URL")}
+                            placeholder={tr("https://tiktok.com/@yourhandle")}
                             value={formData.tiktokUrl}
                             onValueChange={(value) => handleInputChange("tiktokUrl", value)}
                             startContent={<Music2 className="h-4 w-4 text-default-400" />}
@@ -349,20 +354,20 @@ export function BakerySettingsForm() {
                             }}
                         />
                         <Switch
-                            aria-label="Enable TikTok"
+                            aria-label={tr("Enable TikTok")}
                             isSelected={formData.tiktokEnabled}
                             isDisabled={!formData.tiktokUrl.trim()}
                             onValueChange={(v) => handleInputChange("tiktokEnabled", v)}
                         >
-                            Enabled
+                            {tr("Enabled")}
                         </Switch>
                     </div>
 
                     {/* YouTube */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
                         <Input
-                            label="YouTube URL"
-                            placeholder="https://youtube.com/@yourchannel"
+                            label={tr("YouTube URL")}
+                            placeholder={tr("https://youtube.com/@yourchannel")}
                             value={formData.youtubeUrl}
                             onValueChange={(value) => handleInputChange("youtubeUrl", value)}
                             startContent={<Youtube className="h-4 w-4 text-default-400" />}
@@ -372,20 +377,20 @@ export function BakerySettingsForm() {
                             }}
                         />
                         <Switch
-                            aria-label="Enable YouTube"
+                            aria-label={tr("Enable YouTube")}
                             isSelected={formData.youtubeEnabled}
                             isDisabled={!formData.youtubeUrl.trim()}
                             onValueChange={(v) => handleInputChange("youtubeEnabled", v)}
                         >
-                            Enabled
+                            {tr("Enabled")}
                         </Switch>
                     </div>
 
                     {/* X */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
                         <Input
-                            label="X (Twitter) URL"
-                            placeholder="https://x.com/yourhandle"
+                            label={tr("X (Twitter) URL")}
+                            placeholder={tr("https://x.com/yourhandle")}
                             value={formData.xUrl}
                             onValueChange={(value) => handleInputChange("xUrl", value)}
                             startContent={<Twitter className="h-4 w-4 text-default-400" />}
@@ -395,12 +400,12 @@ export function BakerySettingsForm() {
                             }}
                         />
                         <Switch
-                            aria-label="Enable X"
+                            aria-label={tr("Enable X")}
                             isSelected={formData.xEnabled}
                             isDisabled={!formData.xUrl.trim()}
                             onValueChange={(v) => handleInputChange("xEnabled", v)}
                         >
-                            Enabled
+                            {tr("Enabled")}
                         </Switch>
                     </div>
                 </div>
@@ -414,7 +419,7 @@ export function BakerySettingsForm() {
                     isLoading={isPending}
                     disabled={isPending}
                 >
-                    Save Changes
+                    {tr("Save Changes")}
                 </Button>
             </div>
         </form>

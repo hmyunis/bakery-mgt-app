@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useCallback, useMemo, useState } from "react";
 import { Tabs, Tab, Chip, Button } from "@heroui/react";
 import { CreditCard, Landmark, FileClock } from "lucide-react";
@@ -287,13 +288,13 @@ export function TreasuryPage() {
             },
             {
                 accessorKey: "createdAt",
-                header: "Date",
+                header: tr("Date"),
                 cell: ({ row }: { row: { original: Expense } }) =>
                     new Date(row.original.createdAt).toLocaleDateString(),
             },
             {
                 accessorKey: "title",
-                header: "Expense",
+                header: tr("Expense"),
                 cell: ({ row }: { row: { original: Expense } }) => (
                     <div>
                         <p className="font-medium text-slate-900 dark:text-slate-100">
@@ -304,42 +305,42 @@ export function TreasuryPage() {
             },
             {
                 accessorKey: "amount",
-                header: "Amount",
+                header: tr("Amount"),
                 cell: ({ row }: { row: { original: Expense } }) =>
                     formatCurrency(row.original.amount),
             },
             {
                 accessorKey: "status",
-                header: "Status",
+                header: tr("Status"),
                 cell: ({ row }: { row: { original: Expense } }) => (
                     <Chip
                         size="sm"
                         variant="flat"
                         color={row.original.status === "paid" ? "success" : "warning"}
                     >
-                        {row.original.status === "paid" ? "Paid" : "Pending"}
+                        {row.original.status === "paid" ? tr("Paid") : tr("Pending")}
                     </Chip>
                 ),
             },
             {
                 accessorKey: "accountId",
-                header: "Bank Account",
+                header: tr("Bank Account"),
                 cell: ({ row }: { row: { original: Expense } }) => {
                     if (!row.original.accountId) return "—";
                     if (row.original.accountName) return row.original.accountName;
                     const account = accounts.find((acct) => acct.id === row.original.accountId);
-                    if (!account) return "Account removed";
+                    if (!account) return tr("Account removed");
                     return `${account.name} • ${account.bankName}`;
                 },
             },
             {
                 accessorKey: "notes",
-                header: "Notes",
+                header: tr("Notes"),
                 cell: ({ row }: { row: { original: Expense } }) => row.original.notes || "—",
             },
             {
                 id: "actions",
-                header: "Actions",
+                header: tr("Actions"),
                 cell: ({ row }: { row: { original: Expense } }) => (
                     <div className="flex items-center gap-2">
                         <Button
@@ -348,7 +349,7 @@ export function TreasuryPage() {
                             onPress={() => openEditExpense(row.original)}
                             className="!min-w-fit !w-auto px-3 text-slate-700 dark:text-slate-200"
                         >
-                            Edit
+                            {tr("Edit")}
                         </Button>
                         <Button
                             size="sm"
@@ -375,13 +376,13 @@ export function TreasuryPage() {
             },
             {
                 accessorKey: "createdAt",
-                header: "Date",
+                header: tr("Date"),
                 cell: ({ row }: { row: { original: BankTransaction } }) =>
                     new Date(row.original.createdAt).toLocaleString(),
             },
             {
                 accessorKey: "accountId",
-                header: "Account",
+                header: tr("Account"),
                 cell: ({ row }: { row: { original: BankTransaction } }) =>
                     row.original.accountName ||
                     accounts.find((acct) => acct.id === row.original.accountId)?.name ||
@@ -389,38 +390,38 @@ export function TreasuryPage() {
             },
             {
                 accessorKey: "type",
-                header: "Type",
+                header: tr("Type"),
                 cell: ({ row }: { row: { original: BankTransaction } }) => (
                     <Chip
                         size="sm"
                         variant="flat"
                         color={row.original.type === "deposit" ? "success" : "danger"}
                     >
-                        {row.original.type === "deposit" ? "Deposit" : "Withdrawal"}
+                        {row.original.type === "deposit" ? tr("Deposit") : tr("Withdrawal")}
                     </Chip>
                 ),
             },
             {
                 accessorKey: "amount",
-                header: "Amount",
+                header: tr("Amount"),
                 cell: ({ row }: { row: { original: BankTransaction } }) =>
                     formatCurrency(row.original.amount),
             },
             {
                 accessorKey: "recordedBy",
-                header: "Recorded By",
+                header: tr("Recorded By"),
                 cell: ({ row }: { row: { original: BankTransaction } }) =>
                     row.original.recordedByName || "—",
             },
             {
                 accessorKey: "notes",
-                header: "Notes",
+                header: tr("Notes"),
                 cell: ({ row }: { row: { original: BankTransaction } }) =>
                     row.original.notes || "—",
             },
             {
                 id: "actions",
-                header: "Actions",
+                header: tr("Actions"),
                 cell: ({ row }: { row: { original: BankTransaction } }) => (
                     <div className="flex items-center gap-2">
                         <Button
@@ -429,7 +430,7 @@ export function TreasuryPage() {
                             onPress={() => openEditTransaction(row.original)}
                             className="!min-w-fit !w-auto px-3 text-slate-700 dark:text-slate-200"
                         >
-                            Edit
+                            {tr("Edit")}
                         </Button>
                         <Button
                             size="sm"
@@ -449,12 +450,12 @@ export function TreasuryPage() {
     return (
         <div className="space-y-6 lg:space-y-8">
             <PageTitle
-                title="Treasury"
-                subtitle="Configure bank accounts, monitor balances, and prepare expenses."
+                title={tr("Treasury")}
+                subtitle={tr("Configure bank accounts, monitor balances, and prepare expenses.")}
             />
 
             <Tabs
-                aria-label="Treasury"
+                aria-label={tr("Treasury")}
                 selectedKey={activeTab}
                 onSelectionChange={(key) => setActiveTab(String(key))}
                 color="primary"
@@ -469,7 +470,7 @@ export function TreasuryPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <Landmark className="h-4 w-4" />
-                            <span>Bank Accounts</span>
+                            <span>{tr("Bank Accounts")}</span>
                         </div>
                     }
                 >
@@ -525,7 +526,7 @@ export function TreasuryPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <FileClock className="h-4 w-4" />
-                            <span>Expenses</span>
+                            <span>{tr("Expenses")}</span>
                         </div>
                     }
                 >
@@ -573,7 +574,7 @@ export function TreasuryPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <CreditCard className="h-4 w-4" />
-                            <span>Payment Methods</span>
+                            <span>{tr("Payment Methods")}</span>
                         </div>
                     }
                 >

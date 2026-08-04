@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Button, Input, Alert, Select, SelectItem, Divider, Switch } from "@heroui/react";
 import { ChevronRight, ShoppingCart, Plus, Minus, X, Trash2 } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -156,35 +157,35 @@ const SidebarContent = ({
         }
 
         if (items.length === 0) {
-            toast.error("Cart is empty");
+            toast.error(tr("Cart is empty"));
             return;
         }
 
         if (payments.length === 0) {
-            toast.error("Please add at least one payment method");
+            toast.error(tr("Please add at least one payment method"));
             return;
         }
 
         if (!isFullyPaid) {
-            toast.error("Payment amount must cover the total bill");
+            toast.error(tr("Payment amount must cover the total bill"));
             return;
         }
 
         const activePaymentMethodIds = new Set(paymentMethods.map((m) => m.id));
         const hasInvalidMethod = payments.some((p) => !activePaymentMethodIds.has(p.methodId));
         if (hasInvalidMethod) {
-            toast.error("One or more payment methods are invalid or inactive");
+            toast.error(tr("One or more payment methods are invalid or inactive"));
             return;
         }
 
         const hasZeroOrNegative = payments.some((p) => !((parseFloat(p.amount) || 0) > 0));
         const hasNegative = payments.some((p) => (parseFloat(p.amount) || 0) < 0);
         if (hasZeroOrNegative) {
-            toast.error("All payment amounts must be greater than zero");
+            toast.error(tr("All payment amounts must be greater than zero"));
             return;
         }
         if (hasNegative) {
-            toast.error("Payment amounts cannot be negative");
+            toast.error(tr("Payment amounts cannot be negative"));
             return;
         }
 
@@ -221,8 +222,8 @@ const SidebarContent = ({
             {items.length === 0 ? (
                 <div className="text-center py-8 text-slate-500 dark:text-slate-400 m-auto">
                     <ShoppingCart className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Your cart is empty</p>
-                    <p className="text-sm">Add products to get started</p>
+                    <p>{tr("Your cart is empty")}</p>
+                    <p className="text-sm">{tr("Add products to get started")}</p>
                 </div>
             ) : (
                 <>
@@ -259,7 +260,8 @@ const SidebarContent = ({
                                                 </p>
                                             )}
                                             <p className="text-sm font-medium text-primary mt-2">
-                                                ETB {item.product.selling_price.toFixed(2)}
+                                                {tr("ETB")}
+                                                {item.product.selling_price.toFixed(2)}
                                             </p>
                                         </div>
                                         <Button
@@ -316,7 +318,7 @@ const SidebarContent = ({
                                         </div>
                                         <div className="text-right">
                                             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                                ETB{" "}
+                                                {tr("ETB")}{" "}
                                                 {(
                                                     item.product.selling_price * item.quantity
                                                 ).toFixed(2)}
@@ -341,7 +343,7 @@ const SidebarContent = ({
 
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                    Payment Methods
+                                    {tr("Payment Methods")}
                                 </h4>
                                 {payments.length < paymentMethods.length && (
                                     <Button
@@ -350,7 +352,7 @@ const SidebarContent = ({
                                         onPress={addPaymentMethod}
                                         startContent={<Plus className="h-4 w-4" />}
                                     >
-                                        Add
+                                        {tr("Add")}
                                     </Button>
                                 )}
                             </div>
@@ -398,14 +400,16 @@ const SidebarContent = ({
                                                             );
                                                         }
                                                     }}
-                                                    placeholder="Select payment method"
-                                                    aria-label="Select payment method"
+                                                    placeholder={tr("Select payment method")}
+                                                    aria-label={tr("Select payment method")}
                                                     classNames={{
                                                         base: "flex-1 !w-full !text-left",
                                                         trigger:
                                                             "dark:!bg-zinc-800 !w-full !text-left !text-slate-900 dark:!text-slate-100",
                                                         value: "!text-slate-900 dark:!text-slate-100",
-                                                        label: "!w-full !text-left !text-slate-700 dark:!text-slate-300",
+                                                        label: tr(
+                                                            "!w-full !text-left !text-slate-700 dark:!text-slate-300"
+                                                        ),
                                                         selectorIcon:
                                                             "text-slate-500 dark:text-slate-400",
                                                     }}
@@ -429,7 +433,7 @@ const SidebarContent = ({
                                                         placeholder="0"
                                                         startContent={
                                                             <span className="text-zinc-500 text-sm">
-                                                                ETB
+                                                                {tr("ETB")}
                                                             </span>
                                                         }
                                                         classNames={{
@@ -446,7 +450,7 @@ const SidebarContent = ({
                                                                     setRemainingAsAmount(index)
                                                                 }
                                                             >
-                                                                Remaining
+                                                                {tr("Remaining")}
                                                             </Button>
                                                         )}
                                                     {payments.length > 1 && (
@@ -471,22 +475,23 @@ const SidebarContent = ({
 
                             {payments.length === 0 && (
                                 <Alert color="warning" variant="flat">
-                                    Please add a payment method
+                                    {tr("Please add a payment method")}
                                 </Alert>
                             )}
 
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-zinc-600 dark:text-zinc-400">
-                                        Paid Amount:
+                                        {tr("Paid Amount:")}
                                     </span>
                                     <span className="text-zinc-900 dark:text-zinc-100 font-medium">
-                                        ETB {paidAmount.toFixed(2)}
+                                        {tr("ETB")}
+                                        {paidAmount.toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-zinc-600 dark:text-zinc-400">
-                                        Remaining:
+                                        {tr("Remaining:")}
                                     </span>
                                     <span
                                         className={`font-medium ${
@@ -495,12 +500,14 @@ const SidebarContent = ({
                                                 : "text-success-600 dark:text-success-400"
                                         }`}
                                     >
-                                        ETB {remainingAmount.toFixed(2)}
+                                        {tr("ETB")}
+                                        {remainingAmount.toFixed(2)}
                                     </span>
                                 </div>
                                 {remainingAmount < 0 && (
                                     <Alert color="warning" variant="flat">
-                                        Change: ETB {Math.abs(remainingAmount).toFixed(2)}
+                                        {tr("Change: ETB")}
+                                        {Math.abs(remainingAmount).toFixed(2)}
                                     </Alert>
                                 )}
                             </div>
@@ -508,10 +515,11 @@ const SidebarContent = ({
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex flex-col">
                                     <span className="text-xs text-slate-500 dark:text-slate-400">
-                                        Total
+                                        {tr("Total")}
                                     </span>
                                     <span className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                                        ETB {total.toFixed(2)}
+                                        {tr("ETB")}
+                                        {total.toFixed(2)}
                                     </span>
                                 </div>
                                 <Button
@@ -526,7 +534,7 @@ const SidebarContent = ({
                                     }
                                     className="px-4"
                                 >
-                                    Complete Sale
+                                    {tr("Complete Sale")}
                                 </Button>
                             </div>
                         </div>
@@ -583,17 +591,17 @@ export function POSCartSidebar({
                     )}
                 >
                     <div className="flex items-center gap-3 min-w-0">
-                        <h3 className="font-semibold text-lg">Your Cart</h3>
+                        <h3 className="font-semibold text-lg">{tr("Your Cart")}</h3>
                         <Switch
                             size="sm"
                             isSelected={receiptIssued}
                             onValueChange={setReceiptIssued}
-                            aria-label="Receipt issued"
+                            aria-label={tr("Receipt issued")}
                             classNames={{
                                 label: "text-xs text-slate-600 dark:text-slate-300",
                             }}
                         >
-                            Receipt
+                            {tr("Receipt")}
                         </Switch>
                     </div>
                     <Button
@@ -634,17 +642,17 @@ export function POSCartSidebar({
                     <div className="relative w-80 max-w-[90vw] h-full bg-background flex flex-col border-l border-gray-200 dark:border-gray-700 shadow-lg">
                         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3 min-w-0">
-                                <h3 className="font-semibold text-lg">Your Cart</h3>
+                                <h3 className="font-semibold text-lg">{tr("Your Cart")}</h3>
                                 <Switch
                                     size="sm"
                                     isSelected={receiptIssued}
                                     onValueChange={setReceiptIssued}
-                                    aria-label="Receipt issued"
+                                    aria-label={tr("Receipt issued")}
                                     classNames={{
                                         label: "text-xs text-slate-600 dark:text-slate-300",
                                     }}
                                 >
-                                    Receipt
+                                    {tr("Receipt")}
                                 </Switch>
                             </div>
                             <Button

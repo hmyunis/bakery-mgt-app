@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import React from "react";
 import { Bell, BellOff, Info } from "lucide-react";
 import { Card, CardBody, Switch } from "@heroui/react";
@@ -28,8 +29,8 @@ export const NotificationSettingsCard: React.FC = () => {
                     <div className="flex items-center gap-4 text-default-500">
                         <BellOff className="w-6 h-6" />
                         <div>
-                            <h3 className="font-semibold">Push Notifications</h3>
-                            <p className="text-sm">Not supported in this browser.</p>
+                            <h3 className="font-semibold">{tr("Push Notifications")}</h3>
+                            <p className="text-sm">{tr("Not supported in this browser.")}</p>
                         </div>
                     </div>
                 </CardBody>
@@ -57,10 +58,10 @@ export const NotificationSettingsCard: React.FC = () => {
                         </div>
                         <div>
                             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                                Push Notifications
+                                {tr("Push Notifications")}
                             </h3>
                             <p className="text-sm text-default-500">
-                                Receive updates about orders, stock, and system alerts.
+                                {tr("Receive updates about orders, stock, and system alerts.")}
                             </p>
                         </div>
                     </div>
@@ -72,7 +73,7 @@ export const NotificationSettingsCard: React.FC = () => {
                         color="primary"
                     >
                         <span className="text-sm font-medium">
-                            {isSubscribed ? "Enabled" : "Disabled"}
+                            {isSubscribed ? tr("Enabled") : tr("Disabled")}
                         </span>
                     </Switch>
                 </div>
@@ -81,8 +82,9 @@ export const NotificationSettingsCard: React.FC = () => {
                     <div className="bg-danger-50 text-danger-600 p-3 rounded-lg text-sm flex items-start gap-2 mb-4">
                         <Info className="w-4 h-4 mt-0.5 shrink-0" />
                         <p>
-                            Notifications are blocked by your browser. Please reset permissions in
-                            your browser settings to enable them.
+                            {tr(
+                                "Notifications are blocked by your browser. Please reset permissions in your browser settings to enable them."
+                            )}
                         </p>
                     </div>
                 )}
@@ -92,14 +94,12 @@ export const NotificationSettingsCard: React.FC = () => {
                         <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                         <div className="space-y-1">
                             <p className="text-sm font-medium text-default-700">
-                                When will I receive notifications?
+                                {tr("When will I receive notifications?")}
                             </p>
                             <p className="text-xs text-default-500 leading-relaxed">
-                                You will receive pop-up notifications on your device when important
-                                events occur, including: low stock alerts, price anomalies,
-                                production completions, sales, stock adjustments, purchases, new
-                                user creation, user logins, and factory resets. Notifications work
-                                even when the app is closed.
+                                {tr(
+                                    "You will receive pop-up notifications on your device when important events occur, including: low stock alerts, price anomalies, production completions, sales, stock adjustments, purchases, new user creation, user logins, and factory resets. Notifications work even when the app is closed."
+                                )}
                             </p>
                         </div>
                     </div>

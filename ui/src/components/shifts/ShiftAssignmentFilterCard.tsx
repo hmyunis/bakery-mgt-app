@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { memo, useMemo } from "react";
 import { Card, CardBody, DatePicker, Select, SelectItem } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
@@ -41,8 +42,8 @@ function ShiftAssignmentFilterCard({
             <CardBody className="py-3">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <Select
-                        label="Employee"
-                        placeholder="All"
+                        label={tr("Employee")}
+                        placeholder={tr("All")}
                         selectedKeys={employeeKeys}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as string | undefined;
@@ -63,8 +64,8 @@ function ShiftAssignmentFilterCard({
                     </Select>
 
                     <Select
-                        label="Shift"
-                        placeholder="All"
+                        label={tr("Shift")}
+                        placeholder={tr("All")}
                         selectedKeys={shiftKeys}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as string | undefined;
@@ -85,7 +86,7 @@ function ShiftAssignmentFilterCard({
                     </Select>
 
                     <DatePicker
-                        label="Shift Date"
+                        label={tr("Shift Date")}
                         variant="bordered"
                         showMonthAndYearPickers
                         value={dateValue}

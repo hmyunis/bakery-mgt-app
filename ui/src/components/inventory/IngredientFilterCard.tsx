@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import React, { useState } from "react";
 import { Input, Button, Modal, ModalContent, ModalHeader, ModalBody } from "@heroui/react";
 import { Search, Info, TrendingUp, AlertTriangle, Package } from "lucide-react";
@@ -26,7 +27,7 @@ export const IngredientFilterCard: React.FC<IngredientFilterCardProps> = ({
         `}
                 >
                     <Input
-                        placeholder="Search by name..."
+                        placeholder={tr("Search by name...")}
                         value={searchQuery}
                         onValueChange={onSearchChange}
                         isDisabled={isLoading}
@@ -59,9 +60,11 @@ export const IngredientFilterCard: React.FC<IngredientFilterCardProps> = ({
                     <ModalHeader className="flex items-center gap-3">
                         <Package className="h-6 w-6 text-primary" />
                         <div>
-                            <h3 className="text-lg font-semibold">Inventory Management Guide</h3>
+                            <h3 className="text-lg font-semibold">
+                                {tr("Inventory Management Guide")}
+                            </h3>
                             <p className="text-sm text-muted-foreground">
-                                Understanding key inventory concepts and features
+                                {tr("Understanding key inventory concepts and features")}
                             </p>
                         </div>
                     </ModalHeader>
@@ -71,12 +74,12 @@ export const IngredientFilterCard: React.FC<IngredientFilterCardProps> = ({
                                 <Package className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                                        Current Stock
+                                        {tr("Current Stock")}
                                     </h4>
                                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                                        Shows the current quantity of each ingredient in your
-                                        inventory. This value is automatically updated when you
-                                        record purchases or adjust stock levels.
+                                        {tr(
+                                            "Shows the current quantity of each ingredient in your inventory. This value is automatically updated when you record purchases or adjust stock levels."
+                                        )}
                                     </p>
                                 </div>
                             </div>
@@ -87,16 +90,17 @@ export const IngredientFilterCard: React.FC<IngredientFilterCardProps> = ({
                                 <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
-                                        Reorder Point
+                                        {tr("Reorder Point")}
                                     </h4>
                                     <p className="text-sm text-amber-700 dark:text-amber-300 mb-2">
-                                        The minimum stock level that triggers a reorder alert. When
-                                        current stock falls below this threshold, the item is
-                                        highlighted as "Low Stock" to indicate you need to reorder.
+                                        {tr(
+                                            'The minimum stock level that triggers a reorder alert. When current stock falls below this threshold, the item is highlighted as "Low Stock" to indicate you need to reorder.'
+                                        )}
                                     </p>
                                     <p className="text-xs text-amber-600 dark:text-amber-400 italic">
-                                        Purpose: Prevents stockouts and ensures you always have
-                                        ingredients available for production.
+                                        {tr(
+                                            "Purpose: Prevents stockouts and ensures you always have ingredients available for production."
+                                        )}
                                     </p>
                                 </div>
                             </div>
@@ -107,20 +111,22 @@ export const IngredientFilterCard: React.FC<IngredientFilterCardProps> = ({
                                 <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-green-900 dark:text-green-100 mb-1">
-                                        Average Cost per Unit
+                                        {tr("Average Cost per Unit")}
                                     </h4>
                                     <p className="text-sm text-green-700 dark:text-green-300 mb-2">
-                                        The weighted average cost of purchasing this ingredient.
-                                        This is automatically calculated using the formula:
+                                        {tr(
+                                            "The weighted average cost of purchasing this ingredient. This is automatically calculated using the formula:"
+                                        )}
                                     </p>
                                     <div className="bg-white dark:bg-gray-800 p-2 rounded border text-xs font-mono mb-2">
-                                        New Average = ((Current Stock × Current Average) + (Purchase
-                                        Qty × Purchase Price)) ÷ (Current Stock + Purchase Qty)
+                                        {tr(
+                                            "New Average = ((Current Stock × Current Average) + (Purchase Qty × Purchase Price)) ÷ (Current Stock + Purchase Qty)"
+                                        )}
                                     </div>
                                     <p className="text-xs text-green-600 dark:text-green-400 italic">
-                                        Purpose: Provides accurate cost tracking for profitability
-                                        analysis and pricing decisions. Updates automatically with
-                                        each purchase.
+                                        {tr(
+                                            "Purpose: Provides accurate cost tracking for profitability analysis and pricing decisions. Updates automatically with each purchase."
+                                        )}
                                     </p>
                                 </div>
                             </div>
@@ -131,17 +137,17 @@ export const IngredientFilterCard: React.FC<IngredientFilterCardProps> = ({
                                 <Info className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-1">
-                                        Smart Purchase Tracking
+                                        {tr("Smart Purchase Tracking")}
                                     </h4>
                                     <p className="text-sm text-purple-700 dark:text-purple-300 mb-2">
-                                        Record purchases with flexible cost input (total cost or
-                                        unit cost), vendor tracking, and automatic stock updates.
-                                        The system detects price anomalies when costs deviate
-                                        significantly from averages.
+                                        {tr(
+                                            "Record purchases with flexible cost input (total cost or unit cost), vendor tracking, and automatic stock updates. The system detects price anomalies when costs deviate significantly from averages."
+                                        )}
                                     </p>
                                     <p className="text-xs text-purple-600 dark:text-purple-400 italic">
-                                        Recent vendors are saved for quick selection, and all
-                                        purchase history is maintained for auditing and analysis.
+                                        {tr(
+                                            "Recent vendors are saved for quick selection, and all purchase history is maintained for auditing and analysis."
+                                        )}
                                     </p>
                                 </div>
                             </div>
@@ -149,8 +155,9 @@ export const IngredientFilterCard: React.FC<IngredientFilterCardProps> = ({
 
                         <div className="border-t pt-4">
                             <p className="text-xs text-muted-foreground text-center">
-                                Use the shopping cart icon next to any ingredient to quickly record
-                                a purchase for that specific item.
+                                {tr(
+                                    "Use the shopping cart icon next to any ingredient to quickly record a purchase for that specific item."
+                                )}
                             </p>
                         </div>
                     </ModalBody>

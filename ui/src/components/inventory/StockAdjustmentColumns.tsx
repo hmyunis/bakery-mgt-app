@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { StockAdjustment } from "../../types/inventory";
 import { Button, Chip, Tooltip } from "@heroui/react";
@@ -35,7 +36,7 @@ export const getStockAdjustmentColumns = ({
     },
     {
         accessorKey: "ingredient_name",
-        header: "Ingredient",
+        header: tr("Ingredient"),
         cell: ({ row }) => (
             <span className="font-medium text-zinc-900 dark:text-zinc-100">
                 {row.original.ingredient_name || `Ingredient #${row.original.ingredient}`}
@@ -44,7 +45,7 @@ export const getStockAdjustmentColumns = ({
     },
     {
         accessorKey: "quantity_change",
-        header: "Quantity Change",
+        header: tr("Quantity Change"),
         cell: ({ row }) => {
             const adjustment = row.original;
             const isAdd = adjustment.quantity_change > 0;
@@ -73,7 +74,7 @@ export const getStockAdjustmentColumns = ({
     },
     {
         accessorKey: "reason",
-        header: "Reason",
+        header: tr("Reason"),
         cell: ({ row }) => (
             <Chip variant="flat" size="sm" color="default">
                 {getReasonLabel(row.original.reason)}
@@ -82,7 +83,7 @@ export const getStockAdjustmentColumns = ({
     },
     {
         accessorKey: "actor_name",
-        header: "Recorded By",
+        header: tr("Recorded By"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
                 {row.original.actor_name || "-"}
@@ -91,7 +92,7 @@ export const getStockAdjustmentColumns = ({
     },
     {
         accessorKey: "timestamp",
-        header: "Date",
+        header: tr("Date"),
         cell: ({ row }) => (
             <span className="text-sm text-zinc-600 dark:text-zinc-400">
                 {formatDateTime(row.original.timestamp)}
@@ -100,13 +101,13 @@ export const getStockAdjustmentColumns = ({
     },
     {
         id: "actions",
-        header: "Actions",
+        header: tr("Actions"),
         cell: ({ row }) => {
             const adjustment = row.original;
             return (
                 <div className="flex items-center gap-2 p-2">
                     {onDelete && (
-                        <Tooltip content="Delete Adjustment" placement="top" color="danger">
+                        <Tooltip content={tr("Delete Adjustment")} placement="top" color="danger">
                             <Button
                                 isIconOnly
                                 size="sm"

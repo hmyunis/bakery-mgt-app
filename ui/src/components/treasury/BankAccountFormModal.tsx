@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useMemo, useRef, useState } from "react";
 import {
     Modal,
@@ -104,11 +105,11 @@ function BankAccountFormContent({
 
     const validateForm = (): boolean => {
         const nextErrors: Record<string, string> = {};
-        if (!formData.name.trim()) nextErrors.name = "Required";
-        if (!formData.bankName.trim()) nextErrors.bankName = "Required";
-        if (!formData.accountHolder.trim()) nextErrors.accountHolder = "Required";
-        if (!formData.accountNumber.trim()) nextErrors.accountNumber = "Required";
-        if (Number.isNaN(Number(formData.balance))) nextErrors.balance = "Invalid number";
+        if (!formData.name.trim()) nextErrors.name = tr("Required");
+        if (!formData.bankName.trim()) nextErrors.bankName = tr("Required");
+        if (!formData.accountHolder.trim()) nextErrors.accountHolder = tr("Required");
+        if (!formData.accountNumber.trim()) nextErrors.accountNumber = tr("Required");
+        if (Number.isNaN(Number(formData.balance))) nextErrors.balance = tr("Invalid number");
 
         setErrors(nextErrors);
         return Object.keys(nextErrors).length === 0;
@@ -150,16 +151,16 @@ function BankAccountFormContent({
         <>
             <ModalHeader className="flex justify-between items-center pr-10">
                 <span className="text-lg font-semibold">
-                    {isEdit ? "Edit Bank Account" : "Add Bank Account"}
+                    {isEdit ? tr("Edit Bank Account") : tr("Add Bank Account")}
                 </span>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs text-default-500 font-normal">Status:</span>
+                    <span className="text-xs text-default-500 font-normal">{tr("Status:")}</span>
                     <Switch
                         size="sm"
                         color="success"
                         isSelected={formData.isActive}
                         onValueChange={(value) => handleInputChange("isActive", value)}
-                        aria-label="Active status"
+                        aria-label={tr("Active status")}
                     />
                 </div>
             </ModalHeader>
@@ -179,7 +180,7 @@ function BankAccountFormContent({
                                 {logoPreview ? (
                                     <img
                                         src={logoPreview}
-                                        alt="Logo"
+                                        alt={tr("Logo")}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
@@ -209,7 +210,7 @@ function BankAccountFormContent({
                                 startContent={<Upload className="w-4 h-4" />}
                                 onPress={() => fileInputRef.current?.click()}
                             >
-                                {logoPreview ? "Change" : "Upload"}
+                                {logoPreview ? tr("Change") : tr("Upload")}
                             </Button>
                             {logoPreview ? (
                                 <Button
@@ -218,12 +219,12 @@ function BankAccountFormContent({
                                     color="danger"
                                     onPress={handleRemoveLogo}
                                 >
-                                    Remove
+                                    {tr("Remove")}
                                 </Button>
                             ) : null}
                         </div>
                         <span className="text-[10px] text-default-400 uppercase font-medium tracking-wide">
-                            Logo
+                            {tr("Logo")}
                         </span>
                     </div>
 
@@ -231,8 +232,8 @@ function BankAccountFormContent({
                     <div className="w-full sm:flex-1 space-y-3">
                         <Input
                             autoFocus
-                            label="Bank Name"
-                            placeholder="e.g. Commercial Bank of Ethiopia"
+                            label={tr("Bank Name")}
+                            placeholder={tr("e.g. Commercial Bank of Ethiopia")}
                             value={formData.bankName}
                             onValueChange={(val) => handleInputChange("bankName", val)}
                             isInvalid={!!errors.bankName}
@@ -245,13 +246,13 @@ function BankAccountFormContent({
                             }}
                         />
                         <Input
-                            label="Account Nickname"
-                            placeholder="e.g. Main Operating Account"
+                            label={tr("Account Nickname")}
+                            placeholder={tr("e.g. Main Operating Account")}
                             value={formData.name}
                             onValueChange={(val) => handleInputChange("name", val)}
                             isInvalid={!!errors.name}
                             errorMessage={errors.name}
-                            description="A friendly name to identify this account internally."
+                            description={tr("A friendly name to identify this account internally.")}
                             variant="bordered"
                             classNames={{
                                 input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
@@ -265,8 +266,8 @@ function BankAccountFormContent({
                 {/* Section 2: Account Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                        label="Account Holder"
-                        placeholder="e.g. The Bakery LLC"
+                        label={tr("Account Holder")}
+                        placeholder={tr("e.g. The Bakery LLC")}
                         value={formData.accountHolder}
                         onValueChange={(val) => handleInputChange("accountHolder", val)}
                         isInvalid={!!errors.accountHolder}
@@ -279,7 +280,7 @@ function BankAccountFormContent({
                     />
 
                     <Input
-                        label="Account Number"
+                        label={tr("Account Number")}
                         placeholder="1000..."
                         value={formData.accountNumber}
                         onValueChange={(val) => handleInputChange("accountNumber", val)}
@@ -294,7 +295,7 @@ function BankAccountFormContent({
 
                     <Input
                         type="number"
-                        label="Opening Balance"
+                        label={tr("Opening Balance")}
                         placeholder="0.00"
                         value={formData.balance.toString()}
                         onValueChange={(val) => handleInputChange("balance", val)}
@@ -308,8 +309,8 @@ function BankAccountFormContent({
                     />
 
                     <Select
-                        label="Linked Payment Methods"
-                        placeholder="Select methods"
+                        label={tr("Linked Payment Methods")}
+                        placeholder={tr("Select methods")}
                         selectedKeys={paymentSelectedKeys}
                         selectionMode="multiple"
                         startContent={<CreditCard className="text-default-400 w-4 h-4" />}
@@ -336,8 +337,8 @@ function BankAccountFormContent({
 
                 {/* Section 3: Notes */}
                 <Textarea
-                    label="Internal Notes"
-                    placeholder="Any additional details regarding this account..."
+                    label={tr("Internal Notes")}
+                    placeholder={tr("Any additional details regarding this account...")}
                     value={formData.notes || ""}
                     onValueChange={(val) => handleInputChange("notes", val)}
                     minRows={2}
@@ -351,7 +352,7 @@ function BankAccountFormContent({
 
             <ModalFooter className="bg-default-50/50">
                 <Button variant="light" color="danger" onPress={onClose}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button
                     color="primary"
@@ -359,7 +360,7 @@ function BankAccountFormContent({
                     startContent={isEdit ? undefined : <Upload className="w-4 h-4" />}
                     isLoading={isSubmitting}
                 >
-                    {isEdit ? "Save Changes" : "Create Account"}
+                    {isEdit ? tr("Save Changes") : tr("Create Account")}
                 </Button>
             </ModalFooter>
         </>

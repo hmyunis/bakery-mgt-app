@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useMemo, useState } from "react";
 import { Tab, Tabs } from "@heroui/react";
 import { useSearchParams } from "react-router-dom";
@@ -31,10 +32,13 @@ export function HrPage() {
 
     return (
         <div className="space-y-6">
-            <PageTitle title="HR" subtitle="Manage shifts, attendance, and leave records." />
+            <PageTitle
+                title={tr("HR")}
+                subtitle={tr("Manage shifts, attendance, and leave records.")}
+            />
 
             <Tabs
-                aria-label="HR"
+                aria-label={tr("HR")}
                 selectedKey={localSelected}
                 onSelectionChange={onSelectionChange}
                 color="primary"
@@ -49,7 +53,7 @@ export function HrPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <CalendarClock className="h-4 w-4" />
-                            <span>Shifts</span>
+                            <span>{tr("Shifts")}</span>
                         </div>
                     }
                 >
@@ -61,7 +65,7 @@ export function HrPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <ClipboardCheck className="h-4 w-4" />
-                            <span>Attendance</span>
+                            <span>{tr("Attendance")}</span>
                         </div>
                     }
                 >
@@ -73,7 +77,7 @@ export function HrPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <CalendarOff className="h-4 w-4" />
-                            <span>Leaves</span>
+                            <span>{tr("Leaves")}</span>
                         </div>
                     }
                 >

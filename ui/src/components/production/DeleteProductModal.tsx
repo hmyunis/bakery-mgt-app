@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import type { Product } from "../../types/production";
 import { useDeleteProduct } from "../../hooks/useProduction";
@@ -25,15 +26,17 @@ export function DeleteProductModal({ isOpen, onClose, product }: DeleteProductMo
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1">Delete Product</ModalHeader>
+                <ModalHeader className="flex flex-col gap-1">{tr("Delete Product")}</ModalHeader>
                 <ModalBody>
                     <p>
-                        Are you sure you want to delete <strong>{product?.name}</strong>? This
-                        action cannot be undone.
+                        {tr("Are you sure you want to delete")}
+                        <strong>{product?.name}</strong>
+                        {tr("? This action cannot be undone.")}
                     </p>
                     {product && product.stock_quantity > 0 && (
                         <p className="text-warning text-sm mt-2">
-                            Warning: This product has {product.stock_quantity} units in stock.
+                            {tr("Warning: This product has")}
+                            {product.stock_quantity} {tr("units in stock.")}
                         </p>
                     )}
                 </ModalBody>
@@ -43,7 +46,7 @@ export function DeleteProductModal({ isOpen, onClose, product }: DeleteProductMo
                         onPress={onClose}
                         className="!text-zinc-700 dark:!text-zinc-300"
                     >
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button color="danger" onPress={handleDelete} isLoading={isDeleting}>
                         Delete

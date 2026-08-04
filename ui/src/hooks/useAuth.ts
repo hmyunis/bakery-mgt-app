@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
@@ -125,7 +126,7 @@ export const useAuth = () => {
             dispatch(clearSession());
             queryClient.clear();
             navigate("/");
-            toast.success("Logged out successfully");
+            toast.success(tr("Logged out successfully"));
         },
     });
 

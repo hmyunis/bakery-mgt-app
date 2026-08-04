@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { apiClient, clearAuthTokens, setAuthToken, setRefreshToken } from "../lib/apiClient";
 import type { ApiResponse, ApiError } from "../types/api";
 import type { PagePermission } from "../constants/roles";
@@ -46,7 +47,7 @@ class AuthService {
         } else if (credentials.phoneNumber) {
             payload.phone_number = credentials.phoneNumber;
         } else {
-            throw new Error("Either username or phone number is required");
+            throw new Error(tr("Either username or phone number is required"));
         }
 
         try {
@@ -107,7 +108,7 @@ class AuthService {
                     accessToken,
                     fullResponse: response.data,
                 });
-                throw new Error("No access token received from server");
+                throw new Error(tr("No access token received from server"));
             }
 
             // Save token to localStorage
@@ -121,7 +122,7 @@ class AuthService {
                     accessToken,
                     savedToken,
                 });
-                throw new Error("Failed to save authentication token");
+                throw new Error(tr("Failed to save authentication token"));
             }
 
             return loginData as LoginResponse;

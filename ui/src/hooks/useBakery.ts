@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { bakeryService } from "../services/bakeryService";
 import type { BakerySettings } from "../types/bakery";
@@ -23,7 +24,7 @@ export function useUpdateBakerySettings() {
         },
         onSuccess: (data) => {
             queryClient.setQueryData<BakerySettings>(["bakerySettings"], data);
-            toast.success("Bakery settings updated successfully!");
+            toast.success(tr("Bakery settings updated successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;

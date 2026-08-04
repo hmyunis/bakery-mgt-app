@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Button, Tabs, Tab, DatePicker, Spinner } from "@heroui/react";
 import { Plus, Package, ShoppingCart, ListChecks, RotateCcw } from "lucide-react";
@@ -196,15 +197,15 @@ export function InventoryPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <PageTitle
-                    title="Inventory"
-                    subtitle="Manage ingredients, track stock levels, and monitor purchases"
+                    title={tr("Inventory")}
+                    subtitle={tr("Manage ingredients, track stock levels, and monitor purchases")}
                 />
             </div>
 
             <Tabs
                 selectedKey={activeTab}
                 onSelectionChange={(key) => setActiveTab(key as string)}
-                aria-label="Inventory tabs"
+                aria-label={tr("Inventory tabs")}
                 color="primary"
                 variant="underlined"
                 classNames={{
@@ -220,7 +221,7 @@ export function InventoryPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <Package className="h-4 w-4" />
-                            <span>Ingredients</span>
+                            <span>{tr("Ingredients")}</span>
                         </div>
                     }
                 >
@@ -236,7 +237,7 @@ export function InventoryPage() {
                                 onPress={handleAddIngredient}
                                 startContent={<Plus className="h-4 w-4" />}
                             >
-                                Add Ingredient
+                                {tr("Add Ingredient")}
                             </Button>
                         </div>
 
@@ -265,7 +266,7 @@ export function InventoryPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <ShoppingCart className="h-4 w-4" />
-                            <span>Purchase History</span>
+                            <span>{tr("Purchase History")}</span>
                         </div>
                     }
                 >
@@ -273,7 +274,7 @@ export function InventoryPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 <DatePicker
-                                    label="Filter from Date"
+                                    label={tr("Filter from Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={purchaseStartDate}
@@ -286,7 +287,7 @@ export function InventoryPage() {
                                 onPress={() => handleAddPurchase()}
                                 startContent={<Plus className="h-4 w-4" />}
                             >
-                                Record Purchase
+                                {tr("Record Purchase")}
                             </Button>
                         </div>
 
@@ -322,7 +323,7 @@ export function InventoryPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <ListChecks className="h-4 w-4" />
-                            <span>Shopping List</span>
+                            <span>{tr("Shopping List")}</span>
                         </div>
                     }
                 >
@@ -336,7 +337,7 @@ export function InventoryPage() {
                     title={
                         <div className="flex items-center gap-2">
                             <RotateCcw className="h-4 w-4" />
-                            <span>Stock Adjustments</span>
+                            <span>{tr("Stock Adjustments")}</span>
                         </div>
                     }
                 >
@@ -344,7 +345,7 @@ export function InventoryPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 <DatePicker
-                                    label="Filter from Date"
+                                    label={tr("Filter from Date")}
                                     variant="bordered"
                                     showMonthAndYearPickers
                                     value={adjustmentStartDate}
@@ -357,7 +358,7 @@ export function InventoryPage() {
                                 onPress={() => handleAddAdjustment()}
                                 startContent={<Plus className="h-4 w-4" />}
                             >
-                                Record Adjustment
+                                {tr("Record Adjustment")}
                             </Button>
                         </div>
 

@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
@@ -22,16 +23,16 @@ export function getShiftAssignmentColumns({
         },
         {
             accessorKey: "employeeName",
-            header: "Employee",
+            header: tr("Employee"),
             cell: ({ row }) => <span className="font-medium">{row.original.employeeName}</span>,
         },
         {
             accessorKey: "shiftName",
-            header: "Shift",
+            header: tr("Shift"),
         },
         {
             accessorKey: "shiftDate",
-            header: "Date",
+            header: tr("Date"),
         },
         {
             id: "actions",
@@ -46,13 +47,13 @@ export function getShiftAssignmentColumns({
                             </Button>
                         </DropdownTrigger>
                         <DropdownMenu
-                            aria-label="Actions"
+                            aria-label={tr("Actions")}
                             onAction={(key) => {
                                 if (key === "edit") onEdit(assignment);
                                 if (key === "delete") onDelete(assignment);
                             }}
                         >
-                            <DropdownItem key="edit">Edit</DropdownItem>
+                            <DropdownItem key="edit">{tr("Edit")}</DropdownItem>
                             <DropdownItem key="delete" className="text-danger" color="danger">
                                 Delete
                             </DropdownItem>

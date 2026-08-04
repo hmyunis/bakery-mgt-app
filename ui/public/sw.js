@@ -82,7 +82,6 @@ sw.addEventListener("push", (event) => {
                 badge: badge || "/icons/badge-96x96.png",
                 data: notificationData,
                 vibrate: [100, 50, 100],
-                actions: [{ action: "open", title: "View Details" }],
             })
         );
     } catch {

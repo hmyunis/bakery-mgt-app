@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
@@ -98,15 +99,15 @@ export function EmployeesPage() {
     return (
         <div className="space-y-6">
             <PageTitle
-                title="Employees"
-                subtitle="Manage employee profiles, roster, attendance and payroll."
+                title={tr("Employees")}
+                subtitle={tr("Manage employee profiles, roster, attendance and payroll.")}
                 actions={
                     <Button
                         color="primary"
                         onPress={openCreateModal}
                         startContent={<Plus className="h-5 w-5" />}
                     >
-                        Add Employee
+                        {tr("Add Employee")}
                     </Button>
                 }
             />

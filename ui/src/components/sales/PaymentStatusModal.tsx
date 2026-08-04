@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import {
     Button,
     Input,
@@ -70,10 +71,10 @@ function PaymentStatusForm({ sale, isSubmitting, onClose, onSubmit }: PaymentSta
 
     return (
         <>
-            <ModalHeader>Update Payment Status</ModalHeader>
+            <ModalHeader>{tr("Update Payment Status")}</ModalHeader>
             <ModalBody className="space-y-3">
                 <Select
-                    label="Payment Status"
+                    label={tr("Payment Status")}
                     selectedKeys={new Set([paymentStatus])}
                     onSelectionChange={(keys) => {
                         const key = Array.from(keys)[0] as "paid" | "unpaid_approved" | undefined;
@@ -88,14 +89,14 @@ function PaymentStatusForm({ sale, isSubmitting, onClose, onSubmit }: PaymentSta
                         value: "!text-slate-900 dark:!text-slate-100",
                     }}
                 >
-                    <SelectItem key="paid">Paid</SelectItem>
-                    <SelectItem key="unpaid_approved">Unpaid</SelectItem>
+                    <SelectItem key="paid">{tr("Paid")}</SelectItem>
+                    <SelectItem key="unpaid_approved">{tr("Unpaid")}</SelectItem>
                 </Select>
 
                 {paymentStatus === "unpaid_approved" && (
                     <Input
-                        label="Reason"
-                        placeholder="Why this sale is unpaid"
+                        label={tr("Reason")}
+                        placeholder={tr("Why this sale is unpaid")}
                         value={unpaidReason}
                         onValueChange={setUnpaidReason}
                         isRequired
@@ -107,7 +108,7 @@ function PaymentStatusForm({ sale, isSubmitting, onClose, onSubmit }: PaymentSta
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button
                     color="primary"
@@ -115,7 +116,7 @@ function PaymentStatusForm({ sale, isSubmitting, onClose, onSubmit }: PaymentSta
                     isLoading={isSubmitting}
                     isDisabled={paymentStatus === "unpaid_approved" && !unpaidReason.trim()}
                 >
-                    Save
+                    {tr("Save")}
                 </Button>
             </ModalFooter>
         </>

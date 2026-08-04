@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { PaymentMethod } from "../../types/payment";
 import { Button, Chip, Switch, Tooltip } from "@heroui/react";
@@ -20,7 +21,7 @@ export const getPaymentMethodColumns = ({
     },
     {
         accessorKey: "name",
-        header: "Name",
+        header: tr("Name"),
         cell: ({ row }) => (
             <span className="font-medium text-zinc-900 dark:text-zinc-100">
                 {row.original.name}
@@ -29,7 +30,7 @@ export const getPaymentMethodColumns = ({
     },
     {
         accessorKey: "is_active",
-        header: "Status",
+        header: tr("Status"),
         cell: ({ row }) => {
             const paymentMethod = row.original;
             return (
@@ -45,7 +46,7 @@ export const getPaymentMethodColumns = ({
                         variant="flat"
                         size="sm"
                     >
-                        {paymentMethod.is_active ? "Active" : "Inactive"}
+                        {paymentMethod.is_active ? tr("Active") : tr("Inactive")}
                     </Chip>
                 </div>
             );
@@ -53,7 +54,7 @@ export const getPaymentMethodColumns = ({
     },
     {
         accessorKey: "config_details",
-        header: "Config Details",
+        header: tr("Config Details"),
         cell: ({ row }) => (
             <span className="text-sm text-zinc-600 dark:text-zinc-400">
                 {row.original.config_details || "-"}
@@ -62,12 +63,12 @@ export const getPaymentMethodColumns = ({
     },
     {
         id: "actions",
-        header: "Actions",
+        header: tr("Actions"),
         cell: ({ row }) => {
             const paymentMethod = row.original;
             return (
                 <div className="relative flex items-center gap-2 p-2">
-                    <Tooltip content="Edit payment method">
+                    <Tooltip content={tr("Edit payment method")}>
                         <Button
                             isIconOnly
                             variant="light"
@@ -77,7 +78,7 @@ export const getPaymentMethodColumns = ({
                             <Edit className="h-4 w-4" />
                         </Button>
                     </Tooltip>
-                    <Tooltip content="Delete payment method" color="danger">
+                    <Tooltip content={tr("Delete payment method")} color="danger">
                         <Button
                             isIconOnly
                             variant="light"

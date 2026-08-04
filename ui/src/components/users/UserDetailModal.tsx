@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import React from "react";
 import {
     Modal,
@@ -43,7 +44,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             <ModalContent>
                 {() => (
                     <>
-                        <ModalHeader>User Details</ModalHeader>
+                        <ModalHeader>{tr("User Details")}</ModalHeader>
                         <ModalBody>
                             <div className="flex flex-col sm:flex-row gap-6">
                                 <div className="flex flex-col items-center pt-2">
@@ -61,14 +62,16 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                         <div>
                                             <p className="font-medium text-slate-500">
-                                                Phone Number
+                                                {tr("Phone Number")}
                                             </p>
                                             <p className="text-slate-800 dark:text-slate-200">
                                                 {user.phoneNumber || "-"}
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="font-medium text-slate-500">Role</p>
+                                            <p className="font-medium text-slate-500">
+                                                {tr("Role")}
+                                            </p>
                                             <Chip
                                                 color={getRoleColor(user.role)}
                                                 variant="flat"
@@ -79,17 +82,21 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                                             </Chip>
                                         </div>
                                         <div>
-                                            <p className="font-medium text-slate-500">Status</p>
+                                            <p className="font-medium text-slate-500">
+                                                {tr("Status")}
+                                            </p>
                                             <Chip
                                                 color={user.isActive ? "success" : "warning"}
                                                 variant="flat"
                                                 size="sm"
                                             >
-                                                {user.isActive ? "Active" : "Inactive"}
+                                                {user.isActive ? tr("Active") : tr("Inactive")}
                                             </Chip>
                                         </div>
                                         <div>
-                                            <p className="font-medium text-slate-500">Joined On</p>
+                                            <p className="font-medium text-slate-500">
+                                                {tr("Joined On")}
+                                            </p>
                                             <p className="text-slate-800 dark:text-slate-200">
                                                 {user.dateJoined
                                                     ? new Date(user.dateJoined).toLocaleDateString()
@@ -114,7 +121,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                                 onPress={() => onEdit(user)}
                                 startContent={<Edit className="h-4 w-4" />}
                             >
-                                Edit User
+                                {tr("Edit User")}
                             </Button>
                         </ModalFooter>
                     </>

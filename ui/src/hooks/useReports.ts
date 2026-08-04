@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { reportsService } from "../services/reportsService";
 import { toast } from "sonner";
@@ -15,10 +16,10 @@ export function useExportReport() {
             await reportsService.exportReport(startDate, endDate);
         },
         onSuccess: () => {
-            toast.success("Report downloaded successfully!");
+            toast.success(tr("Report downloaded successfully!"));
         },
         onError: () => {
-            toast.error("Failed to download report.");
+            toast.error(tr("Failed to download report."));
         },
     });
 }

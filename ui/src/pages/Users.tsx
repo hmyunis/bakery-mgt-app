@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useState } from "react";
 import { UserFormModal } from "../components/users/UserFormModal";
 import { DeleteUserModal } from "../components/users/DeleteUserModal";
@@ -96,15 +97,15 @@ export function UsersPage() {
     return (
         <div className="space-y-6">
             <PageTitle
-                title="User Management"
-                subtitle="Manage all users and their roles."
+                title={tr("User Management")}
+                subtitle={tr("Manage all users and their roles.")}
                 actions={
                     <Button
                         color="primary"
                         onPress={openCreateModal}
                         startContent={<Plus className="h-5 w-5" />}
                     >
-                        Add User
+                        {tr("Add User")}
                     </Button>
                 }
             />

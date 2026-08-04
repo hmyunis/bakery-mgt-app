@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState, type ReactNode } from "react";
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { Skeleton } from "@heroui/react";
@@ -26,8 +27,8 @@ function EmptyState() {
             <div className="mb-3 text-5xl" aria-hidden="true">
                 📂
             </div>
-            <p className="font-medium text-slate-700 dark:text-slate-200">No Results</p>
-            <p className="text-sm">There is no data to display.</p>
+            <p className="font-medium text-slate-700 dark:text-slate-200">{tr("No Results")}</p>
+            <p className="text-sm">{tr("There is no data to display.")}</p>
         </div>
     );
 }
@@ -69,11 +70,11 @@ export function DataTable<TData, TValue>({
                 <div
                     className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-800"
                     role="group"
-                    aria-label="Choose data view"
+                    aria-label={tr("Choose data view")}
                 >
                     <button
                         type="button"
-                        aria-label="Grid view"
+                        aria-label={tr("Grid view")}
                         aria-pressed={view === "grid"}
                         onClick={() => setView("grid")}
                         className={cn(
@@ -84,11 +85,11 @@ export function DataTable<TData, TValue>({
                         )}
                     >
                         <Grid2X2 className="h-4 w-4" />
-                        <span className="hidden sm:inline">Grid</span>
+                        <span className="hidden sm:inline">{tr("Grid")}</span>
                     </button>
                     <button
                         type="button"
-                        aria-label="Table view"
+                        aria-label={tr("Table view")}
                         aria-pressed={view === "table"}
                         onClick={() => setView("table")}
                         className={cn(
@@ -99,7 +100,7 @@ export function DataTable<TData, TValue>({
                         )}
                     >
                         <List className="h-4 w-4" />
-                        <span className="hidden sm:inline">Table</span>
+                        <span className="hidden sm:inline">{tr("Table")}</span>
                     </button>
                 </div>
             </div>
@@ -145,7 +146,10 @@ export function DataTable<TData, TValue>({
                                     tabIndex={onRowClick ? 0 : undefined}
                                     onClick={() => onRowClick?.(row.original)}
                                     onKeyDown={(event) => {
-                                        if (onRowClick && (event.key === "Enter" || event.key === " ")) {
+                                        if (
+                                            onRowClick &&
+                                            (event.key === "Enter" || event.key === " ")
+                                        ) {
                                             event.preventDefault();
                                             onRowClick(row.original);
                                         }

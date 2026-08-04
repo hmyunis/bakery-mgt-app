@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import {
     Button,
     Chip,
@@ -32,7 +33,7 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, onEdit }: RecipeDet
             <ModalContent>
                 <ModalHeader className="flex items-center gap-2">
                     <Gauge className="h-5 w-5 text-primary" />
-                    Full Batch Estimate
+                    {tr("Full Batch Estimate")}
                 </ModalHeader>
                 <ModalBody>
                     {isLoading ? (
@@ -43,17 +44,17 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, onEdit }: RecipeDet
                         <div className="space-y-4">
                             <div>
                                 <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                    Product
+                                    {tr("Product")}
                                 </p>
                                 <p className="text-lg font-semibold">
-                                    {product?.name || "Unknown product"}
+                                    {product?.name || tr("Unknown product")}
                                 </p>
                             </div>
                             {estimate.items.length ? (
                                 <div className="grid grid-cols-1 items-center gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-800 sm:grid-cols-[minmax(0,1fr)_auto_minmax(140px,0.45fr)]">
                                     <div className="space-y-2">
                                         <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                            Ingredients used together
+                                            {tr("Ingredients used together")}
                                         </p>
                                         {estimate.items.map((item) => (
                                             <div
@@ -76,30 +77,30 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, onEdit }: RecipeDet
                                             {estimate.standard_yield.toFixed(2)}
                                         </p>
                                         <Chip size="sm" color="primary" variant="flat">
-                                            pieces per full batch
+                                            {tr("pieces per full batch")}
                                         </Chip>
                                     </div>
                                 </div>
                             ) : (
                                 <p className="rounded-lg border border-dashed p-6 text-center text-zinc-500">
-                                    No batch ingredients configured.
+                                    {tr("No batch ingredients configured.")}
                                 </p>
                             )}
                             <p className="text-sm text-zinc-500">
-                                The kitchen records these familiar bulk amounts, not a calculated
-                                one-piece recipe. Production history learns the working average from
-                                what chefs actually use and produce.
+                                {tr(
+                                    "The kitchen records these familiar bulk amounts, not a calculated one-piece recipe. Production history learns the working average from what chefs actually use and produce."
+                                )}
                             </p>
                         </div>
                     )}
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="flat" onPress={onClose}>
-                        Close
+                        {tr("Close")}
                     </Button>
                     {onEdit && (
                         <Button color="primary" onPress={() => onEdit(estimate)}>
-                            Edit Estimate
+                            {tr("Edit Estimate")}
                         </Button>
                     )}
                 </ModalFooter>

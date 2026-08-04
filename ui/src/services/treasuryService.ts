@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { apiClient } from "../lib/apiClient";
 import type { ApiResponse, PaginatedResponse, WrappedPaginatedResponse } from "../types/api";
 import type {
@@ -360,7 +361,7 @@ class TreasuryService {
             if (typeof val === "string") return val;
         }
 
-        return "Something went wrong";
+        return tr("Something went wrong");
     }
 }
 

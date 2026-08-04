@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Card, Button } from "@heroui/react";
 import { Plus, Minus } from "lucide-react";
 import type { Product } from "../../types/production";
@@ -47,18 +48,22 @@ export function ProductCard({ product, quantity, onIncrement, onDecrement }: Pro
                             {product.name}
                         </h3>
                         {isOutOfStock && (
-                            <span className="text-xs text-danger font-medium">Out of Stock</span>
+                            <span className="text-xs text-danger font-medium">
+                                {tr("Out of Stock")}
+                            </span>
                         )}
                         {!isOutOfStock && (
                             <span className="text-xs text-slate-500">
-                                Stock: {product.stock_quantity} pcs
+                                {tr("Stock:")}
+                                {product.stock_quantity} {tr("pcs")}
                             </span>
                         )}
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-sm font-bold text-primary whitespace-nowrap">
-                        ETB {product.selling_price.toFixed(2)}
+                        {tr("ETB")}
+                        {product.selling_price.toFixed(2)}
                     </span>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <Button

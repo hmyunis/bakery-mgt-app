@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import {
     Alert,
     Button,
@@ -49,14 +50,14 @@ export function ProductionRunDetailModal({
             <ModalContent>
                 <ModalHeader className="flex items-center gap-2">
                     <ChefHat className="h-5 w-5 text-primary" />
-                    Production Run Details
+                    {tr("Production Run Details")}
                 </ModalHeader>
                 <ModalBody className="space-y-5">
                     <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-lg border p-3 dark:border-zinc-800">
                             <p className="flex items-center gap-2 text-xs text-zinc-500">
                                 <Package className="h-3 w-3" />
-                                Product
+                                {tr("Product")}
                             </p>
                             <p className="mt-1 font-semibold">
                                 {productionRun.product_name || productionRun.composite_name}
@@ -65,16 +66,16 @@ export function ProductionRunDetailModal({
                         <div className="rounded-lg border p-3 dark:border-zinc-800">
                             <p className="flex items-center gap-2 text-xs text-zinc-500">
                                 <ChefHat className="h-3 w-3" />
-                                Actual output
+                                {tr("Actual output")}
                             </p>
                             <p className="mt-1 text-xl font-bold">
-                                {productionRun.quantity_produced.toFixed(2)} pcs
+                                {productionRun.quantity_produced.toFixed(2)} {tr("pcs")}
                             </p>
                         </div>
                         <div className="rounded-lg border p-3 dark:border-zinc-800">
                             <p className="flex items-center gap-2 text-xs text-zinc-500">
                                 <Calendar className="h-3 w-3" />
-                                Recorded
+                                {tr("Recorded")}
                             </p>
                             <p className="mt-1 text-sm font-medium">
                                 {new Date(productionRun.date_produced).toLocaleString()}
@@ -83,7 +84,7 @@ export function ProductionRunDetailModal({
                         <div className="rounded-lg border p-3 dark:border-zinc-800">
                             <p className="flex items-center gap-2 text-xs text-zinc-500">
                                 <User className="h-3 w-3" />
-                                Chef
+                                {tr("Chef")}
                             </p>
                             <p className="mt-1 font-medium">{productionRun.chef_name || "-"}</p>
                         </div>
@@ -92,7 +93,7 @@ export function ProductionRunDetailModal({
                     {!!productionRun.usages.length && (
                         <div className="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900/60">
                             <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                Kitchen ingredients used
+                                {tr("Kitchen ingredients used")}
                             </p>
                             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                                 {productionRun.usages.map((usage) => (
@@ -110,7 +111,7 @@ export function ProductionRunDetailModal({
                                             </Chip>
                                         </div>
                                         <p className="mt-2 text-xs text-zinc-500">
-                                            Rough amount for this output:{" "}
+                                            {tr("Rough amount for this output:")}{" "}
                                             {usage.theoretical_amount.toFixed(3)}{" "}
                                             {usage.ingredient__unit}
                                         </p>
@@ -128,22 +129,25 @@ export function ProductionRunDetailModal({
                         <p className="font-semibold">{labels[performance.status]}</p>
                         {performance.status === "baseline" ? (
                             <p className="text-sm">
-                                More runs are needed before this product can be compared with its
-                                historical average.
+                                {tr(
+                                    "More runs are needed before this product can be compared with its historical average."
+                                )}
                             </p>
                         ) : (
                             <p className="text-sm">
-                                This run was{" "}
+                                {tr("This run was")}{" "}
                                 {Math.abs(performance.deviation_percent || 0).toFixed(1)}%{" "}
                                 {performance.status === "underproducing"
                                     ? "below"
                                     : performance.status === "overproducing"
                                       ? "above"
                                       : "away from"}{" "}
-                                the working average. The strongest signal came from{" "}
-                                {performance.ingredient_name}. Based on that amount, expected output
-                                was about{` `}
-                                {(performance.expected_output_from_average || 0).toFixed(1)} pcs.
+                                {tr("the working average. The strongest signal came from")}{" "}
+                                {performance.ingredient_name}
+                                {tr(". Based on that amount, expected output was about")}
+                                {` `}
+                                {(performance.expected_output_from_average || 0).toFixed(1)}{" "}
+                                {tr("pcs.")}
                             </p>
                         )}
                     </Alert>
@@ -151,7 +155,7 @@ export function ProductionRunDetailModal({
                     {!!performance.ingredients?.length && (
                         <div>
                             <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">
-                                Ingredient signals
+                                {tr("Ingredient signals")}
                             </p>
                             <div className="flex flex-wrap gap-2">
                                 {performance.ingredients.map((ingredient) => {
@@ -182,7 +186,7 @@ export function ProductionRunDetailModal({
 
                     {productionRun.notes && (
                         <div>
-                            <p className="text-xs text-zinc-500">Notes</p>
+                            <p className="text-xs text-zinc-500">{tr("Notes")}</p>
                             <p className="mt-1 text-sm whitespace-pre-wrap">
                                 {productionRun.notes}
                             </p>
@@ -191,7 +195,7 @@ export function ProductionRunDetailModal({
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="flat" onPress={onClose}>
-                        Close
+                        {tr("Close")}
                     </Button>
                     {onDelete && (
                         <Button
@@ -200,7 +204,7 @@ export function ProductionRunDetailModal({
                             isLoading={isDeleting}
                             startContent={<AlertTriangle className="h-4 w-4" />}
                         >
-                            Delete Run
+                            {tr("Delete Run")}
                         </Button>
                     )}
                 </ModalFooter>

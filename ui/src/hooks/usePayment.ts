@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { paymentService } from "../services/paymentService";
@@ -30,7 +31,7 @@ export function usePaymentMethod(id: number | null) {
     return useQuery({
         queryKey: ["payment-methods", id],
         queryFn: async () => {
-            if (!id) throw new Error("Payment method ID is required");
+            if (!id) throw new Error(tr("Payment method ID is required"));
             return await paymentService.getPaymentMethod(id);
         },
         enabled: !!id,
@@ -49,7 +50,7 @@ export function useCreatePaymentMethod() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
-            toast.success("Payment method created successfully!");
+            toast.success(tr("Payment method created successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -76,7 +77,7 @@ export function useUpdatePaymentMethod() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
-            toast.success("Payment method updated successfully!");
+            toast.success(tr("Payment method updated successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
@@ -103,7 +104,7 @@ export function useDeletePaymentMethod() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
-            toast.success("Payment method deleted successfully!");
+            toast.success(tr("Payment method deleted successfully!"));
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;

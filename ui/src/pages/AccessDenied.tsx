@@ -3,9 +3,11 @@ import { ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { setAuthToken } from "../lib/apiClient";
+import { useTranslation } from "../locales";
 
 export function AccessDeniedPage() {
     const { logout, isLoggingOut } = useAuth();
+    const { t } = useTranslation();
 
     const handleLogout = async () => {
         try {
@@ -27,7 +29,7 @@ export function AccessDeniedPage() {
                         isLoading={isLoggingOut}
                         onPress={handleLogout}
                     >
-                        Logout
+                        {t("logout")}
                     </Button>
                 </div>
             </div>
@@ -35,9 +37,9 @@ export function AccessDeniedPage() {
             <div className="flex items-center justify-center py-10">
                 <Card className="p-8 max-w-lg w-full bg-[var(--panel)] border border-[var(--border)] text-center space-y-4">
                     <ShieldAlert className="size-10 text-[var(--accent)] mx-auto" />
-                    <h1 className="text-3xl font-bold">Access denied</h1>
+                    <h1 className="text-3xl font-bold">{t("Access denied")}</h1>
                     <p className="text-[var(--muted)]">
-                        You do not have permission to view this page.
+                        {t("You do not have permission to view this page.")}
                     </p>
                     <Button
                         as={Link}
@@ -45,7 +47,7 @@ export function AccessDeniedPage() {
                         variant="bordered"
                         className="mx-auto border-[var(--fg)]/20 text-[var(--fg)]"
                     >
-                        Back to home
+                        {t("Back to home")}
                     </Button>
                 </Card>
             </div>

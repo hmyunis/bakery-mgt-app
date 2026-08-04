@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState } from "react";
 import {
     Modal,
@@ -64,7 +65,7 @@ function PaymentMethodFormContent({
         const newErrors: Record<string, string> = {};
 
         if (!formData.name.trim()) {
-            newErrors.name = "Name is required";
+            newErrors.name = tr("Name is required");
         }
 
         setErrors(newErrors);
@@ -101,12 +102,12 @@ function PaymentMethodFormContent({
     return (
         <>
             <ModalHeader className="flex flex-col gap-1">
-                {isEdit ? "Edit Payment Method" : "Create Payment Method"}
+                {isEdit ? tr("Edit Payment Method") : tr("Create Payment Method")}
             </ModalHeader>
             <ModalBody>
                 <Input
-                    label="Name"
-                    placeholder="e.g., Cash, Telebirr, CBE"
+                    label={tr("Name")}
+                    placeholder={tr("e.g., Cash, Telebirr, CBE")}
                     value={formData.name}
                     onValueChange={(value) => handleInputChange("name", value)}
                     errorMessage={errors.name}
@@ -119,8 +120,8 @@ function PaymentMethodFormContent({
                 />
 
                 <Textarea
-                    label="Config Details"
-                    placeholder="e.g., Pay to 0911..."
+                    label={tr("Config Details")}
+                    placeholder={tr("e.g., Pay to 0911...")}
                     value={formData.config_details}
                     onValueChange={(value) => handleInputChange("config_details", value)}
                     minRows={2}
@@ -134,7 +135,7 @@ function PaymentMethodFormContent({
                     isSelected={formData.is_active}
                     onValueChange={(value) => handleInputChange("is_active", value)}
                 >
-                    Active
+                    {tr("Active")}
                 </Switch>
             </ModalBody>
             <ModalFooter>
@@ -143,10 +144,10 @@ function PaymentMethodFormContent({
                     onPress={onClose}
                     className="!text-zinc-700 dark:!text-zinc-300"
                 >
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    {isEdit ? "Update" : "Create"}
+                    {isEdit ? tr("Update") : tr("Create")}
                 </Button>
             </ModalFooter>
         </>

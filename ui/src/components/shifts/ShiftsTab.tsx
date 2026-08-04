@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Tab, Tabs } from "@heroui/react";
 import { CalendarDays, Clock } from "lucide-react";
 import { ShiftTemplatesTab } from "./ShiftTemplatesTab";
@@ -7,7 +8,7 @@ export function ShiftsTab() {
     return (
         <div className="space-y-4">
             <Tabs
-                aria-label="Shifts"
+                aria-label={tr("Shifts")}
                 color="primary"
                 variant="bordered"
                 classNames={{
@@ -20,7 +21,7 @@ export function ShiftsTab() {
                     title={
                         <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4" />
-                            <span>Templates</span>
+                            <span>{tr("Templates")}</span>
                         </div>
                     }
                 >
@@ -32,7 +33,7 @@ export function ShiftsTab() {
                     title={
                         <div className="flex items-center gap-2">
                             <CalendarDays className="h-4 w-4" />
-                            <span>Assignments</span>
+                            <span>{tr("Assignments")}</span>
                         </div>
                     }
                 >

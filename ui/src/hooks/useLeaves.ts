@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -21,7 +22,7 @@ export function useCreateLeave() {
         mutationFn: (data: CreateLeaveRecordData) => leaveService.createLeave(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["leaves"] });
-            toast.success("Leave record created");
+            toast.success(tr("Leave record created"));
         },
         onError: (error: unknown) => {
             toast.error(leaveService.parseApiError(error));
@@ -37,7 +38,7 @@ export function useUpdateLeave() {
             leaveService.updateLeave(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["leaves"] });
-            toast.success("Leave record updated");
+            toast.success(tr("Leave record updated"));
         },
         onError: (error: unknown) => {
             toast.error(leaveService.parseApiError(error));
@@ -52,7 +53,7 @@ export function useDeleteLeave() {
         mutationFn: (id: number) => leaveService.deleteLeave(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["leaves"] });
-            toast.success("Leave record deleted");
+            toast.success(tr("Leave record deleted"));
         },
         onError: (error: unknown) => {
             toast.error(leaveService.parseApiError(error));

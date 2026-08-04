@@ -1,0 +1,61 @@
+{
+    "id": "/",
+    "name": "የሲሮ ዳቦ ቤት አስተዳደር",
+    "short_name": "ሲሮ",
+    "description": "የሲሮ ዳቦ ቤት የሽያጭ፣ የምርት፣ የክምችት፣ የሰራተኛ እና የገንዘብ አስተዳደር።",
+    "lang": "am",
+    "dir": "ltr",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+    "orientation": "any",
+    "background_color": "#faf7ed",
+    "theme_color": "#8b4d20",
+    "categories": ["business", "productivity", "finance"],
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "/icons/pwa-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/pwa-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/pwa-maskable-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "ሽያጭ",
+            "short_name": "ሽያጭ",
+            "description": "የሽያጭ ገጽን ክፈት",
+            "url": "/app/sales",
+            "icons": [{ "src": "/icons/pwa-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "ምርት",
+            "short_name": "ምርት",
+            "description": "የምርት አስተዳደርን ክፈት",
+            "url": "/app/production",
+            "icons": [{ "src": "/icons/pwa-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "ክምችት",
+            "short_name": "ክምችት",
+            "description": "የክምችት አስተዳደርን ክፈት",
+            "url": "/app/inventory",
+            "icons": [{ "src": "/icons/pwa-192x192.png", "sizes": "192x192" }]
+        }
+    ],
+    "launch_handler": { "client_mode": "navigate-existing" }
+}

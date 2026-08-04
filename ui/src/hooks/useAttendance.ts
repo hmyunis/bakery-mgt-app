@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -29,7 +30,7 @@ export function useUpsertAttendance() {
         mutationFn: (data: AttendanceUpsertData) => attendanceService.upsertAttendance(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["attendance"] });
-            toast.success("Attendance saved");
+            toast.success(tr("Attendance saved"));
         },
         onError: (error: unknown) => {
             toast.error(attendanceService.parseApiError(error));
@@ -46,7 +47,7 @@ export function useUpdateAttendanceRecord() {
         onSuccess: (updated) => {
             queryClient.invalidateQueries({ queryKey: ["attendance"] });
             queryClient.invalidateQueries({ queryKey: ["attendance", updated.id] });
-            toast.success("Attendance updated");
+            toast.success(tr("Attendance updated"));
         },
         onError: (error: unknown) => {
             toast.error(attendanceService.parseApiError(error));
@@ -61,7 +62,7 @@ export function useDeleteAttendanceRecord() {
         mutationFn: (id: number) => attendanceService.deleteAttendanceRecord(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["attendance"] });
-            toast.success("Attendance deleted");
+            toast.success(tr("Attendance deleted"));
         },
         onError: (error: unknown) => {
             toast.error(attendanceService.parseApiError(error));

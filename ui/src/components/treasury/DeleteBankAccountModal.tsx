@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import type { BankAccount } from "../../types/treasury";
 
@@ -25,11 +26,14 @@ export function DeleteBankAccountModal({
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="md">
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1">Delete bank account?</ModalHeader>
+                <ModalHeader className="flex flex-col gap-1">
+                    {tr("Delete bank account?")}
+                </ModalHeader>
                 <ModalBody>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
-                        This will delete the selected bank account and remove its recorded
-                        activities. This action cannot be undone.
+                        {tr(
+                            "This will delete the selected bank account and remove its recorded activities. This action cannot be undone."
+                        )}
                     </p>
                     {account ? (
                         <div className="text-sm text-slate-500">
@@ -44,7 +48,7 @@ export function DeleteBankAccountModal({
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="light" onPress={onClose}>
-                        Cancel
+                        {tr("Cancel")}
                     </Button>
                     <Button color="danger" onPress={onConfirm}>
                         Delete

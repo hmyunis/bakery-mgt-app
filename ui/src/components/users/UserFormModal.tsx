@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState } from "react";
 import {
     Modal,
@@ -134,23 +135,23 @@ function UserFormContent({
         const newErrors: Record<string, string> = {};
 
         if (!formData.username.trim()) {
-            newErrors.username = "Username is required";
+            newErrors.username = tr("Username is required");
         }
 
         if (!isEdit && !formData.password) {
-            newErrors.password = "Password is required";
+            newErrors.password = tr("Password is required");
         }
 
         if (formData.password && formData.password.length < 8) {
-            newErrors.password = "Password must be at least 8 characters";
+            newErrors.password = tr("Password must be at least 8 characters");
         }
 
         if (formData.password && formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = "Passwords do not match";
+            newErrors.confirmPassword = tr("Passwords do not match");
         }
 
         if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = "Invalid email format";
+            newErrors.email = tr("Invalid email format");
         }
 
         setErrors(newErrors);
@@ -213,7 +214,7 @@ function UserFormContent({
 
     return (
         <>
-            <ModalHeader>{isEdit ? "Edit User" : "Create New User"}</ModalHeader>
+            <ModalHeader>{isEdit ? tr("Edit User") : tr("Create New User")}</ModalHeader>
             <ModalBody className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex flex-col items-center pt-4">
                     <input
@@ -242,7 +243,7 @@ function UserFormContent({
                             color="primary"
                             onPress={() => document.getElementById("avatar-upload")?.click()}
                         >
-                            Change Photo
+                            {tr("Change Photo")}
                         </Button>
                         {isEdit && (avatarPreview || user?.avatar) && (
                             <Button
@@ -251,7 +252,7 @@ function UserFormContent({
                                 color="danger"
                                 onPress={handleRemoveAvatar}
                             >
-                                Remove
+                                {tr("Remove")}
                             </Button>
                         )}
                     </div>
@@ -259,7 +260,7 @@ function UserFormContent({
                 </div>
                 <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input
-                        label="Full Name"
+                        label={tr("Full Name")}
                         value={formData.fullName}
                         onValueChange={(v) => handleInputChange("fullName", v)}
                         isRequired
@@ -268,7 +269,7 @@ function UserFormContent({
                         }}
                     />
                     <Input
-                        label="Email (optional)"
+                        label={tr("Email (optional)")}
                         type="email"
                         value={formData.email}
                         onValueChange={(v) => handleInputChange("email", v)}
@@ -277,7 +278,7 @@ function UserFormContent({
                         }}
                     />
                     <Input
-                        label="Username"
+                        label={tr("Username")}
                         value={formData.username}
                         onValueChange={(v) => handleInputChange("username", v)}
                         isRequired
@@ -288,7 +289,7 @@ function UserFormContent({
                         }}
                     />
                     <Input
-                        label="Phone Number"
+                        label={tr("Phone Number")}
                         value={formData.phoneNumber}
                         onValueChange={(v) => handleInputChange("phoneNumber", v)}
                         classNames={{
@@ -296,16 +297,16 @@ function UserFormContent({
                         }}
                     />
                     <Input
-                        label="Address (Optional)"
+                        label={tr("Address (Optional)")}
                         value={formData.address}
                         onValueChange={(v) => handleInputChange("address", v)}
-                        placeholder="e.g., 2nd Floor, Room 201"
+                        placeholder={tr("e.g., 2nd Floor, Room 201")}
                         classNames={{
                             input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
                         }}
                     />
                     <Select
-                        label="Role"
+                        label={tr("Role")}
                         selectedKeys={[formData.role]}
                         onSelectionChange={(keys) => {
                             const selected = Array.from(keys)[0] as UserRole;
@@ -328,7 +329,7 @@ function UserFormContent({
 
                     {formData.role === "staff" && isAdmin && (
                         <CheckboxGroup
-                            label="Page Permissions"
+                            label={tr("Page Permissions")}
                             value={formData.permissions}
                             onValueChange={(values) =>
                                 handleInputChange("permissions", values as PagePermission[])
@@ -348,12 +349,12 @@ function UserFormContent({
                     {!isEdit && (
                         <>
                             <Input
-                                label="Password"
+                                label={tr("Password")}
                                 type="password"
                                 value={formData.password}
                                 onValueChange={(v) => handleInputChange("password", v)}
                                 isRequired
-                                placeholder="Minimum 8 characters"
+                                placeholder={tr("Minimum 8 characters")}
                                 isInvalid={!!errors.password}
                                 errorMessage={errors.password}
                                 classNames={{
@@ -361,12 +362,12 @@ function UserFormContent({
                                 }}
                             />
                             <Input
-                                label="Confirm Password"
+                                label={tr("Confirm Password")}
                                 type="password"
                                 value={formData.confirmPassword}
                                 onValueChange={(v) => handleInputChange("confirmPassword", v)}
                                 isRequired
-                                placeholder="Confirm password"
+                                placeholder={tr("Confirm password")}
                                 isInvalid={!!errors.confirmPassword}
                                 errorMessage={errors.confirmPassword}
                                 classNames={{
@@ -381,7 +382,7 @@ function UserFormContent({
                                 isSelected={formData.isActive}
                                 onValueChange={(v) => handleInputChange("isActive", v)}
                             >
-                                User Active
+                                {tr("User Active")}
                             </Switch>
                         </div>
                     )}
@@ -389,10 +390,10 @@ function UserFormContent({
             </ModalBody>
             <ModalFooter>
                 <Button variant="flat" onPress={onClose} disabled={isLoading}>
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    {isEdit ? "Save Changes" : "Create User"}
+                    {isEdit ? tr("Save Changes") : tr("Create User")}
                 </Button>
             </ModalFooter>
         </>

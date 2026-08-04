@@ -1,3 +1,4 @@
+import { tr } from "../locales";
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../lib/apiClient";
 import type { ApiError } from "../types/api";
@@ -107,7 +108,7 @@ export function usePushNotifications() {
 
     const subscribeToPush = useCallback(async () => {
         if (!isSupported) {
-            toast.error("Push notifications are not supported in this browser");
+            toast.error(tr("Push notifications are not supported in this browser"));
             return;
         }
 
@@ -118,7 +119,7 @@ export function usePushNotifications() {
             setPermission(permissionResult);
 
             if (permissionResult !== "granted") {
-                toast.error("Permission denied for push notifications");
+                toast.error(tr("Permission denied for push notifications"));
                 return;
             }
 
@@ -138,12 +139,12 @@ export function usePushNotifications() {
                     vapidKey = response.data.key;
                 }
             } catch {
-                throw new Error("Failed to get VAPID public key from backend");
+                throw new Error(tr("Failed to get VAPID public key from backend"));
             }
 
             if (!vapidKey || vapidKey.includes("REPLACE_WITH_REAL_KEY")) {
                 throw new Error(
-                    "Invalid VAPID public key. Please configure VAPID keys in backend."
+                    tr("Invalid VAPID public key. Please configure VAPID keys in backend.")
                 );
             }
 
@@ -158,7 +159,7 @@ export function usePushNotifications() {
             const auth = subscription.getKey("auth");
 
             if (!p256dh || !auth) {
-                throw new Error("Failed to generate subscription keys");
+                throw new Error(tr("Failed to generate subscription keys"));
             }
 
             // Follow guide format: send p256dh and auth as direct fields (not nested in keys)
@@ -185,7 +186,7 @@ export function usePushNotifications() {
                 checkSubscription();
             }, 500);
 
-            toast.success("Successfully subscribed to notifications!");
+            toast.success(tr("Successfully subscribed to notifications!"));
         } catch (error: unknown) {
             const apiError = error as ApiError;
             const msg =
@@ -252,9 +253,9 @@ export function usePushNotifications() {
                 checkSubscription();
             }, 1000);
 
-            toast.success("Notifications disabled");
+            toast.success(tr("Notifications disabled"));
         } catch {
-            toast.error("Failed to disable notifications");
+            toast.error(tr("Failed to disable notifications"));
         } finally {
             setIsLoading(false);
         }

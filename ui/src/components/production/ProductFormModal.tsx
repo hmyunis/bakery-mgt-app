@@ -1,3 +1,4 @@
+import { tr } from "../../locales";
 import { useState, useRef } from "react";
 import {
     Modal,
@@ -103,11 +104,11 @@ function ProductFormContent({
         const newErrors: Record<string, string> = {};
 
         if (!formData.name.trim()) {
-            newErrors.name = "Name is required";
+            newErrors.name = tr("Name is required");
         }
 
         if (!formData.selling_price || parseFloat(formData.selling_price) <= 0) {
-            newErrors.selling_price = "Selling price must be greater than 0";
+            newErrors.selling_price = tr("Selling price must be greater than 0");
         }
 
         setErrors(newErrors);
@@ -149,14 +150,14 @@ function ProductFormContent({
     return (
         <>
             <ModalHeader className="flex flex-col gap-1">
-                {isEdit ? "Edit Product" : "Create Product"}
+                {isEdit ? tr("Edit Product") : tr("Create Product")}
             </ModalHeader>
             <ModalBody>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                         <Input
-                            label="Name"
-                            placeholder="e.g., Burger Bread, Sponge Cake"
+                            label={tr("Name")}
+                            placeholder={tr("e.g., Burger Bread, Sponge Cake")}
                             value={formData.name}
                             onValueChange={(value) => handleInputChange("name", value)}
                             errorMessage={errors.name}
@@ -172,8 +173,8 @@ function ProductFormContent({
 
                     <div className="md:col-span-2">
                         <Textarea
-                            label="Description"
-                            placeholder="Product description..."
+                            label={tr("Description")}
+                            placeholder={tr("Product description...")}
                             value={formData.description}
                             onValueChange={(value) => handleInputChange("description", value)}
                             minRows={2}
@@ -186,7 +187,7 @@ function ProductFormContent({
                     </div>
 
                     <Input
-                        label="Selling Price (ETB)"
+                        label={tr("Selling Price (ETB)")}
                         placeholder="0.00"
                         type="number"
                         step="0.01"
@@ -208,12 +209,14 @@ function ProductFormContent({
                             isSelected={formData.is_active}
                             onValueChange={(value) => handleInputChange("is_active", value)}
                         >
-                            Active
+                            {tr("Active")}
                         </Switch>
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium mb-2">Product Image</label>
+                        <label className="block text-sm font-medium mb-2">
+                            {tr("Product Image")}
+                        </label>
                         <div className="flex items-center gap-4">
                             {imagePreview ? (
                                 <div className="relative">
@@ -249,7 +252,7 @@ function ProductFormContent({
                                     variant="flat"
                                     startContent={<Upload className="h-4 w-4" />}
                                 >
-                                    {imagePreview ? "Change Image" : "Upload Image"}
+                                    {imagePreview ? tr("Change Image") : tr("Upload Image")}
                                 </Button>
                             </div>
                         </div>
@@ -262,10 +265,10 @@ function ProductFormContent({
                     onPress={onClose}
                     className="!text-zinc-700 dark:!text-zinc-300"
                 >
-                    Cancel
+                    {tr("Cancel")}
                 </Button>
                 <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                    {isEdit ? "Update" : "Create"}
+                    {isEdit ? tr("Update") : tr("Create")}
                 </Button>
             </ModalFooter>
         </>
