@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { tr } from "../../locales";
 import { Button, Select, SelectItem } from "@heroui/react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
@@ -23,6 +24,14 @@ export function DataTablePagination({
     const hasPreviousPage = pagination.page > 1;
     const hasNextPage = pagination.page < pagination.totalPages;
 
+    const pageSizeOptions = useMemo(
+        () =>
+            Array.from(new Set([10, 12, 20, 30, 40, 50, pagination.pageSize])).sort(
+                (a, b) => a - b
+            ),
+        [pagination.pageSize]
+    );
+
     const firstItem = (pagination.page - 1) * pagination.pageSize + 1;
     const lastItem = Math.min(pagination.page * pagination.pageSize, pagination.count);
 
@@ -44,6 +53,8 @@ export function DataTablePagination({
                         labelPlacement="outside-left"
                         aria-label={tr("Rows per page")}
                         selectedKeys={[String(pagination.pageSize)]}
+                        disableAnimation
+                        maxListboxHeight={220}
                         className="min-w-[72px] [&_button]:border-0 [&_button]:bg-transparent [&_button]:focus:ring-0 [&_button]:hover:bg-transparent"
                         onSelectionChange={(keys) => {
                             const newSize = Array.from(keys)[0];
@@ -53,7 +64,7 @@ export function DataTablePagination({
                         }}
                         popoverProps={{ className: "w-20" }}
                     >
-                        {[10, 20, 30, 40, 50].map((size) => (
+                        {pageSizeOptions.map((size) => (
                             <SelectItem key={size} id={`${size}`} textValue={`${size}`}>
                                 {size}
                             </SelectItem>

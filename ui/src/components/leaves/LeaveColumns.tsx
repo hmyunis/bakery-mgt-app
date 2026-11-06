@@ -83,7 +83,7 @@ export function getLeaveColumns({
             cell: ({ row }) => {
                 const leave = row.original;
                 return (
-                    <Dropdown placement="bottom-end">
+                    <Dropdown placement="bottom-end" disableAnimation>
                         <DropdownTrigger>
                             <Button isIconOnly variant="light" size="sm">
                                 <MoreVertical className="h-4 w-4 text-slate-700 dark:text-slate-300" />

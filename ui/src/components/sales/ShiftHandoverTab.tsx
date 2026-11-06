@@ -129,6 +129,12 @@ export function ShiftHandoverTab() {
     const resolvedCloseNotes = openedSession
         ? (closeNotesBySession[openedSession.id] ?? openedSession.closeNotes ?? "")
         : "";
+    const { data: openedSessionReconciliation } = useShiftSessionReconciliation(
+        openedSession?.id ?? null,
+        { enabled: !!openedSession?.id }
+    );
+    const systemDigitalSum = openedSessionReconciliation?.money?.digitalCollected ?? 0;
+
     const resolvedCashDeclared = openedSession
         ? (cashDeclaredBySession[openedSession.id] ??
           (openedSession.totalCashDeclared !== null && openedSession.totalCashDeclared !== undefined
@@ -140,8 +146,10 @@ export function ShiftHandoverTab() {
           (openedSession.totalDigitalDeclared !== null &&
           openedSession.totalDigitalDeclared !== undefined
               ? openedSession.totalDigitalDeclared.toFixed(2)
-              : "0"))
-        : "0";
+              : systemDigitalSum > 0
+                ? systemDigitalSum.toFixed(2)
+                : ""))
+        : "";
 
     const selectedSessionId =
         selectedSessionIdOverride ??
@@ -191,10 +199,16 @@ export function ShiftHandoverTab() {
 
     const handleCloseShift = async () => {
         if (!openedSession) return;
+        const parsedCash = Number.parseFloat(resolvedCashDeclared || "0") || 0;
+        const parsedDigital = resolvedDigitalDeclared.trim()
+            ? Number.parseFloat(resolvedDigitalDeclared)
+            : systemDigitalSum;
         const payload = {
             close_notes: resolvedCloseNotes,
-            total_cash_declared: Number.parseFloat(resolvedCashDeclared || "0") || 0,
-            total_digital_declared: Number.parseFloat(resolvedDigitalDeclared || "0") || 0,
+            total_cash_declared: parsedCash,
+            total_digital_declared: Number.isFinite(parsedDigital)
+                ? parsedDigital
+                : systemDigitalSum,
             counts: products.map((product) => ({
                 product_id: product.id,
                 closing_count: toWholeNumber(resolvedClosingCounts[product.id], 0),
@@ -349,7 +363,7 @@ export function ShiftHandoverTab() {
                         <Input
                             type="number"
                             min={0}
-                            label={tr("Digital Declared")}
+                            label={tr("Digital Declared (Optional)")}
                             value={resolvedDigitalDeclared}
                             onValueChange={(value) => {
                                 if (!openedSession) return;
@@ -358,6 +372,27 @@ export function ShiftHandoverTab() {
                                     [openedSession.id]: value,
                                 }));
                             }}
+                            placeholder={
+                                systemDigitalSum > 0 ? systemDigitalSum.toFixed(2) : "0.00"
+                            }
+                            endContent={
+                                <Button
+                                    size="sm"
+                                    variant="flat"
+                                    color="primary"
+                                    className="h-7 text-xs px-2"
+                                    onPress={() => {
+                                        if (!openedSession) return;
+                                        setDigitalDeclaredBySession((prev) => ({
+                                            ...prev,
+                                            [openedSession.id]: systemDigitalSum.toFixed(2),
+                                        }));
+                                    }}
+                                >
+                                    {tr("Autofill")}
+                                </Button>
+                            }
+                            description={tr("Autofills system digital sum. Edit only if needed.")}
                             classNames={visibleInputClassNames}
                         />
                     </div>

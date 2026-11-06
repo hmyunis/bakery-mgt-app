@@ -2,6 +2,9 @@ import { tr } from "../../locales";
 import { useMemo, useState } from "react";
 import {
     Button,
+    Card,
+    CardBody,
+    CardFooter,
     Chip,
     Input,
     Modal,
@@ -14,15 +17,27 @@ import {
     Spinner,
     Textarea,
 } from "@heroui/react";
-import { ArrowRight, History, PackagePlus, Search, Warehouse } from "lucide-react";
+import {
+    ArrowRight,
+    History,
+    Package,
+    PackagePlus,
+    Search,
+    Utensils,
+    Warehouse,
+} from "lucide-react";
 import {
     useCreateKitchenTransfer,
     useIngredients,
     useKitchenTransfers,
 } from "../../hooks/useInventory";
+import { DataTablePagination } from "../ui/DataTablePagination";
 
 export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
     const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(12);
+
     const [isOpen, setIsOpen] = useState(false);
     const [ingredientId, setIngredientId] = useState("");
     const [quantity, setQuantity] = useState("");
@@ -34,12 +49,29 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
         page_size: 10,
     });
     const { mutateAsync: createTransfer, isPending } = useCreateKitchenTransfer();
+
     const ingredients = useMemo(() => ingredientData?.results || [], [ingredientData]);
     const filtered = useMemo(
         () => ingredients.filter((item) => item.name.toLowerCase().includes(search.toLowerCase())),
         [ingredients, search]
     );
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const paginatedItems = useMemo(() => {
+        const start = (page - 1) * pageSize;
+        return filtered.slice(start, start + pageSize);
+    }, [filtered, page, pageSize]);
+
     const selected = ingredients.find((item) => item.id.toString() === ingredientId);
+    const ingredientSelectedKeys = useMemo(
+        () => (ingredientId ? [String(ingredientId)] : []),
+        [ingredientId]
+    );
+
+    const handleSearchChange = (value: string) => {
+        setSearch(value);
+        setPage(1);
+    };
 
     const openTransfer = (id?: number) => {
         setIngredientId(id?.toString() || "");
@@ -68,13 +100,15 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
 
     return (
         <div className="space-y-6">
+            {/* Header controls */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Input
                     aria-label={tr("Search kitchen ingredients")}
                     placeholder={tr("Search ingredients...")}
                     value={search}
-                    onValueChange={setSearch}
+                    onValueChange={handleSearchChange}
                     isClearable
+                    onClear={() => handleSearchChange("")}
                     startContent={<Search className="h-4 w-4 text-zinc-400" />}
                     className="w-full sm:max-w-sm"
                 />
@@ -89,58 +123,152 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                 )}
             </div>
 
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-                <div className="grid grid-cols-[minmax(140px,1fr)_110px_110px_90px] gap-3 bg-zinc-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:bg-zinc-900/60">
-                    <span>{tr("Ingredient")}</span>
-                    <span className="text-right">{tr("Storehouse")}</span>
-                    <span className="text-right">{tr("Kitchen")}</span>
-                    <span />
+            {/* Compact Cards Grid */}
+            {isLoading ? (
+                <div className="flex justify-center py-16">
+                    <Spinner size="lg" />
                 </div>
-                {isLoading ? (
-                    <div className="flex justify-center py-10">
-                        <Spinner />
+            ) : filtered.length ? (
+                <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {paginatedItems.map((item) => {
+                            const isLowStock =
+                                item.reorder_point > 0 &&
+                                item.current_stock > 0 &&
+                                item.current_stock <= item.reorder_point;
+                            const isOutOfStock = item.current_stock <= 0;
+
+                            return (
+                                <Card
+                                    key={item.id}
+                                    className="flex flex-col justify-between border border-zinc-200 bg-white shadow-xs transition-all duration-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/80"
+                                >
+                                    <CardBody className="space-y-3 p-3.5">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Package className="h-4 w-4 shrink-0 text-primary" />
+                                                    <h4 className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                                                        {item.name}
+                                                    </h4>
+                                                </div>
+                                                <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                                    {tr("Unit")}:{" "}
+                                                    <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                                                        {item.unit}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            {isLowStock ? (
+                                                <Chip
+                                                    size="sm"
+                                                    color="warning"
+                                                    variant="flat"
+                                                    className="h-6 shrink-0 text-xs"
+                                                >
+                                                    {tr("Low Stock")}
+                                                </Chip>
+                                            ) : isOutOfStock ? (
+                                                <Chip
+                                                    size="sm"
+                                                    color="danger"
+                                                    variant="flat"
+                                                    className="h-6 shrink-0 text-xs"
+                                                >
+                                                    {tr("Out of Stock")}
+                                                </Chip>
+                                            ) : null}
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 rounded-lg border border-zinc-100 bg-zinc-50 p-2.5 dark:border-zinc-800 dark:bg-zinc-800/50">
+                                            <div>
+                                                <div className="flex items-center gap-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                                                    <Warehouse className="h-3 w-3 text-zinc-400" />
+                                                    <span className="truncate">
+                                                        {tr("Storehouse")}
+                                                    </span>
+                                                </div>
+                                                <p
+                                                    className={`mt-0.5 text-sm font-bold sm:text-base ${
+                                                        item.current_stock > 0
+                                                            ? "text-zinc-900 dark:text-zinc-100"
+                                                            : "text-danger"
+                                                    }`}
+                                                >
+                                                    {item.current_stock.toFixed(2)}{" "}
+                                                    <span className="text-[11px] font-normal text-zinc-500">
+                                                        {item.unit}
+                                                    </span>
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex items-center gap-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                                                    <Utensils className="h-3 w-3 text-primary" />
+                                                    <span className="truncate">
+                                                        {tr("Kitchen")}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-0.5 text-sm font-bold text-primary sm:text-base">
+                                                    {item.kitchen_stock.toFixed(2)}{" "}
+                                                    <span className="text-[11px] font-normal text-zinc-500">
+                                                        {item.unit}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </CardBody>
+
+                                    {canRestock && (
+                                        <CardFooter className="p-3 pt-0">
+                                            <Button
+                                                size="sm"
+                                                color="primary"
+                                                variant="flat"
+                                                className="w-full font-medium"
+                                                startContent={
+                                                    <ArrowRight className="h-3.5 w-3.5" />
+                                                }
+                                                onPress={() => openTransfer(item.id)}
+                                                isDisabled={item.current_stock <= 0}
+                                            >
+                                                {item.current_stock > 0
+                                                    ? tr("Transfer to Kitchen")
+                                                    : tr("Out of Stock")}
+                                            </Button>
+                                        </CardFooter>
+                                    )}
+                                </Card>
+                            );
+                        })}
                     </div>
-                ) : filtered.length ? (
-                    filtered.map((item) => (
-                        <div
-                            key={item.id}
-                            className="grid grid-cols-[minmax(140px,1fr)_110px_110px_90px] items-center gap-3 border-t border-zinc-200 px-4 py-3 dark:border-zinc-800"
-                        >
-                            <div>
-                                <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                                    {item.name}
-                                </p>
-                                <p className="text-xs text-zinc-500">
-                                    {tr("Measured in")}
-                                    {item.unit}
-                                </p>
-                            </div>
-                            <span className="text-right text-sm">
-                                {item.current_stock.toFixed(3)}
-                            </span>
-                            <span className="text-right font-semibold text-primary">
-                                {item.kitchen_stock.toFixed(3)}
-                            </span>
-                            <div className="text-right">
-                                {canRestock && (
-                                    <Button
-                                        size="sm"
-                                        variant="flat"
-                                        onPress={() => openTransfer(item.id)}
-                                    >
-                                        {tr("Move")}
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <p className="py-10 text-center text-sm text-zinc-500">
+
+                    <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/60">
+                        <DataTablePagination
+                            pagination={{
+                                count: filtered.length,
+                                page,
+                                pageSize,
+                                totalPages,
+                            }}
+                            onPageChange={setPage}
+                            onPageSizeChange={(newSize) => {
+                                setPageSize(newSize);
+                                setPage(1);
+                            }}
+                        />
+                    </div>
+                </div>
+            ) : (
+                <div className="rounded-xl border border-dashed border-zinc-200 p-10 text-center dark:border-zinc-800">
+                    <Package className="mx-auto mb-2 h-8 w-8 text-zinc-400" />
+                    <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                         {tr("No ingredients found.")}
                     </p>
-                )}
-            </div>
+                </div>
+            )}
 
+            {/* Recent transfers history */}
             <div>
                 <div className="mb-3 flex items-center gap-2">
                     <History className="h-4 w-4 text-zinc-500" />
@@ -185,17 +313,21 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                 </div>
             </div>
 
+            {/* Transfer Modal */}
             <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
                 <ModalContent>
                     <ModalHeader>{tr("Restock Kitchen Store")}</ModalHeader>
                     <ModalBody className="space-y-3">
                         <Select
                             label={tr("Ingredient")}
-                            selectedKeys={ingredientId ? [ingredientId] : []}
+                            placeholder={tr("Select an ingredient")}
+                            selectedKeys={ingredientSelectedKeys}
                             onSelectionChange={(keys) => {
                                 setIngredientId(String(Array.from(keys)[0] || ""));
                                 setError("");
                             }}
+                            disableAnimation
+                            maxListboxHeight={320}
                             classNames={{
                                 base: "!w-full !text-left",
                                 trigger: "!w-full !text-left",
@@ -204,9 +336,14 @@ export function KitchenStoreTab({ canRestock }: { canRestock: boolean }) {
                             }}
                         >
                             {ingredients.map((item) => (
-                                <SelectItem key={item.id.toString()}>
-                                    {item.name} · {item.current_stock.toFixed(3)} {item.unit}{" "}
-                                    {tr("available")}
+                                <SelectItem key={item.id.toString()} textValue={item.name}>
+                                    <div className="flex w-full items-center justify-between">
+                                        <span className="font-medium">{item.name}</span>
+                                        <span className="text-xs text-default-500">
+                                            {item.current_stock.toFixed(3)} {item.unit}{" "}
+                                            {tr("available")}
+                                        </span>
+                                    </div>
                                 </SelectItem>
                             ))}
                         </Select>

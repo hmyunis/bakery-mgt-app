@@ -3,6 +3,7 @@ from django.db import transaction
 from django.db.models import F, Sum
 from rest_framework import serializers
 
+from core.models import BakerySettings
 from production.models import Product
 
 from .models import (
@@ -233,7 +234,9 @@ class ShiftSessionOpenSerializer(serializers.Serializer):
 class ShiftSessionCloseSerializer(serializers.Serializer):
     close_notes = serializers.CharField(required=False, allow_blank=True)
     total_cash_declared = serializers.DecimalField(max_digits=12, decimal_places=2)
-    total_digital_declared = serializers.DecimalField(max_digits=12, decimal_places=2)
+    total_digital_declared = serializers.DecimalField(
+        max_digits=12, decimal_places=2, required=False, allow_null=True
+    )
     counts = ShiftSessionCountInputSerializer(many=True)
 
     def validate_counts(self, counts):
@@ -262,9 +265,14 @@ class ShiftSessionCloseSerializer(serializers.Serializer):
         return counts
 
     def validate(self, attrs):
-        if attrs["total_cash_declared"] < 0 or attrs["total_digital_declared"] < 0:
+        if attrs.get("total_cash_declared", 0) < 0:
+            raise serializers.ValidationError("Declared cash total cannot be negative.")
+        if (
+            attrs.get("total_digital_declared") is not None
+            and attrs["total_digital_declared"] < 0
+        ):
             raise serializers.ValidationError(
-                "Declared cash and digital totals cannot be negative."
+                "Declared digital total cannot be negative."
             )
         return attrs
 
@@ -424,6 +432,9 @@ class SaleSerializer(serializers.ModelSerializer):
                 "payments_input is required for paid sales."
             )
 
+        bakery_settings = BakerySettings.get_instance()
+        auto_deduct_stock = bakery_settings.auto_deduct_stock_on_sales
+
         with transaction.atomic():
             request_user = self.context["request"].user
             shift_session = self._get_required_shift_session(request_user)
@@ -457,7 +468,7 @@ class SaleSerializer(serializers.ModelSerializer):
                         f"Product with id {product_id} not found or inactive"
                     )
 
-                if product.stock_quantity < qty:
+                if auto_deduct_stock and product.stock_quantity < qty:
                     raise serializers.ValidationError(
                         f"Insufficient stock for {product.name}. "
                         f"Available: {product.stock_quantity}, Requested: {qty}"
@@ -474,8 +485,9 @@ class SaleSerializer(serializers.ModelSerializer):
                 )
                 total_amount += price * qty
 
-                product.stock_quantity = F("stock_quantity") - qty
-                product.save(update_fields=["stock_quantity"])
+                if auto_deduct_stock:
+                    product.stock_quantity = F("stock_quantity") - qty
+                    product.save(update_fields=["stock_quantity"])
 
             payment_total = 0
             payment_entries = []
@@ -539,6 +551,8 @@ class SaleSerializer(serializers.ModelSerializer):
         unpaid_reason = validated_data.get("unpaid_reason", instance.unpaid_reason)
 
         with transaction.atomic():
+            bakery_settings = BakerySettings.get_instance()
+            auto_deduct_stock = bakery_settings.auto_deduct_stock_on_sales
             sale = super().update(instance, validated_data)
 
             if items_data is not None:
@@ -580,20 +594,22 @@ class SaleSerializer(serializers.ModelSerializer):
                         raise serializers.ValidationError(
                             f"Quantity must be greater than 0 for {product.name}."
                         )
-                    available = product.stock_quantity + old_quantities.get(
-                        product_id, 0
-                    )
-                    if quantity > available:
-                        raise serializers.ValidationError(
-                            f"Insufficient stock for {product.name}. "
-                            f"Available: {available}."
+                    if auto_deduct_stock:
+                        available = product.stock_quantity + old_quantities.get(
+                            product_id, 0
                         )
+                        if quantity > available:
+                            raise serializers.ValidationError(
+                                f"Insufficient stock for {product.name}. "
+                                f"Available: {available}."
+                            )
                     new_quantities[product_id] = quantity
 
-                for product_id, product in products.items():
-                    product.stock_quantity += old_quantities.get(product_id, 0)
-                    product.stock_quantity -= new_quantities.get(product_id, 0)
-                Product.objects.bulk_update(products.values(), ["stock_quantity"])
+                if auto_deduct_stock:
+                    for product_id, product in products.items():
+                        product.stock_quantity += old_quantities.get(product_id, 0)
+                        product.stock_quantity -= new_quantities.get(product_id, 0)
+                    Product.objects.bulk_update(products.values(), ["stock_quantity"])
 
                 sale.items.all().delete()
                 for item in items_data:

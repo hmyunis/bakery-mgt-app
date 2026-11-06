@@ -15,6 +15,7 @@ export function BakerySettingsForm() {
         address: "",
         email: "",
         themeColor: "#f2751a",
+        autoDeductStockOnSales: false,
         facebookUrl: "",
         facebookEnabled: false,
         instagramUrl: "",
@@ -42,6 +43,7 @@ export function BakerySettingsForm() {
                 address: bakerySettings.address || "",
                 email: bakerySettings.email || "",
                 themeColor: bakerySettings.themeColor || "#06b6d4",
+                autoDeductStockOnSales: Boolean(bakerySettings.autoDeductStockOnSales),
                 facebookUrl: bakerySettings.facebookUrl || "",
                 facebookEnabled: Boolean(bakerySettings.facebookEnabled),
                 instagramUrl: bakerySettings.instagramUrl || "",
@@ -99,6 +101,10 @@ export function BakerySettingsForm() {
         formDataToSend.append("address", formData.address);
         formDataToSend.append("email", formData.email);
         formDataToSend.append("theme_color", formData.themeColor);
+        formDataToSend.append(
+            "auto_deduct_stock_on_sales",
+            String(formData.autoDeductStockOnSales)
+        );
         formDataToSend.append("facebook_url", formData.facebookUrl);
         formDataToSend.append("facebook_enabled", String(formData.facebookEnabled));
         formDataToSend.append("instagram_url", formData.instagramUrl);
@@ -259,6 +265,33 @@ export function BakerySettingsForm() {
                     <p className="text-xs text-[var(--muted)]">
                         {tr("Choose the accent color for the public landing page.")}
                     </p>
+                </div>
+
+                <Divider className="my-2" />
+
+                <div className="space-y-3">
+                    <div className="text-sm font-medium text-[var(--fg)]">
+                        {tr("Sales & Stock Controls")}
+                    </div>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
+                        <div className="space-y-0.5">
+                            <span className="text-sm font-medium text-[var(--fg)]">
+                                {tr("Auto-deduct stock on sales")}
+                            </span>
+                            <p className="text-xs text-[var(--muted)]">
+                                {tr(
+                                    "When enabled, sales will validate stock availability and deduct product inventory automatically."
+                                )}
+                            </p>
+                        </div>
+                        <Switch
+                            aria-label={tr("Auto-deduct stock on sales")}
+                            isSelected={formData.autoDeductStockOnSales}
+                            onValueChange={(v) => handleInputChange("autoDeductStockOnSales", v)}
+                        >
+                            {formData.autoDeductStockOnSales ? tr("Enabled") : tr("Disabled")}
+                        </Switch>
+                    </div>
                 </div>
 
                 <Divider className="my-2" />

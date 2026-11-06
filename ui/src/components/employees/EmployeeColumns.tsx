@@ -67,9 +67,11 @@ export const getEmployeeColumns = ({
             const employee = row.original;
             return (
                 <div className="relative flex justify-end items-center">
-                    <Dropdown>
-                        <DropdownTrigger as={Button} variant="light">
-                            <MoreVertical className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+                    <Dropdown placement="bottom-end" disableAnimation>
+                        <DropdownTrigger>
+                            <Button isIconOnly variant="light" size="sm">
+                                <MoreVertical className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+                            </Button>
                         </DropdownTrigger>
                         <DropdownMenu aria-label={tr("Employee Actions")}>
                             <DropdownItem key="edit" onAction={() => onEdit(employee)}>

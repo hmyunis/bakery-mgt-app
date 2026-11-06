@@ -9,9 +9,16 @@ interface ProductCardProps {
     quantity: number;
     onIncrement: () => void;
     onDecrement: () => void;
+    autoDeductStock?: boolean;
 }
 
-export function ProductCard({ product, quantity, onIncrement, onDecrement }: ProductCardProps) {
+export function ProductCard({
+    product,
+    quantity,
+    onIncrement,
+    onDecrement,
+    autoDeductStock = true,
+}: ProductCardProps) {
     const getImageUrl = (image?: string): string | undefined => {
         if (!image) return undefined;
         if (image.startsWith("http")) return image;
@@ -19,7 +26,7 @@ export function ProductCard({ product, quantity, onIncrement, onDecrement }: Pro
     };
 
     const imageUrl = getImageUrl(product.image);
-    const isOutOfStock = product.stock_quantity <= 0;
+    const isOutOfStock = autoDeductStock && product.stock_quantity <= 0;
 
     return (
         <Card
@@ -79,7 +86,10 @@ export function ProductCard({ product, quantity, onIncrement, onDecrement }: Pro
                             variant="bordered"
                             size="sm"
                             onPress={onIncrement}
-                            isDisabled={isOutOfStock || quantity >= product.stock_quantity}
+                            isDisabled={
+                                isOutOfStock ||
+                                (autoDeductStock && quantity >= product.stock_quantity)
+                            }
                             className="h-7 w-7 min-w-0 p-1"
                         >
                             <Plus className="h-3 w-3 text-slate-700 dark:text-slate-300" />

@@ -217,12 +217,20 @@ export function ShiftHandoverTab() {
               ? openedSession.totalCashDeclared.toFixed(2)
               : ""))
         : "";
+    const { data: openedSessionReconciliation } = useShiftSessionReconciliation(
+        openedSession?.id ?? null,
+        { enabled: !!openedSession?.id }
+    );
+    const systemDigitalSum = openedSessionReconciliation?.money?.digitalCollected ?? 0;
+
     const resolvedDigitalDeclared = openedSession
         ? (digitalDeclaredBySession[openedSession.id] ??
           (openedSession.totalDigitalDeclared !== null &&
           openedSession.totalDigitalDeclared !== undefined
               ? openedSession.totalDigitalDeclared.toFixed(2)
-              : ""))
+              : systemDigitalSum > 0
+                ? systemDigitalSum.toFixed(2)
+                : ""))
         : "";
 
     const selectedSessionId =
@@ -309,9 +317,7 @@ export function ShiftHandoverTab() {
     const digitalDeclaredInvalid =
         resolvedDigitalDeclared.trim().length > 0 && parsedDigitalDeclared === null;
     const canSubmitCloseShift =
-        parsedCashDeclared !== null &&
-        parsedDigitalDeclared !== null &&
-        !closeShiftMutation.isPending;
+        parsedCashDeclared !== null && !digitalDeclaredInvalid && !closeShiftMutation.isPending;
 
     const handleOpenShift = async () => {
         if (isAdmin && !resolvedCashierId) return;
@@ -336,11 +342,13 @@ export function ShiftHandoverTab() {
 
     const handleCloseShift = async () => {
         if (!openedSession) return;
-        if (parsedCashDeclared === null || parsedDigitalDeclared === null) return;
+        if (parsedCashDeclared === null || digitalDeclaredInvalid) return;
+        const finalDigital =
+            parsedDigitalDeclared !== null ? parsedDigitalDeclared : systemDigitalSum;
         const payload = {
             close_notes: resolvedCloseNotes,
             total_cash_declared: parsedCashDeclared,
-            total_digital_declared: parsedDigitalDeclared,
+            total_digital_declared: finalDigital,
             counts: products.map((product) => ({
                 product_id: product.id,
                 closing_count: toWholeNumber(resolvedClosingCounts[product.id], 0),
@@ -700,7 +708,7 @@ export function ShiftHandoverTab() {
                             type="number"
                             min={0}
                             step="0.01"
-                            label={tr("Digital Declared")}
+                            label={tr("Digital Declared (Optional)")}
                             value={resolvedDigitalDeclared}
                             onValueChange={(value) => {
                                 if (!openedSession) return;
@@ -709,8 +717,27 @@ export function ShiftHandoverTab() {
                                     [openedSession.id]: value,
                                 }));
                             }}
-                            isRequired
-                            placeholder="0.00"
+                            placeholder={
+                                systemDigitalSum > 0 ? systemDigitalSum.toFixed(2) : "0.00"
+                            }
+                            endContent={
+                                <Button
+                                    size="sm"
+                                    variant="flat"
+                                    color="primary"
+                                    className="h-7 text-xs px-2"
+                                    onPress={() => {
+                                        if (!openedSession) return;
+                                        setDigitalDeclaredBySession((prev) => ({
+                                            ...prev,
+                                            [openedSession.id]: systemDigitalSum.toFixed(2),
+                                        }));
+                                    }}
+                                >
+                                    {tr("Autofill")}
+                                </Button>
+                            }
+                            description={tr("Autofills system digital sum. Edit only if needed.")}
                             isInvalid={digitalDeclaredInvalid}
                             errorMessage={
                                 digitalDeclaredInvalid ? tr("Enter a valid amount.") : undefined

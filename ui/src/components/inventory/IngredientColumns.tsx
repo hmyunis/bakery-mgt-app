@@ -2,18 +2,20 @@ import { tr } from "../../locales";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Ingredient } from "../../types/inventory";
 import { Button, Chip, Tooltip } from "@heroui/react";
-import { Edit, Trash2, AlertTriangle, ShoppingCart, RotateCcw } from "lucide-react";
+import { Edit, Trash2, AlertTriangle, ShoppingCart, RotateCcw, ArrowRight } from "lucide-react";
 
 export const getIngredientColumns = ({
     onEdit,
     onDelete,
     onAddPurchase,
     onAdjustStock,
+    onTransfer,
 }: {
     onEdit?: (ingredient: Ingredient) => void;
     onDelete?: (ingredient: Ingredient) => void;
     onAddPurchase?: (ingredient: Ingredient) => void;
     onAdjustStock?: (ingredient: Ingredient) => void;
+    onTransfer?: (ingredient: Ingredient) => void;
 }): ColumnDef<Ingredient>[] => [
     {
         id: "rowNumber",
@@ -107,6 +109,20 @@ export const getIngredientColumns = ({
             const ingredient = row.original;
             return (
                 <div className="flex items-center gap-2">
+                    {onTransfer && (
+                        <Tooltip content={tr("Transfer to Kitchen")} placement="top">
+                            <Button
+                                isIconOnly
+                                size="sm"
+                                variant="flat"
+                                color="secondary"
+                                className="min-w-8 w-8 h-8 p-2"
+                                onPress={() => onTransfer(ingredient)}
+                            >
+                                <ArrowRight className="h-4 w-4" />
+                            </Button>
+                        </Tooltip>
+                    )}
                     {onAddPurchase && (
                         <Tooltip content={tr("Record Purchase")} placement="top">
                             <Button

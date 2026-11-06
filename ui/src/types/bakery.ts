@@ -20,6 +20,7 @@ export interface BakerySettings {
     xUrl: string;
     themeColor: string;
     syncSalesToBankAccounts: boolean;
+    autoDeductStockOnSales: boolean;
     createdAt: string;
     updatedAt: string;
 }

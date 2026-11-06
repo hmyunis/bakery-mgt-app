@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Input, Button } from "@heroui/react";
 import { Search, Grid3X3, List, ShoppingCart } from "lucide-react";
 import { useInfiniteProducts } from "../../hooks/useProduction";
+import { useBakerySettings } from "../../hooks/useBakery";
 import { ProductCard } from "./ProductCard";
 import { ProductRow } from "./ProductRow";
 import { POSCartSidebar, type CartItem } from "./POSCartSidebar";
@@ -20,6 +21,9 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
     const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [showMobileCartFab, setShowMobileCartFab] = useState(false);
+
+    const { data: bakerySettings } = useBakerySettings();
+    const autoDeductStock = bakerySettings?.autoDeductStockOnSales ?? false;
 
     const debouncedSearch = useDebounce(searchQuery, 300);
     const {
@@ -95,11 +99,13 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
 
     const handleIncrement = (productId: number) => {
         const product = getKnownProduct(productId);
-        if (!product || product.stock_quantity <= 0) return;
+        if (!product || (autoDeductStock && product.stock_quantity <= 0)) return;
 
         const existingItem = cart.find((item) => item.product.id === productId);
         const canIncrement =
-            !existingItem || existingItem.quantity < Math.max(0, product.stock_quantity);
+            !autoDeductStock ||
+            !existingItem ||
+            existingItem.quantity < Math.max(0, product.stock_quantity);
         const isDesktopNow = window.matchMedia?.("(min-width: 768px)")?.matches ?? true;
         if (canIncrement && isDesktopNow) setIsSidebarCollapsed(false);
 
@@ -107,7 +113,7 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
             const existingItem = prev.find((item) => item.product.id === productId);
             if (existingItem) {
                 // Check if adding one more would exceed stock
-                if (existingItem.quantity >= product.stock_quantity) {
+                if (autoDeductStock && existingItem.quantity >= product.stock_quantity) {
                     return prev;
                 }
                 return prev.map((item) =>
@@ -141,8 +147,10 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
         const product = getKnownProduct(productId);
         if (!product) return;
 
-        const maxQty = Math.max(0, product.stock_quantity);
-        const clamped = Math.max(1, Math.min(maxQty, Math.floor(nextQty)));
+        const requested = Math.max(1, Math.floor(nextQty));
+        const clamped = autoDeductStock
+            ? Math.max(1, Math.min(Math.max(0, product.stock_quantity), requested))
+            : requested;
 
         setCart((prev) => {
             const existingItem = prev.find((item) => item.product.id === productId);
@@ -250,6 +258,7 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
                                     quantity={quantities[product.id] || 0}
                                     onIncrement={() => handleIncrement(product.id)}
                                     onDecrement={() => handleDecrement(product.id)}
+                                    autoDeductStock={autoDeductStock}
                                 />
                             ))}
                         </div>
@@ -271,6 +280,7 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
                                     onIncrement={() => handleIncrement(product.id)}
                                     onDecrement={() => handleDecrement(product.id)}
                                     rowNumber={index + 1}
+                                    autoDeductStock={autoDeductStock}
                                 />
                             ))}
                         </div>
@@ -296,6 +306,7 @@ export function POSTerminal({ salesLockedReason }: POSTerminalProps) {
                     isSidebarCollapsed={isSidebarCollapsed}
                     setIsSidebarCollapsed={setIsSidebarCollapsed}
                     salesLockedReason={salesLockedReason}
+                    autoDeductStock={autoDeductStock}
                     className="min-h-[calc(100vh-8rem)]"
                 />
             </div>

@@ -27,6 +27,7 @@ interface POSCartSidebarProps {
     setIsSidebarCollapsed: (collapsed: boolean) => void;
     salesLockedReason?: string | null;
     className?: string;
+    autoDeductStock?: boolean;
 }
 
 interface SidebarContentProps {
@@ -38,6 +39,7 @@ interface SidebarContentProps {
     onSaleSuccess: () => void;
     receiptIssued: boolean;
     salesLockedReason?: string | null;
+    autoDeductStock?: boolean;
 }
 
 interface PaymentEntryDraft {
@@ -56,6 +58,7 @@ const SidebarContent = ({
     onSaleSuccess,
     receiptIssued,
     salesLockedReason,
+    autoDeductStock = true,
 }: SidebarContentProps) => {
     const getImageUrl = (image?: string): string | undefined => {
         if (!image) return undefined;
@@ -297,7 +300,11 @@ const SidebarContent = ({
                                                     onSetQuantity(item.product.id, parsed);
                                                 }}
                                                 min={1}
-                                                max={item.product.stock_quantity}
+                                                max={
+                                                    autoDeductStock
+                                                        ? item.product.stock_quantity
+                                                        : undefined
+                                                }
                                                 className="w-20"
                                                 classNames={{
                                                     input: "text-center !text-slate-900 dark:!text-slate-100",
@@ -310,6 +317,7 @@ const SidebarContent = ({
                                                 variant="bordered"
                                                 onPress={() => onIncrement(item.product.id)}
                                                 isDisabled={
+                                                    autoDeductStock &&
                                                     item.quantity >= item.product.stock_quantity
                                                 }
                                             >
@@ -556,6 +564,7 @@ export function POSCartSidebar({
     setIsSidebarCollapsed,
     salesLockedReason,
     className,
+    autoDeductStock = true,
 }: POSCartSidebarProps) {
     const [receiptIssued, setReceiptIssued] = useState<boolean>(() => {
         if (typeof window === "undefined") return false;
@@ -625,6 +634,7 @@ export function POSCartSidebar({
                         onSaleSuccess={onSaleSuccess}
                         receiptIssued={receiptIssued}
                         salesLockedReason={salesLockedReason}
+                        autoDeductStock={autoDeductStock}
                     />
                 )}
             </div>
@@ -674,6 +684,7 @@ export function POSCartSidebar({
                             onSaleSuccess={onSaleSuccess}
                             receiptIssued={receiptIssued}
                             salesLockedReason={salesLockedReason}
+                            autoDeductStock={autoDeductStock}
                         />
                     </div>
                 </div>

@@ -13,6 +13,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from core.models import BakerySettings
 from production.models import Product, ProductionRun
 
 from .models import (
@@ -273,7 +274,21 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
             session.closed_at = closed_at
             session.close_notes = data.get("close_notes", "")
             session.total_cash_declared = data["total_cash_declared"]
-            session.total_digital_declared = data["total_digital_declared"]
+
+            declared_digital = data.get("total_digital_declared")
+            if declared_digital is None:
+                payment_collected = SalePayment.objects.filter(
+                    sale__shift_session=session,
+                    sale__payment_status=Sale.PAYMENT_STATUS_PAID,
+                ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
+                cash_collected = SalePayment.objects.filter(
+                    sale__shift_session=session,
+                    sale__payment_status=Sale.PAYMENT_STATUS_PAID,
+                    method__name__icontains="cash",
+                ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
+                declared_digital = payment_collected - cash_collected
+
+            session.total_digital_declared = declared_digital
             session.status = ShiftSession.STATUS_PENDING_HANDOVER_ACCEPTANCE
             session.save(
                 update_fields=[
@@ -854,9 +869,11 @@ class SaleViewSet(viewsets.ModelViewSet):
                 payment_entries, "subtract", note=f"Sale #{instance.id} deleted"
             )
 
-            for item in instance.items.select_related("product").all():
-                item.product.stock_quantity = F("stock_quantity") + item.quantity
-                item.product.save(update_fields=["stock_quantity"])
+            bakery_settings = BakerySettings.get_instance()
+            if bakery_settings.auto_deduct_stock_on_sales:
+                for item in instance.items.select_related("product").all():
+                    item.product.stock_quantity = F("stock_quantity") + item.quantity
+                    item.product.save(update_fields=["stock_quantity"])
 
             instance.delete()
 

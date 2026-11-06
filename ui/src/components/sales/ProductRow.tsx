@@ -10,6 +10,7 @@ interface ProductRowProps {
     onIncrement: () => void;
     onDecrement: () => void;
     rowNumber: number;
+    autoDeductStock?: boolean;
 }
 
 export function ProductRow({
@@ -18,6 +19,7 @@ export function ProductRow({
     onIncrement,
     onDecrement,
     rowNumber,
+    autoDeductStock = true,
 }: ProductRowProps) {
     const getImageUrl = (image?: string): string | undefined => {
         if (!image) return undefined;
@@ -26,7 +28,7 @@ export function ProductRow({
     };
 
     const imageUrl = getImageUrl(product.image);
-    const isOutOfStock = product.stock_quantity <= 0;
+    const isOutOfStock = autoDeductStock && product.stock_quantity <= 0;
 
     return (
         <Card
@@ -95,7 +97,10 @@ export function ProductRow({
                             variant="bordered"
                             size="sm"
                             onPress={onIncrement}
-                            isDisabled={isOutOfStock || quantity >= product.stock_quantity}
+                            isDisabled={
+                                isOutOfStock ||
+                                (autoDeductStock && quantity >= product.stock_quantity)
+                            }
                             className="h-7 w-7 p-1"
                         >
                             <Plus className="h-3 w-3 text-slate-700 dark:text-slate-300" />

@@ -310,6 +310,30 @@ export const en: Record<string, string> = {
     Digital: "Digital",
     "Digital Collected": "Digital Collected",
     "Digital Declared": "Digital Declared",
+    "Digital Declared (Optional)": "Digital Declared (Optional)",
+    "Autofills system digital sum. Edit only if needed.":
+        "Autofills system digital sum. Edit only if needed.",
+    Autofill: "Autofill",
+    "Auto-deduct stock on sales": "Auto-deduct stock on sales",
+    "When enabled, sales will validate stock availability and deduct product inventory automatically.":
+        "When enabled, sales will validate stock availability and deduct product inventory automatically.",
+    "Sales & Stock Controls": "Sales & Stock Controls",
+    "Transfer to Kitchen": "Transfer to Kitchen",
+    "Kitchen Transfers": "Kitchen Transfers",
+    "Transfer Quantity": "Transfer Quantity",
+    "Cannot transfer more than available in storehouse":
+        "Cannot transfer more than available in storehouse",
+    Transferred: "Transferred",
+    "Select an ingredient to transfer": "Select an ingredient to transfer",
+    "Dispense to Kitchen": "Transfer to Kitchen",
+    "Dispense Material": "Transfer to Kitchen",
+    "Store Dispensing": "Kitchen Transfers",
+    "Storehouse Stock": "Storehouse Stock",
+    "Kitchen Stock": "Kitchen Stock",
+    "Dispense Quantity": "Transfer Quantity",
+    "Cannot dispense more than available in storehouse":
+        "Cannot transfer more than available in storehouse",
+    Dispensed: "Transferred",
     Disabled: "Disabled",
     "do not match the previous closing count. Missing units:":
         "do not match the previous closing count. Missing units:",
@@ -919,8 +943,8 @@ export const en: Record<string, string> = {
     "Shows the current quantity of each ingredient in your inventory. This value is automatically updated when you record purchases or adjust stock levels.":
         "Shows the current quantity of each ingredient in your inventory. This value is automatically updated when you record purchases or adjust stock levels.",
     Sick: "Sick",
-    signIn: "signIn",
-    signingIn: "signingIn",
+    signIn: "Sign In",
+    signingIn: "Signing In",
     "Skip leave days": "Skip leave days",
     "Skip weekends": "Skip weekends",
     "Smart Purchase Tracking": "Smart Purchase Tracking",

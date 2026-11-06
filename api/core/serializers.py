@@ -32,6 +32,7 @@ class BakerySettingsSerializer(serializers.ModelSerializer):
             "x_url",
             "theme_color",
             "sync_sales_to_bank_accounts",
+            "auto_deduct_stock_on_sales",
             "created_at",
             "updated_at",
         ]

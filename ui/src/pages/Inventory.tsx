@@ -1,7 +1,7 @@
 import { tr } from "../locales";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Button, Tabs, Tab, DatePicker, Spinner } from "@heroui/react";
-import { Plus, Package, ShoppingCart, ListChecks, RotateCcw } from "lucide-react";
+import { Plus, Package, ShoppingCart, ListChecks, RotateCcw, Warehouse } from "lucide-react";
 import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { PageTitle } from "../components/ui/PageTitle";
 import { IngredientFilterCard } from "../components/inventory/IngredientFilterCard";
@@ -13,6 +13,8 @@ import { DeletePurchaseModal } from "../components/inventory/DeletePurchaseModal
 import { ShoppingList } from "../components/inventory/ShoppingList";
 import { StockAdjustmentFormModal } from "../components/inventory/StockAdjustmentFormModal";
 import { DeleteStockAdjustmentModal } from "../components/inventory/DeleteStockAdjustmentModal";
+import { DispenseModal } from "../components/inventory/DispenseModal";
+import { KitchenStoreTab } from "../components/production/KitchenStoreTab";
 import { getIngredientColumns } from "../components/inventory/IngredientColumns";
 import { getPurchaseColumns } from "../components/inventory/PurchaseColumns";
 import { getStockAdjustmentColumns } from "../components/inventory/StockAdjustmentColumns";
@@ -55,6 +57,10 @@ export function InventoryPage() {
     const [isAdjustmentFormOpen, setIsAdjustmentFormOpen] = useState(false);
     const [deletingAdjustment, setDeletingAdjustment] = useState<StockAdjustment | null>(null);
     const [adjustmentIngredient, setAdjustmentIngredient] = useState<Ingredient | null>(null);
+
+    // Transfer state
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [transferIngredient, setTransferIngredient] = useState<Ingredient | null>(null);
 
     const debouncedIngredientSearch = useDebounce(ingredientSearch, 500);
 
@@ -193,6 +199,12 @@ export function InventoryPage() {
         setDeletingAdjustment(null);
     };
 
+    // Transfer handlers
+    const handleTransfer = (ingredient?: Ingredient) => {
+        setTransferIngredient(ingredient || null);
+        setIsTransferModalOpen(true);
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -232,13 +244,15 @@ export function InventoryPage() {
                                 onSearchChange={setIngredientSearch}
                                 isLoading={isLoadingIngredients}
                             />
-                            <Button
-                                color="primary"
-                                onPress={handleAddIngredient}
-                                startContent={<Plus className="h-4 w-4" />}
-                            >
-                                {tr("Add Ingredient")}
-                            </Button>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    color="primary"
+                                    onPress={handleAddIngredient}
+                                    startContent={<Plus className="h-4 w-4" />}
+                                >
+                                    {tr("Add Ingredient")}
+                                </Button>
+                            </div>
                         </div>
 
                         <DataTable
@@ -247,6 +261,7 @@ export function InventoryPage() {
                                 onDelete: handleDeleteIngredient,
                                 onAddPurchase: handleAddPurchase,
                                 onAdjustStock: handleAddAdjustment,
+                                onTransfer: handleTransfer,
                             })}
                             data={ingredientRows}
                             isLoading={isLoadingIngredients}
@@ -389,6 +404,20 @@ export function InventoryPage() {
                         )}
                     </div>
                 </Tab>
+
+                <Tab
+                    key="transfers"
+                    title={
+                        <div className="flex items-center gap-2">
+                            <Warehouse className="h-4 w-4" />
+                            <span>{tr("Kitchen Transfers")}</span>
+                        </div>
+                    }
+                >
+                    <div className="pt-4">
+                        <KitchenStoreTab canRestock={true} />
+                    </div>
+                </Tab>
             </Tabs>
 
             {/* Ingredient Modals */}
@@ -445,6 +474,16 @@ export function InventoryPage() {
                 onConfirm={handleDeleteAdjustmentConfirm}
                 adjustment={deletingAdjustment}
                 isLoading={isDeletingAdjustment}
+            />
+
+            {/* Transfer Modal */}
+            <DispenseModal
+                isOpen={isTransferModalOpen}
+                onClose={() => {
+                    setIsTransferModalOpen(false);
+                    setTransferIngredient(null);
+                }}
+                preselectedIngredient={transferIngredient}
             />
         </div>
     );

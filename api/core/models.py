@@ -37,6 +37,13 @@ class BakerySettings(models.Model):
         default=False,
         help_text="When enabled, sales linked to payment methods update bank balances.",
     )
+    auto_deduct_stock_on_sales = models.BooleanField(
+        default=False,
+        help_text=(
+            "When enabled, completing sales automatically validates "
+            "and deducts product stock."
+        ),
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

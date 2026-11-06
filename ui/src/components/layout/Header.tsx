@@ -86,6 +86,7 @@ export function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
                     {/* Profile Dropdown */}
                     <Dropdown
                         placement="bottom-end"
+                        disableAnimation
                         isOpen={isProfileOpen}
                         onOpenChange={setIsProfileOpen}
                     >
