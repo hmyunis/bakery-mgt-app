@@ -56,6 +56,7 @@ export function FactoryResetForm() {
 
         try {
             await factoryReset({
+                password,
                 confirmation: password,
                 ...selectedOptions,
             });

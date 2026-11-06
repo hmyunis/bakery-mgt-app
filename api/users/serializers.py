@@ -283,7 +283,8 @@ class FactoryResetSerializer(serializers.Serializer):
     Admin must provide their password and select which data types to delete.
     """
 
-    password = serializers.CharField(required=True, write_only=True)
+    password = serializers.CharField(required=False, write_only=True)
+    confirmation = serializers.CharField(required=False, write_only=True)
 
     # Data types to delete
     delete_users = serializers.BooleanField(default=False)
@@ -298,6 +299,11 @@ class FactoryResetSerializer(serializers.Serializer):
     delete_notifications = serializers.BooleanField(default=False)
 
     def validate(self, data):
+        password = data.get("password") or data.get("confirmation")
+        if not password:
+            raise serializers.ValidationError({"password": ["This field is required."]})
+        data["password"] = password
+
         # Check that at least one data type is selected
         data_types = [
             "delete_users",
