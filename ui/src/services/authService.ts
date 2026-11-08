@@ -36,6 +36,12 @@ export interface UserProfile {
     pushNotificationsEnabled?: boolean;
 }
 
+export interface FactoryResetResponse {
+    message: string;
+    deleted_counts?: Record<string, number>;
+    errors?: string[];
+}
+
 class AuthService {
     async login(credentials: LoginCredentials): Promise<LoginResponse> {
         const payload: Record<string, string> = {
@@ -265,8 +271,8 @@ class AuthService {
         });
     }
 
-    async factoryReset(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
-        const response = await apiClient.post<ApiResponse<unknown>>("/users/factory_reset/", data);
+    async factoryReset(data: Record<string, unknown>): Promise<FactoryResetResponse> {
+        const response = await apiClient.post<FactoryResetResponse>("/users/factory_reset/", data);
         return response.data;
     }
 }

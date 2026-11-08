@@ -442,6 +442,9 @@ export const en: Record<string, string> = {
     "Facebook URL": "Facebook URL",
     "Factory Reset": "Factory Reset",
     "Factory reset completed successfully.": "Factory reset completed successfully.",
+    "Factory reset completed with some errors.": "Factory reset completed with some errors.",
+    "Factory reset partially completed.": "Factory reset partially completed.",
+    "Factory reset failed.": "Factory reset failed.",
     "Factory Reset Zone": "Factory Reset Zone",
     "Failed to copy to clipboard": "Failed to copy to clipboard",
     "Failed to copy to clipboard. Please copy manually.":

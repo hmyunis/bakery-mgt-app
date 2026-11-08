@@ -249,7 +249,8 @@ function DispenseModalContent({ onClose, preselectedIngredient }: DispenseModalC
                 {activeIngredient && Number(quantity) > 0 && (
                     <div className="flex items-center justify-between text-xs p-2 rounded-lg bg-secondary-50 dark:bg-secondary-900/20 text-secondary-800 dark:text-secondary-200">
                         <span>
-                            {tr("Storehouse")}: {(currentStock - Number(quantity)).toFixed(3)} {unit}
+                            {tr("Storehouse")}: {(currentStock - Number(quantity)).toFixed(3)}{" "}
+                            {unit}
                         </span>
                         <ArrowRight className="h-3.5 w-3.5" />
                         <span>

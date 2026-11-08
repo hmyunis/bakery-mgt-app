@@ -11,7 +11,15 @@ from .middleware import get_current_ip, get_current_user
 from .models import AuditLog
 
 # List of models to ignore (to prevent loops or noise)
-IGNORED_MODELS = ["AuditLog", "Session", "LogEntry", "MigrationRecorder"]
+IGNORED_MODELS = [
+    "AuditLog",
+    "Session",
+    "LogEntry",
+    "MigrationRecorder",
+    "NotificationLog",
+    "NotificationPreference",
+    "PushSubscription",
+]
 
 # Sensitive fields to redact
 SENSITIVE_FIELDS = ["password", "token"]

@@ -13,10 +13,18 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from audit.models import AuditLog
-from inventory.models import Ingredient, Purchase
+from inventory.models import Ingredient, KitchenTransfer, Purchase, StockAdjustment
 from notifications.models import NotificationLog
 from production.models import Product, ProductionRun, Recipe
-from sales.models import PaymentMethod, Sale
+from sales.models import (
+    DailyClosing,
+    PaymentMethod,
+    Sale,
+    SaleItem,
+    ShiftSession,
+    ShiftSessionProductCount,
+)
+from treasury.models import Expense
 
 from .models import (
     AttendanceRecord,
@@ -152,8 +160,14 @@ class UserViewSet(viewsets.ModelViewSet):
             # 1. Sales (Dependent on Products, PaymentMethods, Users)
             if data.get("delete_sales"):
                 try:
-                    count, _ = Sale.objects.all().delete()
-                    deleted_counts["sales"] = count
+                    count_sales, _ = Sale.objects.all().delete()
+                    count_closings, _ = DailyClosing.objects.all().delete()
+                    ShiftSession.objects.update(previous_session=None)
+                    ShiftSessionProductCount.objects.all().delete()
+                    count_sessions, _ = ShiftSession.objects.all().delete()
+                    deleted_counts["sales"] = (
+                        count_sales + count_closings + count_sessions
+                    )
                 except ProtectedError as e:
                     errors.append(f"Cannot delete Sales: {e}")
 
@@ -176,7 +190,14 @@ class UserViewSet(viewsets.ModelViewSet):
             # 4. Purchases (Dependent on Ingredients, Users)
             if data.get("delete_purchases"):
                 try:
+                    expense_ids = list(
+                        Purchase.objects.filter(expense__isnull=False).values_list(
+                            "expense_id", flat=True
+                        )
+                    )
                     count, _ = Purchase.objects.all().delete()
+                    if expense_ids:
+                        Expense.objects.filter(id__in=expense_ids).delete()
                     deleted_counts["purchases"] = count
                 except ProtectedError as e:
                     errors.append(f"Cannot delete Purchases: {e}")
@@ -184,11 +205,11 @@ class UserViewSet(viewsets.ModelViewSet):
             # 5. Products (Referenced by Sales, ProductionRuns, Recipes)
             if data.get("delete_products"):
                 try:
-                    # Only delete if not referenced by existing sales/production/recipes
+                    if not SaleItem.objects.exists():
+                        ShiftSessionProductCount.objects.all().delete()
                     count, _ = Product.objects.all().delete()
                     deleted_counts["products"] = count
                 except ProtectedError as e:
-                    # Parse the error to give a user-friendly message
                     protected_objects = list(e.protected_objects)
                     example = (
                         protected_objects[0] if protected_objects else "unknown objects"
@@ -202,6 +223,8 @@ class UserViewSet(viewsets.ModelViewSet):
             # 6. Ingredients (Referenced by Recipes, ProductionRuns, Purchases)
             if data.get("delete_ingredients"):
                 try:
+                    KitchenTransfer.objects.all().delete()
+                    StockAdjustment.objects.all().delete()
                     count, _ = Ingredient.objects.all().delete()
                     deleted_counts["ingredients"] = count
                 except ProtectedError as e:
@@ -239,20 +262,14 @@ class UserViewSet(viewsets.ModelViewSet):
                 except ProtectedError as e:
                     errors.append(f"Cannot delete Notifications: {e}")
 
-            # 9. Audit Logs
-            if data.get("delete_audit_logs"):
-                try:
-                    count, _ = AuditLog.objects.all().delete()
-                    deleted_counts["audit_logs"] = count
-                except ProtectedError as e:
-                    errors.append(f"Cannot delete Audit Logs: {e}")
-
-            # 10. Users (Referenced by EVERYTHING)
+            # 9. Users (Referenced by EVERYTHING)
             if data.get("delete_users"):
                 try:
-                    # Exclude the current admin user and superusers
                     users_to_delete = User.objects.exclude(id=user.id).exclude(
                         is_superuser=True
+                    )
+                    ShiftSession.objects.filter(opened_by__in=users_to_delete).update(
+                        opened_by=user
                     )
                     count, _ = users_to_delete.delete()
                     deleted_counts["users"] = count
@@ -267,18 +284,31 @@ class UserViewSet(viewsets.ModelViewSet):
                         f"{model_name}."
                     )
 
+            # 10. Audit Logs (Run after deletions so post_delete signals
+            # don't leave new logs)
+            if data.get("delete_audit_logs"):
+                try:
+                    count, _ = AuditLog.objects.all().delete()
+                    deleted_counts["audit_logs"] = count
+                except ProtectedError as e:
+                    errors.append(f"Cannot delete Audit Logs: {e}")
+
         except Exception as e:
             return Response(
                 {"detail": f"An unexpected error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        response_status = status.HTTP_200_OK
-        message = "Factory reset completed."
-
-        if errors:
-            response_status = status.HTTP_207_MULTI_STATUS  # Partial content/status
+        total_deleted = sum(deleted_counts.values())
+        if errors and total_deleted == 0:
+            response_status = status.HTTP_400_BAD_REQUEST
+            message = "Factory reset failed."
+        elif errors:
+            response_status = status.HTTP_207_MULTI_STATUS
             message = "Factory reset completed with some errors."
+        else:
+            response_status = status.HTTP_200_OK
+            message = "Factory reset completed."
 
         # Send notification to all admins about factory reset
         from notifications.models import NotificationEvent

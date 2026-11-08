@@ -14,7 +14,8 @@ const stampServiceWorker = () => ({
         const assets = [...index.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map(([, asset]) =>
             JSON.stringify(asset)
         );
-        const source = readFileSync(workerPath, "utf8");
+        const publicWorkerPath = fileURLToPath(new URL("./public/sw.js", import.meta.url));
+        const source = readFileSync(publicWorkerPath, "utf8");
         if (!source.includes("__BUILD_ID__") || !source.includes("__PRECACHE_ASSETS__")) {
             throw new Error("Service worker build placeholders are missing.");
         }

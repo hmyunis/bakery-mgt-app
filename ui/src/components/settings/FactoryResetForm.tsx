@@ -17,7 +17,7 @@ import { Trash2, AlertTriangle } from "lucide-react";
 import { useFactoryReset } from "../../hooks/useFactoryReset";
 
 export function FactoryResetForm() {
-    const { isOpen, onOpen, onOpenChange } = useDisclosure();
+    const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure();
     const { mutateAsync: factoryReset, isPending } = useFactoryReset();
 
     const [password, setPassword] = useState("");
@@ -61,8 +61,7 @@ export function FactoryResetForm() {
                 ...selectedOptions,
             });
             setPassword("");
-            // Close modal programmatically if needed, but onOpenChange handles it
-            onOpenChange();
+            onClose();
         } catch {
             // Error handled in hook
         }

@@ -1,6 +1,6 @@
 import { tr } from "../locales";
-import { useMutation } from "@tanstack/react-query";
-import { authService } from "../services/authService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { authService, type FactoryResetResponse } from "../services/authService";
 import type { ApiError } from "../types/api";
 import { toast } from "sonner";
 
@@ -21,17 +21,40 @@ export interface FactoryResetPayload {
 }
 
 export function useFactoryReset() {
+    const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: (data: FactoryResetPayload) => authService.factoryReset(data),
-        onSuccess: () => {
-            // ApiResponse<unknown> doesn't have errors property, assume success
-            toast.success(tr("Factory reset completed successfully."));
+        onSuccess: (data: FactoryResetResponse) => {
+            if (data?.errors && data.errors.length > 0) {
+                const totalDeleted = Object.values(data.deleted_counts || {}).reduce(
+                    (a, b) => a + b,
+                    0
+                );
+                if (totalDeleted > 0) {
+                    toast.warning(
+                        `${tr("Factory reset completed with some errors.")} ${data.errors.join(". ")}`
+                    );
+                } else {
+                    toast.error(
+                        data.errors.join("\n") || tr("Factory reset failed. Please try again.")
+                    );
+                }
+            } else {
+                toast.success(tr("Factory reset completed successfully."));
+            }
+            queryClient.clear();
+            queryClient.invalidateQueries();
         },
         onError: (error: unknown) => {
             console.error("Factory reset failed:", error);
             const apiError = error as ApiError;
             const errorMsg =
                 apiError.response?.data?.detail ||
+                (Array.isArray(apiError.response?.data?.errors)
+                    ? apiError.response?.data?.errors.join("\n")
+                    : null) ||
+                apiError.response?.data?.message ||
                 apiError.response?.data?.password?.[0] ||
                 apiError.response?.data?.confirmation?.[0] ||
                 apiError.response?.data?.non_field_errors?.[0] ||
