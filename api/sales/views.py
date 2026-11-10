@@ -63,7 +63,9 @@ class IsCashierOrAdminForShiftSession(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.is_anonymous:
             return False
-        return request.user.has_page_permission("sales")
+        return request.user.has_page_permission("sales") or request.user.has_permission(
+            "manage_shifts"
+        )
 
 
 class PaymentMethodViewSet(viewsets.ModelViewSet):
@@ -72,14 +74,14 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
     Cashiers can see active methods (read-only).
     """
 
-    queryset = PaymentMethod.objects.all()
+    queryset = PaymentMethod.objects.all().order_by("name")
     serializer_class = PaymentMethodSerializer
     permission_classes = [IsAdmin]
 
     def get_queryset(self):
         if self.request.user.has_page_permission("treasury"):
-            return PaymentMethod.objects.all()
-        return PaymentMethod.objects.filter(is_active=True)
+            return PaymentMethod.objects.all().order_by("name")
+        return PaymentMethod.objects.filter(is_active=True).order_by("name")
 
 
 class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -95,7 +97,9 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = super().get_queryset()
         user = self.request.user
 
-        if getattr(user, "role", None) == "staff":
+        if getattr(user, "role", None) == "staff" and not user.has_permission(
+            "manage_shifts"
+        ):
             queryset = queryset.filter(
                 Q(opened_by=user)
                 | Q(status=ShiftSession.STATUS_CLOSED)
@@ -158,9 +162,17 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="open")
     def open_shift(self, request):
-        if not request.user.has_page_permission("sales"):
+        if not (
+            request.user.has_page_permission("sales")
+            or request.user.has_permission("manage_shifts")
+        ):
             return Response(
-                {"detail": "Sales permission is required to open shift sessions."},
+                {
+                    "detail": (
+                        "Sales or shift management permission is required to open shift"
+                        " sessions."
+                    )
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
         serializer = ShiftSessionOpenSerializer(
@@ -185,7 +197,10 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if request.user.role == "staff" and session.opened_by_id != request.user.id:
+        is_manager = request.user.role == "admin" or request.user.has_permission(
+            "manage_shifts"
+        )
+        if not is_manager and session.opened_by_id != request.user.id:
             return Response(
                 {"detail": "Cashier can only close own opened session."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -321,7 +336,10 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if request.user.role == "staff" and session.opened_by_id == request.user.id:
+        is_manager = request.user.role == "admin" or request.user.has_permission(
+            "manage_shifts"
+        )
+        if not is_manager and session.opened_by_id == request.user.id:
             return Response(
                 {"detail": "Cashier cannot accept own session handover."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -340,9 +358,12 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="reopen")
     def reopen_shift(self, request, pk=None):
-        if request.user.role != "admin":
+        is_manager = request.user.role == "admin" or request.user.has_permission(
+            "manage_shifts"
+        )
+        if not is_manager:
             return Response(
-                {"detail": "Only admins can reopen shift sessions."},
+                {"detail": "Only admins or shift managers can reopen shift sessions."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -359,9 +380,10 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
 
         if not session.closed_by or (
             getattr(session.closed_by, "role", None) != "staff"
+            and getattr(session.closed_by, "role", None) != "admin"
         ):
             return Response(
-                {"detail": "Only shifts closed by a cashier can be reopened."},
+                {"detail": "Only shifts closed by a cashier or admin can be reopened."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -391,9 +413,17 @@ class ShiftSessionViewSet(viewsets.ReadOnlyModelViewSet):
         session = self.get_object()
 
         if request.method == "PATCH":
-            if request.user.role != "admin":
+            is_manager = request.user.role == "admin" or request.user.has_permission(
+                "manage_shifts"
+            )
+            if not is_manager:
                 return Response(
-                    {"detail": "Only admins can edit reconciliation reports."},
+                    {
+                        "detail": (
+                            "Only admins or shift managers can edit reconciliation"
+                            " reports."
+                        )
+                    },
                     status=status.HTTP_403_FORBIDDEN,
                 )
             serializer = ShiftSessionReconciliationUpdateSerializer(data=request.data)

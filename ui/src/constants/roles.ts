@@ -21,9 +21,25 @@ export const PAGE_PERMISSIONS = [
 
 export type PagePermission = (typeof PAGE_PERMISSIONS)[number];
 
+export const ACTION_PERMISSIONS = ["manage_shifts"] as const;
+
+export type ActionPermission = (typeof ACTION_PERMISSIONS)[number];
+
+export const ALL_PERMISSIONS = [...PAGE_PERMISSIONS, ...ACTION_PERMISSIONS] as const;
+
+export type AppPermission = (typeof ALL_PERMISSIONS)[number];
+
+export function hasPermission(
+    role: UserRole | undefined,
+    permissions: string[] | undefined,
+    permission: AppPermission | string
+) {
+    return role === "admin" || !!permissions?.includes(permission);
+}
+
 export function hasPagePermission(
     role: UserRole | undefined,
-    permissions: PagePermission[] | undefined,
+    permissions: (PagePermission | string)[] | undefined,
     permission: PagePermission
 ) {
     return role === "admin" || !!permissions?.includes(permission);

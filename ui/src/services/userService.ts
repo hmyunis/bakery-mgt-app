@@ -1,5 +1,5 @@
 import { apiClient } from "../lib/apiClient";
-import { type PagePermission, type UserRole } from "../constants/roles";
+import { type AppPermission, type UserRole } from "../constants/roles";
 import type { ApiResponse, WrappedPaginatedResponse, PaginatedResponse } from "../types/api";
 
 export interface User {
@@ -9,7 +9,7 @@ export interface User {
     email?: string;
     phoneNumber?: string;
     role: UserRole;
-    permissions: PagePermission[];
+    permissions: AppPermission[];
     address?: string;
     avatar?: string;
     dateJoined?: string;
@@ -30,7 +30,7 @@ export interface CreateUserData {
     email?: string;
     phoneNumber?: string;
     role: UserRole;
-    permissions?: PagePermission[];
+    permissions?: AppPermission[];
     address?: string;
     password: string;
     confirmPassword: string;
@@ -43,7 +43,7 @@ export interface UpdateUserData {
     email?: string;
     phoneNumber?: string;
     role?: UserRole;
-    permissions?: PagePermission[];
+    permissions?: AppPermission[];
     address?: string;
     password?: string;
     confirmPassword?: string;
@@ -167,7 +167,7 @@ class UserService {
             email: user.email as string,
             phoneNumber: (user.phoneNumber || user.phone_number) as string,
             role: user.role as UserRole,
-            permissions: (user.permissions || []) as PagePermission[],
+            permissions: (user.permissions || []) as AppPermission[],
             address: user.address as string,
             avatar: user.avatar as string,
             dateJoined: (user.dateJoined || user.date_joined) as string,

@@ -19,6 +19,7 @@ import { User as UserIcon } from "lucide-react";
 import {
     PAGE_PERMISSIONS,
     VALID_ROLES,
+    type AppPermission,
     type PagePermission,
     type UserRole,
 } from "../../constants/roles";
@@ -71,7 +72,7 @@ function UserFormContent({
         email: user?.email || "",
         phoneNumber: user?.phoneNumber || "",
         role: user?.role || ("staff" as UserRole),
-        permissions: user?.permissions || ([] as PagePermission[]),
+        permissions: user?.permissions || ([] as AppPermission[]),
         address: user?.address || "",
         password: "",
         confirmPassword: "",
@@ -83,7 +84,7 @@ function UserFormContent({
     const [avatarRemoved, setAvatarRemoved] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const handleInputChange = (field: string, value: string | boolean | PagePermission[]) => {
+    const handleInputChange = (field: string, value: string | boolean | AppPermission[]) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
         // Clear error for this field
         if (errors[field]) {
@@ -328,22 +329,66 @@ function UserFormContent({
                     </Select>
 
                     {formData.role === "staff" && isAdmin && (
-                        <CheckboxGroup
-                            label={tr("Page Permissions")}
-                            value={formData.permissions}
-                            onValueChange={(values) =>
-                                handleInputChange("permissions", values as PagePermission[])
-                            }
-                            orientation="horizontal"
-                            className="sm:col-span-2"
-                            classNames={{ wrapper: "grid grid-cols-2 md:grid-cols-3 gap-2" }}
-                        >
-                            {PAGE_PERMISSIONS.map((permission) => (
-                                <Checkbox key={permission} value={permission}>
-                                    {permissionLabels[permission]}
-                                </Checkbox>
-                            ))}
-                        </CheckboxGroup>
+                        <>
+                            <CheckboxGroup
+                                label={tr("Page Permissions")}
+                                value={formData.permissions.filter((p) =>
+                                    PAGE_PERMISSIONS.includes(p as PagePermission)
+                                )}
+                                onValueChange={(values) => {
+                                    const otherPerms = formData.permissions.filter(
+                                        (p) => !PAGE_PERMISSIONS.includes(p as PagePermission)
+                                    );
+                                    handleInputChange("permissions", [
+                                        ...(values as PagePermission[]),
+                                        ...otherPerms,
+                                    ]);
+                                }}
+                                orientation="horizontal"
+                                className="sm:col-span-2"
+                                classNames={{ wrapper: "grid grid-cols-2 md:grid-cols-3 gap-2" }}
+                            >
+                                {PAGE_PERMISSIONS.map((permission) => (
+                                    <Checkbox key={permission} value={permission}>
+                                        {permissionLabels[permission]}
+                                    </Checkbox>
+                                ))}
+                            </CheckboxGroup>
+
+                            <div className="rounded-lg border border-slate-200 p-3.5 dark:border-slate-800 sm:col-span-2 bg-slate-50/50 dark:bg-slate-900/50">
+                                <Switch
+                                    isSelected={formData.permissions.includes("manage_shifts")}
+                                    onValueChange={(checked) => {
+                                        const updatedPermissions = checked
+                                            ? Array.from(
+                                                  new Set([
+                                                      ...formData.permissions,
+                                                      "manage_shifts" as AppPermission,
+                                                  ])
+                                              )
+                                            : formData.permissions.filter(
+                                                  (p) => p !== "manage_shifts"
+                                              );
+                                        handleInputChange("permissions", updatedPermissions);
+                                    }}
+                                    size="sm"
+                                    classNames={{
+                                        base: "max-w-full inline-flex",
+                                    }}
+                                >
+                                    <div className="flex flex-col ml-1">
+                                        <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                            {tr("Shift Handover Management")}
+                                        </span>
+                                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                                            {tr(
+                                                "Grants full authority equal to admin in the shift handover tab (opening shifts for cashiers, closing any shift, accepting handovers, reopening shifts, and editing reconciliation)."
+                                            )}
+                                        </span>
+                                    </div>
+                                </Switch>
+                            </div>
+                        </>
                     )}
 
                     {!isEdit && (

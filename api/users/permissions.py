@@ -19,7 +19,15 @@ class IsAdminOrOwner(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if view.action in ["list", "create"]:
+        if view.action == "list":
+            return bool(
+                request.user.is_authenticated
+                and (
+                    request.user.has_page_permission("users")
+                    or request.user.has_permission("manage_shifts")
+                )
+            )
+        if view.action == "create":
             return bool(
                 request.user.is_authenticated
                 and request.user.has_page_permission("users")

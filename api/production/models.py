@@ -23,6 +23,7 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        ordering = ["name"]
         indexes = [
             models.Index(fields=["is_active"]),
             models.Index(fields=["-created_at"]),
@@ -53,6 +54,9 @@ class Recipe(models.Model):
 
     # Yield info (e.g., This recipe makes 100 breads)
     standard_yield = models.DecimalField(max_digits=10, decimal_places=2, default=1.0)
+
+    class Meta:
+        ordering = ["id"]
 
     def __str__(self):
         if self.product:

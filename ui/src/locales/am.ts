@@ -901,6 +901,9 @@ export const am: Record<string, string> = {
     "Shift closed and pending acceptance.": "Shift ተዘግቷል እና ተቀባይነትን በመጠባበቅ ላይ።",
     "Shift Date": "የፈረቃ ቀን",
     "Shift Handover": "የፈረቃ ርክክብ",
+    "Shift Handover Management": "የፈረቃ ርክክብ አስተዳደር",
+    "Grants full authority equal to admin in the shift handover tab (opening shifts for cashiers, closing any shift, accepting handovers, reopening shifts, and editing reconciliation).":
+        "በፈረቃ ርክክብ ታብ ውስጥ ከአድሚን ጋር እኩል ሙሉ ፈቃድ ይሰጣል (ለካሺሮች ፈረቃ መክፈት፣ ማንኛውንም ፈረቃ መዝጋት፣ ርክክብ መቀበል፣ ፈረቃ እንደገና መክፈት እና ሪኮንሲሌሽን ማስተካከል)።",
     "Shift handover accepted.": "የሺፍት ርክክብ ተቀባይነት አግኝቷል።",
     "Shift opened successfully.": "Shift በተሳካ ሁኔታ ተከፍቷል።",
     "Shift reopened successfully.": "Shift በተሳካ ሁኔታ እንደገና ተከፍቷል።",

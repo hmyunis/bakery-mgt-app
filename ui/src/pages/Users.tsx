@@ -1,5 +1,5 @@
 import { tr } from "../locales";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { UserFormModal } from "../components/users/UserFormModal";
 import { DeleteUserModal } from "../components/users/DeleteUserModal";
 import { useUsers, useCreateUser, useUpdateUser, useDeleteUser } from "../hooks/useUsers";
@@ -8,10 +8,11 @@ import { DataTable } from "../components/ui/DataTable";
 import { DataTablePagination } from "../components/ui/DataTablePagination";
 import { getUserColumns } from "../components/users/UserColumns";
 import { UserDetailModal } from "../components/users/UserDetailModal";
-import { UserFilterCard } from "../components/users/UserFilterCard";
+import { MemoUserFilterCard } from "../components/users/UserFilterCard";
 import { PageTitle } from "../components/ui/PageTitle";
 import { Button } from "@heroui/react";
 import { Plus } from "lucide-react";
+import { useDebounce } from "../hooks/useDebounce";
 
 const PAGE_SIZE = 10;
 
@@ -19,6 +20,7 @@ export function UsersPage() {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(PAGE_SIZE);
     const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 300);
     const [isActiveFilter, setIsActiveFilter] = useState<boolean | null>(null);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -28,10 +30,20 @@ export function UsersPage() {
     const { data, isLoading } = useUsers({
         page,
         pageSize,
-        search: search || undefined,
+        search: debouncedSearch || undefined,
         isActive: isActiveFilter !== null ? isActiveFilter : undefined,
         ordering: "-date_joined",
     });
+
+    const handleSearchChange = useCallback((value: string) => {
+        setSearch(value);
+        setPage(1);
+    }, []);
+
+    const handleIsActiveFilterChange = useCallback((value: boolean | null) => {
+        setIsActiveFilter(value);
+        setPage(1);
+    }, []);
 
     const createUser = useCreateUser();
     const updateUser = useUpdateUser();
@@ -109,18 +121,11 @@ export function UsersPage() {
                     </Button>
                 }
             />
-            <UserFilterCard
+            <MemoUserFilterCard
                 searchQuery={search}
-                onSearchChange={(value) => {
-                    setSearch(value);
-                    setPage(1);
-                }}
+                onSearchChange={handleSearchChange}
                 isActiveFilter={isActiveFilter}
-                onIsActiveFilterChange={(value) => {
-                    setIsActiveFilter(value);
-                    setPage(1);
-                }}
-                isLoading={isLoading}
+                onIsActiveFilterChange={handleIsActiveFilterChange}
             />
             <DataTable
                 columns={columns}

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { clearAuthTokens, getAuthToken, getRefreshToken } from "../lib/apiClient";
 import { setSession, clearSession } from "../store/authSlice";
-import { isValidRole, PAGE_PERMISSIONS, type PagePermission } from "../constants/roles";
+import { isValidRole, ALL_PERMISSIONS, type AppPermission } from "../constants/roles";
 
 /**
  * Hook to initialize auth state from stored token on app load
@@ -45,7 +45,7 @@ export function useAuthInit() {
                     const userRole = isValidRole(payload.role) ? payload.role : undefined;
                     const permissions = Array.isArray(payload.permissions)
                         ? payload.permissions.filter((permission: string) =>
-                              PAGE_PERMISSIONS.includes(permission as PagePermission)
+                              ALL_PERMISSIONS.includes(permission as AppPermission)
                           )
                         : [];
                     dispatch(

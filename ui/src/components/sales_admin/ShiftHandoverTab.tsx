@@ -86,6 +86,7 @@ const reconciliationColumns: ColumnDef<ShiftSessionReconciliationProduct>[] = [
 export function ShiftHandoverTab() {
     const { user } = useAppSelector((state) => state.auth);
     const isAdmin = user?.role === "admin";
+    const canManageShifts = isAdmin || !!user?.permissions?.includes("manage_shifts");
     const currentUserId = user?.id !== undefined ? Number(user.id) : null;
 
     const [openNotes, setOpenNotes] = useState("");
@@ -132,7 +133,7 @@ export function ShiftHandoverTab() {
             role: "staff",
             ordering: "full_name",
         },
-        { enabled: isAdmin }
+        { enabled: canManageShifts }
     );
     const sessions = useMemo(() => sessionsData?.results || [], [sessionsData]);
     const pendingSessionCount = useMemo(
@@ -157,12 +158,12 @@ export function ShiftHandoverTab() {
         [sessions]
     );
     const resolvedCashierId = useMemo(() => {
-        if (!isAdmin) return currentUserId;
+        if (!canManageShifts) return currentUserId;
         if (selectedCashierId && cashiers.some((cashier) => cashier.id === selectedCashierId)) {
             return selectedCashierId;
         }
         return cashiers[0]?.id ?? null;
-    }, [cashiers, currentUserId, isAdmin, selectedCashierId]);
+    }, [cashiers, currentUserId, canManageShifts, selectedCashierId]);
 
     const openShiftMutation = useOpenShiftSession();
     const closeShiftMutation = useCloseShiftSession();
@@ -284,7 +285,7 @@ export function ShiftHandoverTab() {
 
     const canCloseOpenedSession =
         !!openedSession &&
-        (isAdmin || (currentUserId !== null && openedSession.openedBy === currentUserId));
+        (canManageShifts || (currentUserId !== null && openedSession.openedBy === currentUserId));
 
     const reconciliationCashierLabel = useMemo(() => {
         const fullName = (reconciliationData?.session.openedByFullName || "").trim();
@@ -320,7 +321,7 @@ export function ShiftHandoverTab() {
         parsedCashDeclared !== null && !digitalDeclaredInvalid && !closeShiftMutation.isPending;
 
     const handleOpenShift = async () => {
-        if (isAdmin && !resolvedCashierId) return;
+        if (canManageShifts && !resolvedCashierId) return;
 
         const payload: {
             open_notes: string;
@@ -333,7 +334,7 @@ export function ShiftHandoverTab() {
                 opening_count: toWholeNumber(resolvedOpeningCounts[product.id], 0),
             })),
         };
-        if (isAdmin && resolvedCashierId) {
+        if (canManageShifts && resolvedCashierId) {
             payload.cashier = resolvedCashierId;
         }
         await openShiftMutation.mutateAsync(payload);
@@ -416,7 +417,7 @@ export function ShiftHandoverTab() {
 
     const openingColumns: ColumnDef<Product>[] = [
         { accessorKey: "name", header: tr("Product") },
-        ...(isAdmin && openingComparisonSource
+        ...(canManageShifts && openingComparisonSource
             ? [
                   {
                       id: "lastClose",
@@ -456,7 +457,7 @@ export function ShiftHandoverTab() {
                 );
             },
         },
-        ...(isAdmin && openingComparisonSource
+        ...(canManageShifts && openingComparisonSource
             ? [
                   {
                       id: "mismatch",
@@ -549,7 +550,7 @@ export function ShiftHandoverTab() {
         ),
     ];
 
-    if (isLoadingProducts || isLoadingActive || (isAdmin && isLoadingCashiers)) {
+    if (isLoadingProducts || isLoadingActive || (canManageShifts && isLoadingCashiers)) {
         return (
             <div className="flex justify-center py-12">
                 <Spinner size="lg" />
@@ -583,12 +584,12 @@ export function ShiftHandoverTab() {
                             )}
                         </p>
                     )}
-                    {isAdmin && openingComparisonSource && (
+                    {canManageShifts && openingComparisonSource && (
                         <div
                             className={`rounded-md border px-3 py-2 text-sm ${
                                 openingMismatchSummary.mismatchCount > 0
-                                    ? "border-danger-300 bg-danger-50 text-danger-700 dark:border-danger-800 dark:bg-danger-950/30 dark:text-danger-300"
-                                    : "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+                                     ? "border-danger-300 bg-danger-50 text-danger-700 dark:border-danger-800 dark:bg-danger-950/30 dark:text-danger-300"
+                                     : "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
                             }`}
                         >
                             <p className="font-semibold">
@@ -616,7 +617,7 @@ export function ShiftHandoverTab() {
                             )}
                         </div>
                     )}
-                    {isAdmin && (
+                    {canManageShifts && (
                         <Select
                             label={tr("Assign Cashier")}
                             selectedKeys={
@@ -667,7 +668,7 @@ export function ShiftHandoverTab() {
                         isLoading={openShiftMutation.isPending}
                         isDisabled={
                             !products.length ||
-                            (isAdmin && !resolvedCashierId) ||
+                            (canManageShifts && !resolvedCashierId) ||
                             pendingSessionCount >= 3
                         }
                     >
@@ -772,7 +773,7 @@ export function ShiftHandoverTab() {
                 </div>
             )}
 
-            {pendingSession && isAdmin && (
+            {pendingSession && canManageShifts && (
                 <div className="space-y-3 rounded-lg border border-primary-300/60 p-4">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {tr("Pending Handover Acceptance #")}
@@ -810,7 +811,7 @@ export function ShiftHandoverTab() {
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {tr("Reconciliation Report")}
                     </h3>
-                    {isAdmin && reconciliationData && (
+                    {canManageShifts && reconciliationData && (
                         <Button
                             size="sm"
                             variant="flat"

@@ -1,5 +1,5 @@
 import { tr } from "../locales";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { userService } from "../services/userService";
 import type { CreateUserData, UpdateUserData, UsersListParams } from "../services/userService";
@@ -14,6 +14,7 @@ export function useUsers(params: UsersListParams = {}, options?: { enabled?: boo
     return useQuery({
         queryKey: ["users", params],
         queryFn: () => userService.getUsers(params),
+        placeholderData: keepPreviousData,
         enabled: options?.enabled ?? true,
     });
 }

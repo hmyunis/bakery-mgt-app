@@ -157,3 +157,150 @@ class ShiftStockOverrideTest(TestCase):
         self.assertEqual(ok_res.status_code, 201)
         product.refresh_from_db()
         self.assertEqual(product.stock_quantity, 2)  # 5 - 3 = 2
+
+
+class StaffShiftManagementTest(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.shift_manager = User.objects.create_user(
+            username="shift_mgr",
+            password="password123",
+            role="staff",
+            permissions=["sales", "manage_shifts"],
+        )
+        self.cashier = User.objects.create_user(
+            username="cashier_user",
+            password="password123",
+            role="staff",
+            permissions=["sales"],
+        )
+        self.other_staff = User.objects.create_user(
+            username="other_staff",
+            password="password123",
+            role="staff",
+            permissions=["sales"],
+        )
+        self.product = Product.objects.create(
+            name="Roll", selling_price="5.00", stock_quantity=20
+        )
+
+    def test_shift_manager_can_open_shift_for_another_cashier(self):
+        client = APIClient()
+        client.force_authenticate(self.shift_manager)
+
+        res = client.post(
+            "/api/v1/sales/shift-sessions/open/",
+            {
+                "cashier": self.cashier.id,
+                "counts": [{"product_id": self.product.id, "opening_count": 20}],
+            },
+            format="json",
+        )
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.data["opened_by"], self.cashier.id)
+
+    def test_regular_staff_cannot_open_shift_for_another_cashier(self):
+        client = APIClient()
+        client.force_authenticate(self.other_staff)
+
+        res = client.post(
+            "/api/v1/sales/shift-sessions/open/",
+            {
+                "cashier": self.cashier.id,
+                "counts": [{"product_id": self.product.id, "opening_count": 20}],
+            },
+            format="json",
+        )
+        self.assertEqual(res.status_code, 400)
+        errors = res.data.get("errors", res.data)
+        self.assertIn("cashier", errors)
+
+    def test_shift_manager_can_close_another_cashier_shift(self):
+        # Cashier opens shift
+        cashier_client = APIClient()
+        cashier_client.force_authenticate(self.cashier)
+        open_res = cashier_client.post(
+            "/api/v1/sales/shift-sessions/open/",
+            {"counts": [{"product_id": self.product.id, "opening_count": 20}]},
+            format="json",
+        )
+        self.assertEqual(open_res.status_code, 201)
+        session_id = open_res.data["id"]
+
+        # Regular other staff cannot see/close another cashier's open shift (404/403)
+        other_client = APIClient()
+        other_client.force_authenticate(self.other_staff)
+        fail_res = other_client.post(
+            f"/api/v1/sales/shift-sessions/{session_id}/close/",
+            {
+                "total_cash_declared": "100.00",
+                "counts": [{"product_id": self.product.id, "closing_count": 20}],
+            },
+            format="json",
+        )
+        self.assertIn(fail_res.status_code, [403, 404])
+
+        # Shift manager closes -> 200
+        mgr_client = APIClient()
+        mgr_client.force_authenticate(self.shift_manager)
+        ok_res = mgr_client.post(
+            f"/api/v1/sales/shift-sessions/{session_id}/close/",
+            {
+                "total_cash_declared": "100.00",
+                "counts": [{"product_id": self.product.id, "closing_count": 20}],
+            },
+            format="json",
+        )
+        self.assertEqual(ok_res.status_code, 200)
+
+    def test_shift_manager_can_reopen_and_edit_reconciliation(self):
+        # Open and close session
+        client = APIClient()
+        client.force_authenticate(self.cashier)
+        open_res = client.post(
+            "/api/v1/sales/shift-sessions/open/",
+            {"counts": [{"product_id": self.product.id, "opening_count": 20}]},
+            format="json",
+        )
+        session_id = open_res.data["id"]
+        client.post(
+            f"/api/v1/sales/shift-sessions/{session_id}/close/",
+            {
+                "total_cash_declared": "50.00",
+                "counts": [{"product_id": self.product.id, "closing_count": 20}],
+            },
+            format="json",
+        )
+
+        # Regular staff cannot reopen -> 403
+        other_client = APIClient()
+        other_client.force_authenticate(self.other_staff)
+        reopen_fail = other_client.post(
+            f"/api/v1/sales/shift-sessions/{session_id}/reopen/"
+        )
+        self.assertEqual(reopen_fail.status_code, 403)
+
+        # Regular staff cannot patch reconciliation -> 403
+        patch_fail = other_client.patch(
+            f"/api/v1/sales/shift-sessions/{session_id}/reconciliation/",
+            {"total_cash_declared": "75.00"},
+            format="json",
+        )
+        self.assertEqual(patch_fail.status_code, 403)
+
+        # Shift manager can patch reconciliation -> 200
+        mgr_client = APIClient()
+        mgr_client.force_authenticate(self.shift_manager)
+        patch_ok = mgr_client.patch(
+            f"/api/v1/sales/shift-sessions/{session_id}/reconciliation/",
+            {"total_cash_declared": "80.00"},
+            format="json",
+        )
+        self.assertEqual(patch_ok.status_code, 200)
+
+        # Shift manager can reopen -> 200
+        reopen_ok = mgr_client.post(
+            f"/api/v1/sales/shift-sessions/{session_id}/reopen/"
+        )
+        self.assertEqual(reopen_ok.status_code, 200)
+        self.assertEqual(reopen_ok.data["status"], "opened")

@@ -1,7 +1,7 @@
 import { tr } from "../locales";
 import { apiClient, clearAuthTokens, setAuthToken, setRefreshToken } from "../lib/apiClient";
 import type { ApiResponse, ApiError } from "../types/api";
-import type { PagePermission } from "../constants/roles";
+import type { AppPermission } from "../constants/roles";
 
 export interface LoginCredentials {
     username?: string;
@@ -18,7 +18,7 @@ export interface LoginResponse {
         email?: string;
         phoneNumber?: string;
         role: string;
-        permissions?: PagePermission[];
+        permissions?: AppPermission[];
         fullName?: string;
         avatar?: string;
     };
@@ -173,7 +173,7 @@ class AuthService {
             email: userData.email as string,
             phoneNumber: (userData.phoneNumber || userData.phone_number) as string,
             role: userData.role as string,
-            permissions: (userData.permissions || []) as PagePermission[],
+            permissions: (userData.permissions || []) as AppPermission[],
             avatar: userData.avatar as string,
             // Handle both camelCase (from API response) and snake_case (from DB)
             pushNotificationsEnabled: (userData.pushNotificationsEnabled ??
@@ -254,7 +254,7 @@ class AuthService {
             email: userData.email as string,
             phoneNumber: (userData.phoneNumber || userData.phone_number) as string,
             role: userData.role as string,
-            permissions: (userData.permissions || []) as PagePermission[],
+            permissions: (userData.permissions || []) as AppPermission[],
             avatar: userData.avatar as string,
             // Handle both camelCase (from API response) and snake_case (from DB)
             pushNotificationsEnabled: (userData.pushNotificationsEnabled ??

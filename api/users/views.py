@@ -75,7 +75,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == "admin":
             return User.objects.all()
-        if user.has_page_permission("users"):
+        if user.has_page_permission("users") or user.has_permission("manage_shifts"):
             return User.objects.filter(role="staff")
         return User.objects.filter(id=user.id)
 

@@ -147,11 +147,17 @@ class ShiftSessionOpenSerializer(serializers.Serializer):
         request = self.context["request"]
         request_user = request.user
         selected_cashier = attrs.get("cashier")
+        is_manager = request_user.role == "admin" or request_user.has_permission(
+            "manage_shifts"
+        )
 
-        if request_user.role == "admin":
+        if is_manager:
             if not selected_cashier:
+                if request_user.has_page_permission("sales"):
+                    attrs["cashier"] = request_user
+                    return attrs
                 raise serializers.ValidationError(
-                    {"cashier": "cashier is required when admin opens a shift."}
+                    {"cashier": "cashier is required when opening a shift."}
                 )
             if not selected_cashier.has_page_permission("sales"):
                 raise serializers.ValidationError(

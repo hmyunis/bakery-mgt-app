@@ -43,6 +43,7 @@ const reconciliationColumns: ColumnDef<ShiftSessionReconciliationProduct>[] = [
 export function ShiftHandoverTab() {
     const { user } = useAppSelector((state) => state.auth);
     const isAdmin = user?.role === "admin";
+    const canManageShifts = isAdmin || !!user?.permissions?.includes("manage_shifts");
     const currentUserId = user?.id !== undefined ? Number(user.id) : null;
 
     const [openNotes, setOpenNotes] = useState("");
@@ -165,11 +166,11 @@ export function ShiftHandoverTab() {
 
     const canCloseOpenedSession =
         !!openedSession &&
-        (isAdmin || (currentUserId !== null && openedSession.openedBy === currentUserId));
+        (canManageShifts || (currentUserId !== null && openedSession.openedBy === currentUserId));
 
     const canAcceptPendingSession =
         !!pendingSession &&
-        (isAdmin ||
+        (canManageShifts ||
             (currentUserId !== null &&
                 pendingSession.openedBy !== currentUserId &&
                 user.role === "staff"));

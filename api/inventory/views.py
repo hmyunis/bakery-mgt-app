@@ -29,11 +29,22 @@ class IsStoreKeeperOrAdmin(permissions.BasePermission):
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
-    queryset = Ingredient.objects.all()
+    queryset = Ingredient.objects.all().order_by("name")
     serializer_class = IngredientSerializer
     permission_classes = [IsStoreKeeperOrAdmin]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
     search_fields = ["name"]
+    ordering_fields = [
+        "name",
+        "current_stock",
+        "kitchen_stock",
+        "average_cost_per_unit",
+    ]
+    ordering = ["name"]
 
     @action(detail=False, methods=["get"])
     def shopping_list(self, request):

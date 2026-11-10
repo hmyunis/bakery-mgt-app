@@ -15,6 +15,9 @@ class PaymentMethod(models.Model):
     # Optional: If you want to store account numbers for display on POS
     config_details = models.TextField(blank=True, help_text="e.g. Pay to 0911...")
 
+    class Meta:
+        ordering = ["name"]
+
     def __str__(self):
         return self.name
 

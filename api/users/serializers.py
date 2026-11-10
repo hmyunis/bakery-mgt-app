@@ -173,7 +173,7 @@ class UserSerializer(serializers.ModelSerializer):
                     {"password": "Password must be at least 8 characters long."}
                 )
 
-        valid_permissions = set(User.PAGE_PERMISSIONS)
+        valid_permissions = set(User.ALL_PERMISSIONS)
         if "permissions" in data:
             unknown = set(data["permissions"]) - valid_permissions
             if unknown:

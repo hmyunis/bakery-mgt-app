@@ -23,6 +23,10 @@ class User(AbstractUser):
         "settings",
     )
 
+    ACTION_PERMISSIONS = ("manage_shifts",)
+
+    ALL_PERMISSIONS = PAGE_PERMISSIONS + ACTION_PERMISSIONS
+
     # Override first_name and last_name to be unused
     first_name = None
     last_name = None
@@ -47,6 +51,9 @@ class User(AbstractUser):
         return f"{self.username} ({self.role})"
 
     def has_page_permission(self, permission):
+        return self.role == "admin" or permission in (self.permissions or [])
+
+    def has_permission(self, permission):
         return self.role == "admin" or permission in (self.permissions or [])
 
 

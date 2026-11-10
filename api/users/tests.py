@@ -269,3 +269,55 @@ class FactoryResetTest(TestCase):
             )
         )
         self.assertTrue(Product.objects.filter(name="Cake").exists())
+
+
+class UserManageShiftsPermissionTest(TestCase):
+    def setUp(self):
+        self.User = get_user_model()
+        self.admin = self.User.objects.create_user(
+            username="admin_user",
+            password="adminpassword123",
+            role="admin",
+        )
+        self.staff_manager = self.User.objects.create_user(
+            username="staff_mgr",
+            password="staffpassword123",
+            role="staff",
+            permissions=["manage_shifts"],
+        )
+        self.regular_staff = self.User.objects.create_user(
+            username="staff_reg",
+            password="staffpassword123",
+            role="staff",
+            permissions=["sales"],
+        )
+
+    def test_admin_can_assign_manage_shifts_permission(self):
+        client = APIClient()
+        client.force_authenticate(self.admin)
+        res = client.post(
+            "/api/v1/users/",
+            {
+                "username": "new_shift_mgr",
+                "password": "password123",
+                "confirm_password": "password123",
+                "role": "staff",
+                "permissions": ["sales", "manage_shifts"],
+            },
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        new_user = self.User.objects.get(username="new_shift_mgr")
+        self.assertTrue(new_user.has_permission("manage_shifts"))
+
+    def test_staff_with_manage_shifts_can_list_staff_users(self):
+        client = APIClient()
+        client.force_authenticate(self.staff_manager)
+        res = client.get("/api/v1/users/?role=staff")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_regular_staff_without_manage_shifts_cannot_list_users(self):
+        client = APIClient()
+        client.force_authenticate(self.regular_staff)
+        res = client.get("/api/v1/users/")
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)

@@ -928,6 +928,9 @@ export const en: Record<string, string> = {
     "Shift closed and pending acceptance.": "Shift closed and pending acceptance.",
     "Shift Date": "Shift Date",
     "Shift Handover": "Shift Handover",
+    "Shift Handover Management": "Shift Handover Management",
+    "Grants full authority equal to admin in the shift handover tab (opening shifts for cashiers, closing any shift, accepting handovers, reopening shifts, and editing reconciliation).":
+        "Grants full authority equal to admin in the shift handover tab (opening shifts for cashiers, closing any shift, accepting handovers, reopening shifts, and editing reconciliation).",
     "Shift handover accepted.": "Shift handover accepted.",
     "Shift opened successfully.": "Shift opened successfully.",
     "Shift reopened successfully.": "Shift reopened successfully.",

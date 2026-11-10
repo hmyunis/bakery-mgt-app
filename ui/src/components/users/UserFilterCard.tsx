@@ -17,7 +17,6 @@ export const UserFilterCard: React.FC<UserFilterCardProps> = ({
     onSearchChange,
     isActiveFilter,
     onIsActiveFilterChange,
-    isLoading,
 }) => {
     return (
         <div className="flex flex-col sm:flex-row gap-4">
@@ -32,7 +31,6 @@ export const UserFilterCard: React.FC<UserFilterCardProps> = ({
                     placeholder={tr("Search by name, email, or phone...")}
                     value={searchQuery}
                     onValueChange={onSearchChange}
-                    isDisabled={isLoading}
                     startContent={<Search className="h-5 w-5 text-slate-400" />}
                     isClearable
                 />
@@ -53,7 +51,6 @@ export const UserFilterCard: React.FC<UserFilterCardProps> = ({
                             onIsActiveFilterChange(false);
                         }
                     }}
-                    isDisabled={isLoading}
                     classNames={{
                         trigger: "!w-full !text-left",
                         label: "!w-full !text-left",
@@ -68,3 +65,5 @@ export const UserFilterCard: React.FC<UserFilterCardProps> = ({
         </div>
     );
 };
+
+export const MemoUserFilterCard = React.memo(UserFilterCard);

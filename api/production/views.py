@@ -23,24 +23,37 @@ class IsChefOrAdmin(permissions.BasePermission):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by("name")
     serializer_class = ProductSerializer
     permission_classes = [IsChefOrAdmin]
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+    filterset_fields = ["is_active"]
     search_fields = ["name"]
+    ordering_fields = ["name", "created_at", "selling_price", "stock_quantity"]
+    ordering = ["name"]
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = (
         Recipe.objects.select_related("product", "composite_ingredient")
         .prefetch_related("items__ingredient")
-        .all()
+        .order_by("id")
     )
     serializer_class = RecipeSerializer
     permission_classes = [IsChefOrAdmin]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
     filterset_fields = ["product", "composite_ingredient"]
     search_fields = ["product__name", "instructions"]
+    ordering_fields = ["id", "standard_yield"]
+    ordering = ["id"]
 
     @action(detail=False, methods=["get"], url_path="products-with-recipes")
     def products_with_recipes(self, request):

@@ -10,8 +10,8 @@ import { clearAuthTokens, getAuthToken, getRefreshToken } from "../lib/apiClient
 import {
     getDefaultAppPath,
     isValidRole,
-    PAGE_PERMISSIONS,
-    type PagePermission,
+    ALL_PERMISSIONS,
+    type AppPermission,
 } from "../constants/roles";
 import type { ApiError } from "../types/api";
 
@@ -34,7 +34,7 @@ export const useAuth = () => {
                         const userRole = isValidRole(payload.role) ? payload.role : undefined;
                         const permissions = Array.isArray(payload.permissions)
                             ? payload.permissions.filter((permission: string) =>
-                                  PAGE_PERMISSIONS.includes(permission as PagePermission)
+                                  ALL_PERMISSIONS.includes(permission as AppPermission)
                               )
                             : [];
                         dispatch(
@@ -82,7 +82,7 @@ export const useAuth = () => {
         onSuccess: (response) => {
             queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
-            let permissions: PagePermission[] = response.user?.permissions || [];
+            let permissions: AppPermission[] = response.user?.permissions || [];
             let role = response.user?.role;
             if (!role && response.access) {
                 try {

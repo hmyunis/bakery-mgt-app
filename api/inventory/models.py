@@ -31,6 +31,9 @@ class Ingredient(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ["name"]
+
     def __str__(self):
         return f"{self.name} ({self.current_stock} {self.unit})"
 
