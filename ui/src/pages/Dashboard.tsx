@@ -58,12 +58,12 @@ const salesPerformanceColumns: ColumnDef<SalesPerformanceDay>[] = [
     {
         accessorKey: "salesTotal",
         header: tr("Sales"),
-        cell: ({ row }) => `${formatMoney(row.original.salesTotal)} ETB`,
+        cell: ({ row }) => `${formatMoney(row.original.salesTotal)} ${tr("Birr")}`,
     },
     {
         accessorKey: "productionCost",
         header: tr("Production Cost"),
-        cell: ({ row }) => `${formatMoney(row.original.productionCost)} ETB`,
+        cell: ({ row }) => `${formatMoney(row.original.productionCost)} ${tr("Birr")}`,
     },
     {
         id: "net",
@@ -78,7 +78,7 @@ const salesPerformanceColumns: ColumnDef<SalesPerformanceDay>[] = [
                             : "font-medium text-red-600 dark:text-red-400"
                     }
                 >
-                    {formatMoney(net)} {tr("ETB")}
+                    {formatMoney(net)} {tr("Birr")}
                 </span>
             );
         },
@@ -152,7 +152,7 @@ export function DashboardPage() {
                         <span className="text-sm text-white/80">{tr("Today")}</span>
                     </div>
                     <div className="text-4xl font-bold mb-2">
-                        {formatMoney(data.salesToday.total)} {tr("ETB")}
+                        {formatMoney(data.salesToday.total)} {tr("Birr")}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-white/80">
                         <span>
@@ -162,7 +162,7 @@ export function DashboardPage() {
                         {data.salesToday.count > 0 && (
                             <span>
                                 {tr("Avg:")}
-                                {formatMoney(data.salesToday.average)} {tr("ETB")}
+                                {formatMoney(data.salesToday.average)} {tr("Birr")}
                             </span>
                         )}
                     </div>
@@ -175,7 +175,7 @@ export function DashboardPage() {
                         <span className="text-xs text-[var(--muted)]">{tr("Inventory")}</span>
                     </div>
                     <div className="text-2xl font-bold text-[var(--fg)]">
-                        {formatMoney(data.inventoryStats.totalValue)} {tr("ETB")}
+                        {formatMoney(data.inventoryStats.totalValue)} {tr("Birr")}
                     </div>
                     <div className="text-sm text-[var(--muted)] mt-1">
                         {data.inventoryStats.totalItems} {tr("items")}
@@ -295,7 +295,7 @@ export function DashboardPage() {
                         <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
                             <div className="text-xs text-[var(--muted)]">{tr("Today")}</div>
                             <div className="text-lg font-bold text-[var(--fg)]">
-                                {formatMoney(salesPerformance.todayTotal)} {tr("ETB")}
+                                {formatMoney(salesPerformance.todayTotal)} {tr("Birr")}
                             </div>
                         </div>
                         <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
@@ -303,7 +303,7 @@ export function DashboardPage() {
                                 {tr("Avg (last 3 days)")}
                             </div>
                             <div className="text-lg font-bold text-[var(--fg)]">
-                                {formatMoney(salesPerformance.lastThreeDaysAverage)} {tr("ETB")}
+                                {formatMoney(salesPerformance.lastThreeDaysAverage)} {tr("Birr")}
                             </div>
                         </div>
                         <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">

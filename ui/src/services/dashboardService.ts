@@ -85,7 +85,8 @@ class DashboardService {
                 productionRunId: Number(w.productionRunId ?? w.production_run_id),
                 producedAt: w.producedAt as string,
                 producedItemName: (w.producedItemName ?? w.produced_item_name ?? null) as
-                    string | null,
+                    | string
+                    | null,
                 ingredientName: (w.ingredientName ?? w.ingredient_name) as string,
                 unit: w.unit as Unit,
                 wastage: this.normalizeNumber(w.wastage),

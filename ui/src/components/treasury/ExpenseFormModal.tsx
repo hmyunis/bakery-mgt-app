@@ -157,7 +157,7 @@ export function ExpenseFormModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
                             type="number"
-                            label={tr("Amount (ETB)")}
+                            label={tr("Amount (Birr)")}
                             placeholder="0.00"
                             value={formData.amount ? String(formData.amount) : ""}
                             onValueChange={(value) =>

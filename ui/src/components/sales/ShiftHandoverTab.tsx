@@ -499,22 +499,21 @@ export function ShiftHandoverTab() {
                                             : "!text-slate-900 dark:!text-slate-100"
                                     }`}
                                 >
-                                    {tr("ETB")}
-                                    {reconciliationData.money.collectedTotal.toFixed(2)}
+                                    {reconciliationData.money.collectedTotal.toFixed(2)}{" "}
+                                    {tr("Birr")}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
                                 <p className="text-xs text-slate-500">{tr("Unpaid Value")}</p>
                                 <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
-                                    {tr("ETB")}
-                                    {reconciliationData.money.unpaidValue.toFixed(2)}
+                                    {reconciliationData.money.unpaidValue.toFixed(2)} {tr("Birr")}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
                                 <p className="text-xs text-slate-500">{tr("Variance Value")}</p>
                                 <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
-                                    {tr("ETB")}
-                                    {reconciliationData.totals.varianceTotalValue.toFixed(2)}
+                                    {reconciliationData.totals.varianceTotalValue.toFixed(2)}{" "}
+                                    {tr("Birr")}
                                 </p>
                             </div>
                         </div>

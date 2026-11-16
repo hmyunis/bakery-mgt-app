@@ -94,7 +94,7 @@ export function ReportsTab() {
                                 {hourlySales
                                     .reduce((acc: number, curr) => acc + curr.total, 0)
                                     .toFixed(2)}{" "}
-                                {tr("ETB")}
+                                {tr("Birr")}
                             </span>
                         </div>
                         <div className="p-2 bg-primary/10 rounded-full text-primary">

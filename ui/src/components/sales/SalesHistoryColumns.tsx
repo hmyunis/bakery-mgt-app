@@ -65,8 +65,7 @@ export const getSalesHistoryColumns = (options?: {
         header: tr("Total Amount"),
         cell: ({ row }) => (
             <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                {tr("ETB")}
-                {row.original.total_amount.toFixed(2)}
+                {row.original.total_amount.toFixed(2)} {tr("Birr")}
             </span>
         ),
     },
@@ -101,9 +100,7 @@ export const getSalesHistoryColumns = (options?: {
                 <div className="flex flex-wrap gap-1">
                     {sale.payments.map((payment, index) => (
                         <Chip key={index} variant="flat" size="sm">
-                            {payment.method__name}
-                            {tr(": ETB")}
-                            {payment.amount.toFixed(2)}
+                            {payment.method__name}: {payment.amount.toFixed(2)} {tr("Birr")}
                         </Chip>
                     ))}
                 </div>

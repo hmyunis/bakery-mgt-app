@@ -25,7 +25,7 @@ interface CashierStatementModalProps {
     cashierId: number | null;
 }
 
-const formatMoney = (amount: number) => `ETB ${amount.toFixed(2)}`;
+const formatMoney = (amount: number) => `${amount.toFixed(2)} ${tr("Birr")}`;
 
 const formatDateTime = (value: string) => {
     if (!value) return "-";

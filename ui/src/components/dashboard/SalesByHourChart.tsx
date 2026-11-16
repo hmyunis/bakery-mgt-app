@@ -54,8 +54,7 @@ export function SalesByHourChart({ data, className }: SalesByHourChartProps) {
                         {item.hour}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {tr("Revenue:")}
-                        {formatMoney(item.revenue)} {tr("ETB")}
+                        {tr("Revenue:")} {formatMoney(item.revenue)} {tr("Birr")}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
                         {tr("Sales:")}

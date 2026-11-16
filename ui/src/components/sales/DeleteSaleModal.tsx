@@ -44,8 +44,7 @@ export function DeleteSaleModal({
                                     {tr("Total")}
                                 </span>
                                 <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                                    {tr("ETB")}
-                                    {sale.total_amount.toFixed(2)}
+                                    {sale.total_amount.toFixed(2)} {tr("Birr")}
                                 </span>
                             </div>
                             <div className="flex justify-between">

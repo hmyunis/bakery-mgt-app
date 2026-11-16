@@ -38,15 +38,7 @@ import {
 import { useBakerySettings, useUpdateBakerySettings } from "../hooks/useBakery";
 
 const formatCurrency = (amount: number) => {
-    try {
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "ETB",
-            maximumFractionDigits: 2,
-        }).format(amount);
-    } catch {
-        return `ETB ${amount.toFixed(2)}`;
-    }
+    return `${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${tr("Birr")}`;
 };
 
 export function TreasuryPage() {

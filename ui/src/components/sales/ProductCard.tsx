@@ -68,8 +68,7 @@ export function ProductCard({
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-sm font-bold text-primary whitespace-nowrap">
-                        {tr("ETB")}
-                        {product.selling_price.toFixed(2)}
+                        {product.selling_price.toFixed(2)} {tr("Birr")}
                     </span>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <Button

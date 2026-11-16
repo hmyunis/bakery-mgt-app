@@ -588,8 +588,8 @@ export function ShiftHandoverTab() {
                         <div
                             className={`rounded-md border px-3 py-2 text-sm ${
                                 openingMismatchSummary.mismatchCount > 0
-                                     ? "border-danger-300 bg-danger-50 text-danger-700 dark:border-danger-800 dark:bg-danger-950/30 dark:text-danger-300"
-                                     : "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+                                    ? "border-danger-300 bg-danger-50 text-danger-700 dark:border-danger-800 dark:bg-danger-950/30 dark:text-danger-300"
+                                    : "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
                             }`}
                         >
                             <p className="font-semibold">
@@ -956,8 +956,8 @@ export function ShiftHandoverTab() {
                                             : "!text-slate-900 dark:!text-slate-100"
                                     }`}
                                 >
-                                    {tr("ETB")}
-                                    {reconciliationData.money.collectedTotal.toFixed(2)}
+                                    {reconciliationData.money.collectedTotal.toFixed(2)}{" "}
+                                    {tr("Birr")}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
@@ -966,8 +966,7 @@ export function ShiftHandoverTab() {
                                     {tr("Unpaid Value")}
                                 </p>
                                 <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
-                                    {tr("ETB")}
-                                    {reconciliationData.money.unpaidValue.toFixed(2)}
+                                    {reconciliationData.money.unpaidValue.toFixed(2)} {tr("Birr")}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
@@ -976,8 +975,8 @@ export function ShiftHandoverTab() {
                                     {tr("Variance Value")}
                                 </p>
                                 <p className="text-lg font-semibold !text-slate-900 dark:!text-slate-100">
-                                    {tr("ETB")}
-                                    {reconciliationData.totals.varianceTotalValue.toFixed(2)}
+                                    {reconciliationData.totals.varianceTotalValue.toFixed(2)}{" "}
+                                    {tr("Birr")}
                                 </p>
                             </div>
                         </div>
@@ -994,8 +993,7 @@ export function ShiftHandoverTab() {
                                             : "!text-slate-900 dark:!text-slate-100"
                                     }`}
                                 >
-                                    {tr("ETB")}
-                                    {reconciliationData.money.cashDeclared.toFixed(2)}
+                                    {reconciliationData.money.cashDeclared.toFixed(2)} {tr("Birr")}
                                 </p>
                             </div>
                             <div className="rounded-md border border-slate-200 px-3 py-2 dark:border-slate-800">
@@ -1010,8 +1008,8 @@ export function ShiftHandoverTab() {
                                             : "!text-slate-900 dark:!text-slate-100"
                                     }`}
                                 >
-                                    {tr("ETB")}
-                                    {reconciliationData.money.digitalDeclared.toFixed(2)}
+                                    {reconciliationData.money.digitalDeclared.toFixed(2)}{" "}
+                                    {tr("Birr")}
                                 </p>
                             </div>
                         </div>

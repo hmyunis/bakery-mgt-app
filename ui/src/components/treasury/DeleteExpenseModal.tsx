@@ -27,8 +27,7 @@ export function DeleteExpenseModal({
                     </p>
                     {expense ? (
                         <p className="text-sm text-slate-500">
-                            {expense.title} {tr("• ETB")}
-                            {expense.amount.toLocaleString()}
+                            {expense.title} • {expense.amount.toLocaleString()} {tr("Birr")}
                         </p>
                     ) : null}
                 </ModalBody>

@@ -323,7 +323,7 @@ function PurchaseFormContent({
                         isRequired={costInputMode === "total"}
                         isInvalid={!!errors.total_cost}
                         errorMessage={errors.total_cost}
-                        startContent={<span className="text-xs text-slate-500">{tr("ETB")}</span>}
+                        endContent={<span className="text-xs text-slate-500">{tr("Birr")}</span>}
                         classNames={{
                             input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
                         }}
@@ -341,7 +341,7 @@ function PurchaseFormContent({
                         onValueChange={(v) => handleInputChange("unit_cost", v)}
                         isDisabled={costInputMode === "total"}
                         isRequired={costInputMode === "unit"}
-                        startContent={<span className="text-xs text-slate-500">{tr("ETB")}</span>}
+                        endContent={<span className="text-xs text-slate-500">{tr("Birr")}</span>}
                         classNames={{
                             input: "!text-slate-900 dark:!text-slate-100 !placeholder:text-slate-400 dark:!placeholder:text-slate-500",
                         }}

@@ -47,7 +47,8 @@ const extractCbeReceiptIdentifier = (
 const formatMoney = (amount?: string, currency?: string, formatted?: string) => {
     if (formatted) return formatted;
     if (!amount) return tr("Unknown");
-    return currency ? `${currency} ${amount}` : amount;
+    const curr = currency === "ETB" ? tr("Birr") : currency || tr("Birr");
+    return `${amount} ${curr}`;
 };
 
 const getTransactionDate = (detail: CbeTransactionDetail | null) => {

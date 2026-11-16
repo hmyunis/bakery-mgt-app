@@ -47,7 +47,7 @@ export const getPurchaseColumns = ({
         header: tr("Total Cost"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
-                {row.original.total_cost.toFixed(2)} {tr("ETB")}
+                {row.original.total_cost.toFixed(2)} {tr("Birr")}
             </span>
         ),
     },
@@ -70,7 +70,7 @@ export const getPurchaseColumns = ({
                                 : "text-zinc-900 dark:text-zinc-100"
                         }
                     >
-                        {purchase.unit_cost.toFixed(2)} {tr("ETB")}
+                        {purchase.unit_cost.toFixed(2)} {tr("Birr")}
                     </span>
                     {purchase.is_price_anomaly && (
                         <Chip color="warning" variant="flat" size="sm">

@@ -80,8 +80,7 @@ export function ProductRow({
                     </div>
                     <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
                         <span className="text-sm font-bold text-primary whitespace-nowrap">
-                            {tr("ETB")}
-                            {product.selling_price.toFixed(2)}
+                            {product.selling_price.toFixed(2)} {tr("Birr")}
                         </span>
                         <Button
                             variant="bordered"

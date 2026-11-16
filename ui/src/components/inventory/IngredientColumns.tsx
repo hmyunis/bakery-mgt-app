@@ -98,7 +98,7 @@ export const getIngredientColumns = ({
         header: tr("Avg Cost/Unit"),
         cell: ({ row }) => (
             <span className="text-zinc-900 dark:text-zinc-100">
-                {row.original.average_cost_per_unit.toFixed(2)} {tr("ETB")}
+                {row.original.average_cost_per_unit.toFixed(2)} {tr("Birr")}
             </span>
         ),
     },

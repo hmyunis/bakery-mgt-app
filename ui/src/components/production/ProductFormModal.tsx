@@ -187,7 +187,7 @@ function ProductFormContent({
                     </div>
 
                     <Input
-                        label={tr("Selling Price (ETB)")}
+                        label={tr("Selling Price (Birr)")}
                         placeholder="0.00"
                         type="number"
                         step="0.01"

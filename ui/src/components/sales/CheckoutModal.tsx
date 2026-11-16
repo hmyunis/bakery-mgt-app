@@ -10,8 +10,6 @@ import {
     Input,
     Divider,
     Alert,
-    Select,
-    SelectItem,
 } from "@heroui/react";
 import { Plus, Trash2, CreditCard } from "lucide-react";
 import type { Product } from "../../types/production";
@@ -215,10 +213,10 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                             {item.product.name} × {item.quantity}
                                         </span>
                                         <span className="text-zinc-900 dark:text-zinc-100 font-medium">
-                                            {tr("ETB")}{" "}
                                             {(item.product.selling_price * item.quantity).toFixed(
                                                 2
-                                            )}
+                                            )}{" "}
+                                            {tr("Birr")}
                                         </span>
                                     </div>
                                 ))}
@@ -229,8 +227,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                     {tr("Total:")}
                                 </span>
                                 <span className="text-xl font-bold text-primary">
-                                    {tr("ETB")}
-                                    {totalAmount.toFixed(2)}
+                                    {totalAmount.toFixed(2)} {tr("Birr")}
                                 </span>
                             </div>
                         </div>
@@ -262,68 +259,58 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                                 (p, i) => i !== index && p.method.id === method.id
                                             )
                                     );
-                                    const availableMethodItems = availableMethods.map((method) => ({
-                                        key: method.id.toString(),
-                                        label: method.name,
-                                    }));
-
                                     return (
                                         <div
                                             key={index}
-                                            className="flex items-center gap-3 p-3 border border-zinc-200 dark:border-zinc-800 rounded-lg"
+                                            className="p-3 border border-zinc-200 dark:border-zinc-800 rounded-lg space-y-2 bg-zinc-50/50 dark:bg-zinc-900/40"
                                         >
-                                            <Select
-                                                items={availableMethodItems}
-                                                selectedKeys={
-                                                    new Set([payment.method.id.toString()])
-                                                }
-                                                onSelectionChange={(keys) => {
-                                                    const selectedKey = Array.from(keys)[0];
-                                                    if (selectedKey) {
-                                                        updatePaymentMethod(
-                                                            index,
-                                                            parseInt(selectedKey as string)
-                                                        );
+                                            <div className="flex items-center gap-2">
+                                                <select
+                                                    value={
+                                                        payment.method?.id
+                                                            ? String(payment.method.id)
+                                                            : ""
                                                     }
-                                                }}
-                                                placeholder={tr("Select payment method")}
-                                                aria-label={tr("Select payment method")}
-                                                classNames={{
-                                                    base: "flex-1 !w-full !text-left",
-                                                    trigger:
-                                                        "dark:!bg-zinc-800 !w-full !text-left !text-slate-900 dark:!text-slate-100",
-                                                    value: "!text-slate-900 dark:!text-slate-100",
-                                                    label: tr(
-                                                        "!w-full !text-left !text-slate-700 dark:!text-slate-300"
-                                                    ),
-                                                    selectorIcon:
-                                                        "text-slate-500 dark:text-slate-400",
-                                                }}
-                                                selectionMode="single"
-                                            >
-                                                {(method) => (
-                                                    <SelectItem key={method.key}>
-                                                        {method.label}
-                                                    </SelectItem>
-                                                )}
-                                            </Select>
-                                            <div className="flex items-center gap-2 flex-1">
+                                                    onChange={(e) => {
+                                                        const val = Number(e.target.value);
+                                                        if (val) updatePaymentMethod(index, val);
+                                                    }}
+                                                    aria-label={tr("Select payment method")}
+                                                    className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-slate-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                                                >
+                                                    {availableMethods.map((m) => (
+                                                        <option
+                                                            key={m.id}
+                                                            value={m.id}
+                                                            className="bg-white dark:bg-zinc-800 text-slate-900 dark:text-slate-100"
+                                                        >
+                                                            {m.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+
                                                 <Input
                                                     type="number"
                                                     value={payment.amount.toFixed(2)}
                                                     onValueChange={(v) =>
-                                                        updatePaymentAmount(index, parseFloat(v))
+                                                        updatePaymentAmount(
+                                                            index,
+                                                            parseFloat(v) || 0
+                                                        )
                                                     }
                                                     placeholder="0.00"
                                                     step="0.01"
                                                     min="0"
-                                                    startContent={
-                                                        <span className="text-zinc-500 text-sm">
-                                                            {tr("ETB")}
+                                                    endContent={
+                                                        <span className="text-zinc-500 text-xs">
+                                                            {tr("Birr")}
                                                         </span>
                                                     }
                                                     classNames={{
-                                                        input: "!text-slate-900 dark:!text-slate-100",
+                                                        base: "w-28 flex-shrink-0",
+                                                        input: "!text-slate-900 dark:!text-slate-100 font-semibold",
+                                                        inputWrapper:
+                                                            "!h-10 !min-h-10 !bg-white dark:!bg-zinc-800",
                                                     }}
                                                 />
                                                 {remainingAmount > 0 &&
@@ -331,25 +318,27 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                                         <Button
                                                             size="sm"
                                                             variant="flat"
+                                                            className="h-10 font-medium flex-shrink-0"
                                                             onPress={() =>
                                                                 setRemainingAsAmount(index)
                                                             }
                                                         >
-                                                            {tr("Use Remaining")}
+                                                            {tr("Remaining")}
                                                         </Button>
                                                     )}
+                                                {payments.length > 1 && (
+                                                    <Button
+                                                        isIconOnly
+                                                        size="sm"
+                                                        variant="light"
+                                                        color="danger"
+                                                        className="h-10 w-10 flex-shrink-0"
+                                                        onPress={() => removePaymentMethod(index)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                             </div>
-                                            {payments.length > 1 && (
-                                                <Button
-                                                    isIconOnly
-                                                    size="sm"
-                                                    variant="light"
-                                                    color="danger"
-                                                    onPress={() => removePaymentMethod(index)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            )}
                                         </div>
                                     );
                                 })}
@@ -369,8 +358,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                     {tr("Paid Amount:")}
                                 </span>
                                 <span className="text-zinc-900 dark:text-zinc-100 font-medium">
-                                    {tr("ETB")}
-                                    {paidAmount.toFixed(2)}
+                                    {paidAmount.toFixed(2)} {tr("Birr")}
                                 </span>
                             </div>
                             <div className="flex justify-between text-sm">
@@ -384,14 +372,13 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }: Checkou
                                             : "text-success-600 dark:text-success-400"
                                     }`}
                                 >
-                                    {tr("ETB")}
-                                    {remainingAmount.toFixed(2)}
+                                    {remainingAmount.toFixed(2)} {tr("Birr")}
                                 </span>
                             </div>
                             {remainingAmount < 0 && (
                                 <Alert color="warning" variant="flat" className="mt-2">
-                                    {tr("Change: ETB")}
-                                    {Math.abs(remainingAmount).toFixed(2)}
+                                    {tr("Change:")} {Math.abs(remainingAmount).toFixed(2)}{" "}
+                                    {tr("Birr")}
                                 </Alert>
                             )}
                         </div>

@@ -114,7 +114,7 @@ export function BankTransactionModal({
                 </ModalHeader>
                 <ModalBody className="space-y-4">
                     <Input
-                        label={tr("Amount (ETB)")}
+                        label={tr("Amount (Birr)")}
                         type="number"
                         placeholder="0"
                         value={amount}

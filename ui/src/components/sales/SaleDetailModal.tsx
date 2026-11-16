@@ -110,13 +110,12 @@ export function SaleDetailModal({
                                                 {item.product_name}
                                             </p>
                                             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                                {tr("ETB")}
-                                                {item.unit_price.toFixed(2)} × {item.quantity}
+                                                {item.unit_price.toFixed(2)} {tr("Birr")} ×{" "}
+                                                {item.quantity}
                                             </p>
                                         </div>
                                         <p className="font-semibold text-zinc-900 dark:text-zinc-100">
-                                            {tr("ETB")}
-                                            {item.subtotal.toFixed(2)}
+                                            {item.subtotal.toFixed(2)} {tr("Birr")}
                                         </p>
                                     </div>
                                 ))}
@@ -144,8 +143,7 @@ export function SaleDetailModal({
                                             {payment.method__name}
                                         </Chip>
                                         <p className="font-semibold text-zinc-900 dark:text-zinc-100">
-                                            {tr("ETB")}
-                                            {payment.amount.toFixed(2)}
+                                            {payment.amount.toFixed(2)} {tr("Birr")}
                                         </p>
                                     </div>
                                 ))}
@@ -159,8 +157,7 @@ export function SaleDetailModal({
                                     {tr("Total Amount:")}
                                 </span>
                                 <span className="text-2xl font-bold text-primary">
-                                    {tr("ETB")}
-                                    {sale.total_amount.toFixed(2)}
+                                    {sale.total_amount.toFixed(2)} {tr("Birr")}
                                 </span>
                             </div>
                         </div>

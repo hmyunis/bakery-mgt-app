@@ -28,8 +28,7 @@ export function DeleteTransactionModal({
                     </p>
                     {transaction ? (
                         <p className="text-sm text-slate-500">
-                            {tr("Amount: ETB")}
-                            {transaction.amount.toLocaleString()}
+                            {tr("Amount:")} {transaction.amount.toLocaleString()} {tr("Birr")}
                         </p>
                     ) : null}
                 </ModalBody>

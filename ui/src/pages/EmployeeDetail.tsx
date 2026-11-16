@@ -205,11 +205,10 @@ export function EmployeeDetailPage() {
                         ) : (
                             <p className="text-sm font-medium">
                                 {employee?.monthlyBaseSalary
-                                    ? new Intl.NumberFormat("en-ET", {
-                                          style: "currency",
-                                          currency: "ETB",
+                                    ? `${employee.monthlyBaseSalary.toLocaleString(undefined, {
                                           minimumFractionDigits: 2,
-                                      }).format(employee.monthlyBaseSalary)
+                                          maximumFractionDigits: 2,
+                                      })} ${tr("Birr")}`
                                     : "-"}
                             </p>
                         )}

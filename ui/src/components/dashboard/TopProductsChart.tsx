@@ -61,8 +61,7 @@ export function TopProductsChart({ data, className }: TopProductsChartProps) {
                         {item.name}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {tr("Revenue:")}
-                        {formatMoney(item.revenue)} {tr("ETB")}
+                        {tr("Revenue:")} {formatMoney(item.revenue)} {tr("Birr")}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
                         {tr("Quantity:")}

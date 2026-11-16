@@ -68,8 +68,7 @@ export const getProductColumns = ({
         header: tr("Selling Price"),
         cell: ({ row }) => (
             <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                {tr("ETB")}
-                {parseFloat(row.original.selling_price.toString()).toFixed(2)}
+                {parseFloat(row.original.selling_price.toString()).toFixed(2)} {tr("Birr")}
             </span>
         ),
     },

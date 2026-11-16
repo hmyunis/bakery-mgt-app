@@ -175,22 +175,22 @@ export function SalesPage() {
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                             <p className="text-xs text-slate-500">{tr("Cash In Hand Now")}</p>
                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                                {tr("ETB")}
-                                {(liveShiftReconciliation?.money.cashCollected ?? 0).toFixed(2)}
+                                {(liveShiftReconciliation?.money.cashCollected ?? 0).toFixed(2)}{" "}
+                                {tr("Birr")}
                             </p>
                         </div>
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                             <p className="text-xs text-slate-500">{tr("Total Collected")}</p>
                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                                {tr("ETB")}{" "}
-                                {(liveShiftReconciliation?.money.collectedTotal ?? 0).toFixed(2)}
+                                {(liveShiftReconciliation?.money.collectedTotal ?? 0).toFixed(2)}{" "}
+                                {tr("Birr")}
                             </p>
                         </div>
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                             <p className="text-xs text-slate-500">{tr("Digital Collected")}</p>
                             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                                {tr("ETB")}{" "}
-                                {(liveShiftReconciliation?.money.digitalCollected ?? 0).toFixed(2)}
+                                {(liveShiftReconciliation?.money.digitalCollected ?? 0).toFixed(2)}{" "}
+                                {tr("Birr")}
                             </p>
                         </div>
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
@@ -271,7 +271,10 @@ export function SalesPage() {
                                     selectedKeys={new Set([receiptFilter])}
                                     onSelectionChange={(keys) => {
                                         const key = Array.from(keys)[0] as
-                                            "all" | "issued" | "not_issued" | undefined;
+                                            | "all"
+                                            | "issued"
+                                            | "not_issued"
+                                            | undefined;
                                         if (!key) return;
                                         setReceiptFilter(key);
                                         setHistoryPage(1);
